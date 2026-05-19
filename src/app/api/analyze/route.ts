@@ -117,6 +117,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       score: result.score,
       result_json: JSON.stringify(result),
       target_role: targetRole || null,
+      resume_text: resumeText,
+      job_description: jobDescription || null,
     }),
     incrementUsage(userId),
   ]);

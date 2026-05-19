@@ -91,8 +91,9 @@ export default async function DashboardPage({
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
               {analyses.map((a) => (
-                <div
+                <a
                   key={a.id}
+                  href={`/dashboard/${a.id}`}
                   style={{
                     background: "var(--paper-card)",
                     border: "1px solid var(--border)",
@@ -101,24 +102,31 @@ export default async function DashboardPage({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    textDecoration: "none",
+                    color: "inherit",
+                    transition: "all 0.15s",
+                    cursor: "pointer",
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 4 }}>
-                      {a.target_role || "Resume Review"}
+                    <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 4, color: "var(--ink)" }}>
+                      {a.target_role || "General Resume Review"}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--ink-faint)", fontFamily: "DM Mono, monospace" }}>
                       {new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                   </div>
-                  <div style={{
-                    fontFamily: "DM Serif Display, serif",
-                    fontSize: 28,
-                    color: a.score >= 75 ? "#2d6a4f" : a.score >= 55 ? "#92400e" : "#7a2020",
-                  }}>
-                    {a.score}
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{
+                      fontFamily: "DM Serif Display, serif",
+                      fontSize: 28,
+                      color: a.score >= 75 ? "#2d6a4f" : a.score >= 55 ? "#92400e" : "#7a2020",
+                    }}>
+                      {a.score}
+                    </div>
+                    <div style={{ color: "var(--border-strong)" }}>→</div>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           )}
