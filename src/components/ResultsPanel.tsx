@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { AnalysisResult } from "@/types";
 
 interface Props {
@@ -12,10 +13,24 @@ interface Props {
 }
 
 export default function ResultsPanel({ result, hasJD, resumeText, jobDescription, targetRole }: Props) {
+  const componentRef = useRef<HTMLDivElement>(null);
+  const clRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: "ResumeLens-Analysis",
+  });
+
+  const handlePrintCL = useReactToPrint({
+    contentRef: clRef,
+    documentTitle: "ResumeLens-CoverLetter",
+  });
+
   const [barWidth, setBarWidth] = useState(0);
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [isGeneratingCL, setIsGeneratingCL] = useState(false);
   const [clError, setClError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function handleGenerateCoverLetter() {
     if (!resumeText) {
@@ -62,6 +77,7 @@ export default function ResultsPanel({ result, hasJD, resumeText, jobDescription
 
   return (
     <div
+      ref={componentRef}
       className="fade-up"
       style={{
         background: "var(--paper-card)",
@@ -84,8 +100,27 @@ export default function ResultsPanel({ result, hasJD, resumeText, jobDescription
           gap: 12,
         }}
       >
-        <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 22 }}>
-          Analysis Complete
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 22 }}>
+            Analysis Complete
+          </div>
+          <button
+            onClick={handlePrint}
+            className="print:hidden"
+            style={{
+              background: "transparent",
+              color: "var(--accent)",
+              border: "1px solid var(--accent-border)",
+              borderRadius: 8,
+              padding: "4px 10px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "Instrument Sans, sans-serif",
+            }}
+          >
+            ↓ Save PDF
+          </button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div>
@@ -223,52 +258,120 @@ export default function ResultsPanel({ result, hasJD, resumeText, jobDescription
         </Section>
 
         {/* Cover Letter Generator */}
-        <Section title="Cover Letter Generator" delay={5}>
-          {!coverLetter ? (
-            <div style={{ textAlign: "center", padding: "20px" }}>
-              <p style={{ color: "var(--ink-muted)", fontSize: 14, marginBottom: 16 }}>
-                Need a cover letter? Generate a highly personalized one instantly using your resume and the job description.
-              </p>
-              <button
-                onClick={handleGenerateCoverLetter}
-                disabled={isGeneratingCL}
-                style={{
-                  background: isGeneratingCL ? "var(--ink-faint)" : "var(--accent)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "10px 24px",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: isGeneratingCL ? "not-allowed" : "pointer",
-                  fontFamily: "Instrument Sans, sans-serif",
-                  transition: "opacity 0.15s",
-                }}
-              >
-                {isGeneratingCL ? "Drafting Cover Letter..." : "Generate Cover Letter ✉️"}
-              </button>
-              {clError && (
-                <p style={{ color: "#7a2020", fontSize: 13, marginTop: 12 }}>{clError}</p>
-              )}
-            </div>
-          ) : (
-            <div
-              style={{
-                background: "var(--paper)",
-                border: "1px solid var(--border)",
-                borderRadius: 10,
-                padding: "20px 24px",
-                fontFamily: "Instrument Sans, sans-serif",
-                fontSize: 14.5,
-                lineHeight: 1.7,
-                color: "var(--ink)",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {coverLetter}
-            </div>
-          )}
-        </Section>
+        <div className="print:hidden">
+          <Section title="Cover Letter Generator" delay={5}>
+            {!coverLetter ? (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                <p style={{ color: "var(--ink-muted)", fontSize: 14, marginBottom: 16 }}>
+                  Need a cover letter? Generate a highly personalized one instantly using your resume and the job description.
+                </p>
+                <button
+                  onClick={handleGenerateCoverLetter}
+                  disabled={isGeneratingCL}
+                  style={{
+                    background: isGeneratingCL ? "var(--ink-faint)" : "var(--accent)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "10px 24px",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: isGeneratingCL ? "not-allowed" : "pointer",
+                    fontFamily: "Instrument Sans, sans-serif",
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  {isGeneratingCL ? "Drafting Cover Letter..." : "Generate Cover Letter ✉️"}
+                </button>
+                {clError && (
+                  <p style={{ color: "#7a2020", fontSize: 13, marginTop: 12 }}>{clError}</p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginBottom: 12 }}>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(coverLetter);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    style={{
+                      background: "transparent",
+                      color: "var(--ink-muted)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "6px 14px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "Instrument Sans, sans-serif",
+                    }}
+                  >
+                    {copied ? "Copied! ✓" : "Copy to Clipboard"}
+                  </button>
+                  <button
+                    onClick={handlePrintCL}
+                    style={{
+                      background: "var(--accent)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "6px 14px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "Instrument Sans, sans-serif",
+                    }}
+                  >
+                    ↓ Download Cover Letter
+                  </button>
+                </div>
+                <div ref={clRef} className="print-cover-letter">
+                  {/* Screen View */}
+                  <div
+                    className="print:hidden"
+                    style={{
+                      background: "var(--paper)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 10,
+                      padding: "30px 40px",
+                      fontFamily: "Instrument Sans, sans-serif",
+                      fontSize: 14.5,
+                      lineHeight: 1.7,
+                      color: "var(--ink)",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {coverLetter}
+                  </div>
+
+                  {/* Print View (Formal Document format) */}
+                  <div
+                    className="hidden print:block"
+                    style={{
+                      padding: "40px",
+                      fontFamily: "'Times New Roman', Times, serif",
+                      fontSize: "12pt",
+                      lineHeight: 1.6,
+                      color: "black",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    <div style={{ marginBottom: "2rem" }}>
+                      {new Date().toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </div>
+                    {coverLetter}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Section>
+        </div>
       </div>
     </div>
   );
