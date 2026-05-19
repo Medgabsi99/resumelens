@@ -27,6 +27,7 @@ export interface AnalyzeRequest {
 export interface AnalyzeResponse {
   success: boolean;
   data?: AnalysisResult;
+  extractedText?: string;
   error?: string;
   // Partial data returned on free tier
   preview?: {

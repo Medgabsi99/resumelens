@@ -121,5 +121,5 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     incrementUsage(userId),
   ]);
 
-  return NextResponse.json({ success: true, data: result });
+  return NextResponse.json({ success: true, data: result, extractedText: resumeText });
 }

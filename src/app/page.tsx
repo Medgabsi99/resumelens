@@ -49,6 +49,8 @@ export default function HomePage() {
   });
 
   // ── Analyze ──────────────────────────────────────────────
+  const [extractedText, setExtractedText] = useState("");
+
   async function handleAnalyze() {
     if (!resumeText.trim() && !uploadedFile) {
       setError("Please paste your resume text or upload a file.");
@@ -61,6 +63,7 @@ export default function HomePage() {
     setPreview(null);
     setRequiresUpgrade(false);
     setLoadingStep(0);
+    setExtractedText("");
 
     // Cycle loading messages
     const interval = setInterval(() => {
@@ -96,6 +99,12 @@ export default function HomePage() {
         }
         setError(data.error || "Something went wrong.");
         return;
+      }
+
+      if (data.extractedText) {
+        setExtractedText(data.extractedText);
+      } else if (!uploadedFile) {
+        setExtractedText(resumeText);
       }
 
       if (data.requiresUpgrade) {
@@ -322,7 +331,15 @@ export default function HomePage() {
         )}
 
         {/* Results */}
-        {result && <ResultsPanel result={result} hasJD={hasJD} />}
+        {result && (
+          <ResultsPanel
+            result={result}
+            hasJD={hasJD}
+            resumeText={extractedText}
+            jobDescription={jobDescription}
+            targetRole={targetRole}
+          />
+        )}
 
         {/* Upgrade preview */}
         {requiresUpgrade && preview && !showUpgradeModal && (

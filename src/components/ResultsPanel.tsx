@@ -6,10 +6,46 @@ import { AnalysisResult } from "@/types";
 interface Props {
   result: AnalysisResult;
   hasJD: boolean;
+  resumeText?: string;
+  jobDescription?: string;
+  targetRole?: string;
 }
 
-export default function ResultsPanel({ result, hasJD }: Props) {
+export default function ResultsPanel({ result, hasJD, resumeText, jobDescription, targetRole }: Props) {
   const [barWidth, setBarWidth] = useState(0);
+  const [coverLetter, setCoverLetter] = useState<string | null>(null);
+  const [isGeneratingCL, setIsGeneratingCL] = useState(false);
+  const [clError, setClError] = useState<string | null>(null);
+
+  async function handleGenerateCoverLetter() {
+    if (!resumeText) {
+      setClError("Cannot generate cover letter: missing original resume text.");
+      return;
+    }
+    
+    setIsGeneratingCL(true);
+    setClError(null);
+    
+    try {
+      const res = await fetch("/api/cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText, jobDescription, targetRole }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setClError(data.error || "Failed to generate cover letter.");
+        return;
+      }
+      
+      setCoverLetter(data.data);
+    } catch (err) {
+      setClError("Network error. Please try again.");
+    } finally {
+      setIsGeneratingCL(false);
+    }
+  }
 
   useEffect(() => {
     // Animate score bar after mount
@@ -184,6 +220,54 @@ export default function ResultsPanel({ result, hasJD }: Props) {
               </div>
             ))}
           </div>
+        </Section>
+
+        {/* Cover Letter Generator */}
+        <Section title="Cover Letter Generator" delay={5}>
+          {!coverLetter ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <p style={{ color: "var(--ink-muted)", fontSize: 14, marginBottom: 16 }}>
+                Need a cover letter? Generate a highly personalized one instantly using your resume and the job description.
+              </p>
+              <button
+                onClick={handleGenerateCoverLetter}
+                disabled={isGeneratingCL}
+                style={{
+                  background: isGeneratingCL ? "var(--ink-faint)" : "var(--accent)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 24px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: isGeneratingCL ? "not-allowed" : "pointer",
+                  fontFamily: "Instrument Sans, sans-serif",
+                  transition: "opacity 0.15s",
+                }}
+              >
+                {isGeneratingCL ? "Drafting Cover Letter..." : "Generate Cover Letter ✉️"}
+              </button>
+              {clError && (
+                <p style={{ color: "#7a2020", fontSize: 13, marginTop: 12 }}>{clError}</p>
+              )}
+            </div>
+          ) : (
+            <div
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--border)",
+                borderRadius: 10,
+                padding: "20px 24px",
+                fontFamily: "Instrument Sans, sans-serif",
+                fontSize: 14.5,
+                lineHeight: 1.7,
+                color: "var(--ink)",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {coverLetter}
+            </div>
+          )}
         </Section>
       </div>
     </div>

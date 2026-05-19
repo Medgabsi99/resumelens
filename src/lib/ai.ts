@@ -9,6 +9,13 @@ const model = genAI.getGenerativeModel({
     "You are an expert resume coach and senior technical recruiter with 15+ years of experience across tech, product, design, finance, and business. You give brutally honest, specific, actionable feedback. You must respond with ONLY valid JSON — no preamble, no markdown fences, no explanation outside the JSON object.",
 });
 
+// A separate model instance for text generation (so it doesn't force JSON)
+const coverLetterModel = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert career coach and technical recruiter. You write exceptional, highly tailored, and compelling cover letters. Do NOT use JSON formatting.",
+});
+
 export function buildAnalysisPrompt(
   resumeText: string,
   jobDescription?: string,
@@ -106,4 +113,26 @@ export async function extractTextFromBuffer(
 
   // Treat as plain text
   return buffer.toString("utf-8");
+}
+
+// ─── Cover Letter Generation ──────────────────────────────
+
+export async function generateCoverLetter(
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string
+): Promise<string> {
+  let prompt = `Write a professional, compelling, and modern cover letter based on the following resume.
+Keep it to 3 or 4 concise paragraphs. Make it impactful and engaging, avoiding overly robotic language.
+Do NOT include placeholder addresses like "[Your Address]" or "[Company Address]" — just write the body of the letter and sign off with "[Your Name]".`;
+
+  if (targetRole) prompt += `\n\nThe target role is: ${targetRole}`;
+  if (jobDescription) {
+    prompt += `\n\nEnsure the cover letter specifically addresses these job requirements and highlights relevant matching experience:\n${jobDescription.slice(0, 3000)}`;
+  }
+
+  prompt += `\n\nRESUME:\n${resumeText.slice(0, 6000)}\n\nReturn ONLY the cover letter text.`;
+
+  const result = await coverLetterModel.generateContent(prompt);
+  return result.response.text().trim();
 }
