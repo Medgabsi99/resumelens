@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AnalysisResult, JobMatchResult } from "@/types";
 
@@ -17,6 +18,52 @@ function getSecureModel(options: {
       ? options.systemInstruction + securityInstruction
       : securityInstruction,
   });
+}
+
+async function withRetryAndTimeout<T>(
+  fn: () => Promise<T>,
+  timeoutMs = 50000,
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<T> {
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    let timer;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(`AI request timed out after ${timeoutMs}ms.`));
+      }, timeoutMs);
+    });
+
+    try {
+      const result = await Promise.race([fn(), timeoutPromise]);
+      clearTimeout(timer);
+      return result;
+    } catch (error: any) {
+      clearTimeout(timer);
+
+      const isTransient =
+        error?.status === 503 ||
+        error?.status === 504 ||
+        error?.status === 429 ||
+        error?.message?.includes("503") ||
+        error?.message?.includes("504") ||
+        error?.message?.includes("429") ||
+        error?.message?.includes("timed out") ||
+        error?.message?.includes("fetch failed");
+
+      if (isTransient && attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt - 1);
+        logger.warn(
+          `AI request failed transiently (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms. Error: ${error.message}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
 }
 
 const model = getSecureModel({
@@ -112,7 +159,7 @@ export async function analyzeResume(
 ): Promise<AnalysisResult> {
   const prompt = buildAnalysisPrompt(resumeText, jobDescription, targetRole);
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
 
   // Strip any accidental markdown fences
@@ -181,7 +228,7 @@ Do NOT include placeholder addresses like "[Your Address]" or "[Company Address]
 
   prompt += `\n\n[RESUME START]\n${resumeText.slice(0, 6000)}\n[RESUME END]\n\nReturn ONLY the cover letter text.`;
 
-  const result = await coverLetterModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => coverLetterModel.generateContent(prompt));
   return result.response.text().trim();
 }
 
@@ -214,7 +261,7 @@ ${resumeText.slice(0, 6000)}
     prompt += `\n\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
   }
 
-  const result = await interviewModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => interviewModel.generateContent(prompt));
   return result.response.text().trim();
 }
 
@@ -233,7 +280,7 @@ export async function chatWithResume(
 
   const prompt = `${context}[MESSAGE START]\n${message}\n[MESSAGE END]\n\nProvide a helpful, actionable, and specific response.`;
 
-  const result = await chatModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => chatModel.generateContent(prompt));
   return result.response.text().trim();
 }
 
@@ -311,7 +358,7 @@ Responsibilities: medium weight (0.8x)
 Education: lower weight (0.5x) unless explicitly required
 Culture: lower weight (0.4x) but include for completeness`;
 
-  const result = await matchModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => matchModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
@@ -476,7 +523,7 @@ Template recommendation guide:
 - "minimal": When the candidate wants a clean, universal look — safe default
 - "executive": Senior leadership, C-suite, VP-level, director roles`;
 
-  const result = await smartResumeModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => smartResumeModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
@@ -582,7 +629,7 @@ Rules for tailoring:
 3. Do NOT change dates, company names, titles, or schools. They must remain exactly as in the original resume.
 4. Keep the output strictly in the specified JSON schema. Do not output anything other than the JSON.`;
 
-  const result = await smartResumeModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => smartResumeModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
@@ -650,7 +697,7 @@ Ensure each question:
 - Focuses on technical choices, design/architecture decisions, behavioral scenarios, or job requirement gaps.
 - Avoids generic questions like 'tell me about yourself' — focus on high-impact queries.`;
 
-  const result = await structuredQuestionsModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => structuredQuestionsModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -722,7 +769,7 @@ Return ONLY a JSON object with this exact structure (no preamble, no markdown fe
 }
 `;
 
-  const result = await interviewEvaluatorModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => interviewEvaluatorModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
@@ -812,7 +859,7 @@ Return ONLY a JSON object matching this exact structure (no preamble, no markdow
 }
 `;
 
-  const result = await portfolioModel.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => portfolioModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
@@ -875,7 +922,7 @@ Rules for the message:
 5. Do NOT include placeholder fields like "[Date]" or "[Skills]" in the body — write a complete, ready-to-send message. Use placeholder "[Your Name]" only at the sign-off.
 6. Return ONLY the message body, no markdown fences, no email subject lines, and no preambles.`;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   return result.response.text().trim();
 }
 
@@ -984,7 +1031,7 @@ Return ONLY a JSON object with this exact structure:
 }
 `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1055,7 +1102,7 @@ Return ONLY a JSON object with this exact structure:
 }
 `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1143,7 +1190,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
 }
 `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1271,7 +1318,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
 }
 `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1355,7 +1402,7 @@ export async function generateSimulatorQuestions(
   ]
   `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1424,7 +1471,7 @@ export async function compileFinalInterviewScorecard(
   }
   `;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
