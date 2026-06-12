@@ -48,9 +48,19 @@ export default function ResultsPanel({
   analysisId,
 }: Props) {
   const componentRef = useRef<HTMLDivElement>(null);
-  const pdfClassicRef = useRef<HTMLDivElement>(null);
-  const pdfModernRef = useRef<HTMLDivElement>(null);
+  const pdfPrintRef = useRef<HTMLDivElement>(null);
   const clRef = useRef<HTMLDivElement>(null);
+
+  // State Management
+  const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("results");
+  const [barWidth, setBarWidth] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportedUrl, setExportedUrl] = useState<string | null>(null);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [savedToast, setSavedToast] = useState(false);
 
   // Printer handlers
   const handlePrint = useReactToPrint({
@@ -63,26 +73,10 @@ export default function ResultsPanel({
     documentTitle: "ResumeLens-CoverLetter",
   });
 
-  const handlePrintClassic = useReactToPrint({
-    contentRef: pdfClassicRef,
-    documentTitle: "ResumeLens-Classic",
+  const handlePrintTemplate = useReactToPrint({
+    contentRef: pdfPrintRef,
+    documentTitle: `ResumeLens-${pdfTemplate}`,
   });
-
-  const handlePrintModern = useReactToPrint({
-    contentRef: pdfModernRef,
-    documentTitle: "ResumeLens-Modern",
-  });
-
-  // State Management
-  const [barWidth, setBarWidth] = useState(0);
-  const [pdfTemplate, setPdfTemplate] = useState<PdfTemplate>("results");
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportedUrl, setExportedUrl] = useState<string | null>(null);
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [savedToast, setSavedToast] = useState(false);
 
   // Custom Hooks
   const {
@@ -130,26 +124,56 @@ export default function ResultsPanel({
   const strokeDashoffset = circumference - (barWidth / 100) * circumference;
 
   async function handleExportPdf() {
-    if (!resumeText) {
-      setToastMessage("No resume text available for export.");
+    const element = pdfTemplate === "results" ? componentRef.current : pdfPrintRef.current;
+    if (!element) {
+      setToastMessage("Print container is not ready.");
       setToastOpen(true);
       return;
     }
 
     setIsExporting(true);
     try {
-      const payload = {
-        template: pdfTemplate,
-        result,
-        targetRole,
-        jobDescription,
-        resumeText,
-      };
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const pdfBlob = pdf.output("blob");
+
+      const formData = new FormData();
+      formData.append("file", pdfBlob, `ResumeLens-${pdfTemplate}.pdf`);
+      formData.append("template", pdfTemplate);
 
       const res = await fetch("/api/export-pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -157,33 +181,20 @@ export default function ResultsPanel({
         throw new Error(err?.error || "Export failed");
       }
 
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const data = await res.json().catch(() => null);
-        if (data?.url) {
-          setExportedUrl(data.url);
-          setToastMessage("PDF uploaded — click to open or copy link.");
-          setToastOpen(true);
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(data.url);
-            }
-          } catch (err) {
-            // ignore clipboard errors
+      const data = await res.json().catch(() => null);
+      if (data?.url) {
+        setExportedUrl(data.url);
+        setToastMessage("PDF uploaded — click to open or copy link.");
+        setToastOpen(true);
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(data.url);
           }
-        } else {
-          throw new Error(data?.error || "Export returned no URL.");
+        } catch (err) {
+          // ignore clipboard errors
         }
       } else {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `ResumeLens-${pdfTemplate}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        throw new Error("Export returned no URL.");
       }
     } catch (e) {
       console.error(e);
@@ -255,20 +266,9 @@ export default function ResultsPanel({
   const handleSavePdf = () => {
     if (pdfTemplate === "results") {
       handlePrint();
-      return;
+    } else {
+      handlePrintTemplate();
     }
-
-    if (pdfTemplate === "classic") {
-      handlePrintClassic();
-      return;
-    }
-
-    if (pdfTemplate === "modern") {
-      handlePrintModern();
-      return;
-    }
-
-    void handleExportPdf();
   };
 
   return (
@@ -850,21 +850,8 @@ export default function ResultsPanel({
       </div>
 
       <div style={{ position: "absolute", left: -9999, top: 0, width: 900 }}>
-        <div ref={pdfClassicRef}>
-          <ClassicTemplate
-            resumeText={resumeText}
-            jobDescription={jobDescription}
-            targetRole={targetRole}
-            result={result}
-          />
-        </div>
-        <div ref={pdfModernRef}>
-          <ModernTemplate
-            resumeText={resumeText}
-            jobDescription={jobDescription}
-            targetRole={targetRole}
-            result={result}
-          />
+        <div ref={pdfPrintRef}>
+          {renderSelectedTemplate()}
         </div>
       </div>
       {showSaveModal && resumeText && (
