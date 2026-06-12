@@ -39,10 +39,28 @@ export type Database = {
           score: number;
           result_json: string;
           target_role: string | null;
+          resume_text: string | null;
+          job_description: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["analyses"]["Row"], "id" | "created_at">;
         Update: never;
+      };
+      resumes: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          target_role: string | null;
+          target_company: string | null;
+          resume_text: string;
+          job_description: string | null;
+          last_score: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["resumes"]["Row"], "id" | "created_at" | "updated_at">;
+        Update: Partial<Database["public"]["Tables"]["resumes"]["Insert"]>;
       };
     };
   };

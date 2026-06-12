@@ -10,10 +10,14 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
+  const errorParam = searchParams.get("error");
+
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
+    errorParam ? { type: "error", text: errorParam } : null
+  );
 
   const supabase = createBrowserClient();
 
@@ -41,43 +45,41 @@ function LoginForm() {
   }
 
   async function handleGoogleLogin() {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
-    });
+    setMessage(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
+      });
+      if (error) {
+        setMessage({ type: "error", text: error.message });
+      }
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Failed to start Google sign-in" });
+    }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 380 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <a href="/" style={{ fontFamily: "DM Serif Display, serif", fontSize: 26, textDecoration: "none", color: "var(--ink)" }}>
-            Resume<em style={{ color: "var(--accent)" }}>Lens</em>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6" style={{ background: "var(--paper)" }}>
+      {/* Background glow blobs */}
+      <div className="glow-blob top-[-50px] right-[-50px] w-[300px] h-[300px]" />
+      <div className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]" style={{ animationDelay: "-1.5s" }} />
+
+      <div className="relative z-10 w-full max-w-[400px] fade-up">
+        <div className="text-center mb-8">
+          <a href="/" className="font-display text-3xl font-bold tracking-tight no-underline text-ink inline-block">
+            Resume<span style={{ color: "var(--accent)" }}>Lens</span>
           </a>
-          <p style={{ color: "var(--ink-muted)", fontSize: 14, marginTop: 8 }}>
-            {mode === "login" ? "Welcome back" : "Create your account"}
+          <p className="text-ink-muted text-sm mt-2">
+            {mode === "login" ? "Welcome back to your dashboard" : "Create your account for unlimited reviews"}
           </p>
         </div>
 
-        <div style={{ background: "var(--paper-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 28 }}>
+        <div className="glass-card bg-paper-card border border-border p-8 rounded-2xl shadow-premium">
           {/* Google */}
           <button
             onClick={handleGoogleLogin}
-            style={{
-              width: "100%",
-              background: "white",
-              border: "1.5px solid var(--border-strong)",
-              borderRadius: 10,
-              padding: "11px 0",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              marginBottom: 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-            }}
+            className="w-full flex items-center justify-center gap-3 bg-paper hover:bg-paper-warm border border-border-strong rounded-xl py-3 px-4 text-sm font-medium text-ink cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
               <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.3-.2-2.7-.5-4z" fill="#FFC107"/>
@@ -88,43 +90,61 @@ function LoginForm() {
             Continue with Google
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-            <span style={{ fontSize: 12, color: "var(--ink-faint)", fontFamily: "DM Mono, monospace" }}>or email</span>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+            <span className="font-mono text-[10px] tracking-wider text-ink-faint uppercase">or email</span>
+            <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
           </div>
 
           {/* Email + password */}
-          <div style={{ display: "grid", gap: 12 }}>
-            <input
-              id="login-email"
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              id="login-password"
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              style={inputStyle}
-            />
+          <div className="flex flex-col gap-4">
+            <div>
+              <label htmlFor="login-email" className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase mb-1.5">
+                Email Address
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="premium-input"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label htmlFor="login-password" className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase">
+                  Password
+                </label>
+                {mode === "login" && (
+                  <a
+                    href="/forgot-password"
+                    className="text-xs text-accent hover:text-accent-hover font-semibold no-underline transition-colors duration-150"
+                  >
+                    Forgot?
+                  </a>
+                )}
+              </div>
+              <input
+                id="login-password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                className="premium-input"
+              />
+            </div>
           </div>
 
           {message && (
-            <div style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              borderRadius: 8,
-              fontSize: 13,
-              background: message.type === "error" ? "#fff5f5" : "#edf7f2",
-              color: message.type === "error" ? "#7a2020" : "#2d6a4f",
-              border: `1px solid ${message.type === "error" ? "rgba(200,86,42,0.2)" : "rgba(45,106,79,0.2)"}`,
-            }}>
+            <div className="mt-4 p-3.5 rounded-xl text-sm leading-relaxed border"
+              style={{
+                background: message.type === "error" ? "rgba(239, 68, 68, 0.08)" : "rgba(16, 185, 129, 0.08)",
+                color: message.type === "error" ? "#ef4444" : "#10b981",
+                borderColor: message.type === "error" ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
+              }}
+            >
               {message.text}
             </div>
           )}
@@ -133,28 +153,16 @@ function LoginForm() {
             id="login-submit"
             onClick={handleSubmit}
             disabled={loading}
-            style={{
-              width: "100%",
-              marginTop: 16,
-              background: "var(--accent)",
-              color: "white",
-              border: "none",
-              borderRadius: 10,
-              padding: "12px 0",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-            }}
+            className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold cursor-pointer mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "..." : mode === "login" ? "Sign in" : "Create account"}
+            {loading ? "Processing..." : mode === "login" ? "Sign In" : "Create Account"}
           </button>
 
-          <p style={{ textAlign: "center", fontSize: 13, color: "var(--ink-muted)", marginTop: 16 }}>
-            {mode === "login" ? "No account? " : "Already have one? "}
+          <p className="text-center text-xs text-ink-muted mt-6">
+            {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+              className="bg-transparent border-none text-accent hover:text-accent-hover font-bold cursor-pointer text-xs transition-colors duration-150"
             >
               {mode === "login" ? "Sign up free" : "Sign in"}
             </button>
@@ -165,17 +173,7 @@ function LoginForm() {
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1.5px solid var(--border)",
-  borderRadius: 10,
-  padding: "11px 14px",
-  fontSize: 14,
-  background: "var(--paper)",
-  color: "var(--ink)",
-  outline: "none",
-  fontFamily: "Instrument Sans, sans-serif",
-};
+const inputStyle: React.CSSProperties = {};
 
 // Page export wraps with Suspense (required by Next.js App Router for useSearchParams)
 export default function LoginPage() {

@@ -41,7 +41,15 @@ export async function incrementUsage(userId: string) {
 // Create profile row on first sign-up (called from webhook or sign-up handler)
 export async function createProfile(userId: string, email: string) {
   const admin = createAdminClient();
-  await admin.from("profiles").upsert({
+  const { data: existing } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (existing) return;
+
+  await admin.from("profiles").insert({
     id: userId,
     email,
     plan: "free",
