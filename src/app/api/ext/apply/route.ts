@@ -1,8 +1,8 @@
+import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
 
 export async function OPTIONS(req: NextRequest) {
@@ -12,12 +12,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      const errRes = NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-      return handleCors(req, errRes);
-    }
+    const user = await requireUser();
+    const session = { user };
 
     const body = await req.json();
     const {
@@ -36,10 +32,8 @@ export async function POST(req: NextRequest) {
       return handleCors(req, errRes);
     }
 
-    const admin = createAdminClient();
-
     // 1. Insert into job_matches
-    const { error: matchError } = await admin
+    const { error: matchError } = await supabase
       .from("job_matches")
       .insert({
         user_id: session.user.id,
@@ -58,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Insert into applications (saved status)
-    const { error: appError } = await admin
+    const { error: appError } = await supabase
       .from("applications")
       .insert({
         user_id: session.user.id,

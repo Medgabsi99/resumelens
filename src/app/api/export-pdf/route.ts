@@ -1,6 +1,6 @@
+import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "../../../lib/supabase";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
@@ -10,16 +10,8 @@ export const maxDuration = 15; // Lower duration limit since it's just a file up
 export async function POST(req: NextRequest) {
   // Auth check
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   try {
     const formData = await req.formData();
@@ -35,11 +27,10 @@ export async function POST(req: NextRequest) {
 
     const pdfBuffer = Buffer.from(await file.arrayBuffer());
 
-    const adminClient = createAdminClient();
     const bucket = process.env.SUPABASE_PDF_BUCKET || "pdfs";
     const fileName = `exports/${Date.now()}-${template}.pdf`;
 
-    const { error: uploadError } = await adminClient.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(fileName, pdfBuffer, { contentType: "application/pdf" });
 
@@ -48,7 +39,7 @@ export async function POST(req: NextRequest) {
       throw uploadError;
     }
 
-    const { data: urlData } = await adminClient.storage
+    const { data: urlData } = await supabase.storage
       .from(bucket)
       .getPublicUrl(fileName);
 
@@ -62,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Fallback: create a signed URL (valid for 24 hours) so private buckets still work.
     try {
       const expiresIn = 60 * 60 * 24; // 24 hours
-      const { data: signedData, error: signedErr } = await adminClient.storage
+      const { data: signedData, error: signedErr } = await supabase.storage
         .from(bucket)
         .createSignedUrl(fileName, expiresIn);
 

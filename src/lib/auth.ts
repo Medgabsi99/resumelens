@@ -13,6 +13,15 @@ export async function getServerSession() {
   return session;
 }
 
+// Authenticates user and returns the user object, or throws Error if not authenticated
+export async function requireUser() {
+  const session = await getServerSession();
+  if (!session || !session.user) {
+    throw new Error("Unauthorized");
+  }
+  return session.user;
+}
+
 interface CacheEntry {
   profile: UserProfile | null;
   expiresAt: number;
@@ -29,8 +38,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return cached.profile;
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  const supabase = createServerComponentClient({ cookies });
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)

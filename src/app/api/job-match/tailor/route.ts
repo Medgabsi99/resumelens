@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,16 +14,8 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
     const supabase = createRouteHandlerClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
-    }
+    const user = await requireUser();
+  const session = { user };
 
     // ── 2. Load user profile & check quota ───────────────────
     const profile = await getUserProfile(session.user.id);

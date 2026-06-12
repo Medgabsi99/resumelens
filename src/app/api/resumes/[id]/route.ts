@@ -1,7 +1,7 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 
 // DELETE /api/resumes/<id>
 export async function DELETE(
@@ -9,11 +9,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const supabase = createRouteHandlerClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+  const user = await requireUser();
+  const session = { user };
 
-  const admin = createAdminClient();
-  const { error } = await admin
+  const { error } = await supabase
     .from("resumes")
     .delete()
     .eq("id", params.id)
@@ -33,8 +32,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const supabase = createRouteHandlerClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+  const user = await requireUser();
+  const session = { user };
 
   const body = await req.json();
 
@@ -57,8 +56,7 @@ export async function PUT(
   if (body.jobDescription !== undefined) update.job_description = body.jobDescription ?? null;
   if (body.lastScore !== undefined) update.last_score = body.lastScore ?? null;
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  const { data, error } = await supabase
     .from("resumes")
     .update(update)
     .eq("id", params.id)

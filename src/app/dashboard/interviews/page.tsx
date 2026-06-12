@@ -141,7 +141,7 @@ export default function InterviewsPage() {
     }, 2000);
 
     try {
-      const res = await fetch("/api/interviews/generate", {
+      const res = await fetch("/api/interviews/questions/simulator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

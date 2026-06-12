@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
@@ -8,13 +9,8 @@ import { createAdminClient } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const user = await requireUser();
+  const session = { user };
 
   const { plan } = await req.json();
   if (!plan || !PRICES[plan as keyof typeof PRICES]) {

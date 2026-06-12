@@ -3,27 +3,19 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { generateStructuredQuestions } from "@/lib/ai";
-import { getUserProfile, canAnalyze } from "@/lib/auth";
+import { generateSimulatorQuestions } from "@/lib/ai";
+import { getUserProfile, canAnalyze, requireUser } from "@/lib/auth";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   try {
-    // ── 1. Auth check ────────────────────────────────────────
+    // 1. Auth check
     const supabase = createRouteHandlerClient({ cookies });
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const user = await requireUser();
+    const session = { user };
 
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
-    }
-
-    // ── 2. Load user profile & check quota ───────────────────
+    // 2. Load user profile & check quota
     const profile = await getUserProfile(session.user.id);
     if (!profile || !canAnalyze(profile)) {
       return NextResponse.json(
@@ -32,33 +24,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 3. Parse request ──────────────────────────────────────
+    // 3. Parse request
     const body = await req.json();
-    let { resumeText, jobDescription, targetRole } = body;
+    let { resumeText, targetRole, companyName, jobDescription, interviewType, difficulty } = body;
 
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      targetRole = validateAndSanitizeInput(targetRole, 200, "Target role", true);
+      companyName = validateAndSanitizeInput(companyName, 200, "Company name", true);
       if (jobDescription) {
         jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
       }
-      if (targetRole) {
-        targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+      if (interviewType) {
+        interviewType = validateAndSanitizeInput(interviewType, 100, "Interview type");
+      }
+      if (difficulty) {
+        difficulty = validateAndSanitizeInput(difficulty, 100, "Difficulty");
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
-    // ── 4. Generate questions array ──────────────────────────
-    const questions = await generateStructuredQuestions(
+    // 4. Generate custom simulator questions
+    const questions = await generateSimulatorQuestions(
       resumeText,
+      targetRole,
+      companyName,
       jobDescription || undefined,
-      targetRole || undefined
+      interviewType || "behavioral",
+      difficulty || "mid"
     );
 
     return NextResponse.json({ success: true, questions });
   } catch (error: unknown) {
-    logger.error("Structured mock questions API error:", error);
+    logger.error("Mock simulator questions generate route error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate mock interview questions";
     return NextResponse.json(

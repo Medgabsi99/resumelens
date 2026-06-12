@@ -25,7 +25,7 @@ export function useInterviewPrep(
     setInterviewQuestions("");
 
     try {
-      const res = await fetch("/api/interview-questions", {
+      const res = await fetch("/api/interviews/questions/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText, jobDescription, targetRole }),
@@ -75,7 +75,7 @@ export function useInterviewPrep(
     setIqError(null);
 
     try {
-      const res = await fetch("/api/interview/questions", {
+      const res = await fetch("/api/interviews/questions/structured", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText, jobDescription, targetRole }),

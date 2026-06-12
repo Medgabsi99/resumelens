@@ -1,26 +1,17 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const user = await requireUser();
+  const session = { user };
 
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
-
-  const admin = createAdminClient();
-  const { data: analysis, error } = await admin
+  const { data: analysis, error } = await supabase
     .from("analyses")
     .select("id, resume_text, job_description, target_role, score")
     .eq("id", params.id)
@@ -50,19 +41,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const user = await requireUser();
+  const session = { user };
 
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
-
-  const admin = createAdminClient();
-  const { error } = await admin
+  const { error } = await supabase
     .from("analyses")
     .delete()
     .eq("id", params.id)

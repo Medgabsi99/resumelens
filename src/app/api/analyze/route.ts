@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { analyzeResume, extractTextFromBuffer } from "@/lib/ai";
-import { getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase";
+import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
 import { AnalyzeResponse } from "@/types";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -12,16 +11,8 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeResponse>> {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   const userId = session.user.id;
 
@@ -88,9 +79,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
     }
   } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
-    }
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
+  }
 
   if (resumeText.trim().length < 100) {
     return NextResponse.json(
@@ -124,9 +115,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   }
 
   // ── 6. Persist analysis + increment usage ─────────────────
-  const admin = createAdminClient();
   await Promise.all([
-    admin.from("analyses").insert({
+    supabase.from("analyses").insert({
       user_id: userId,
       score: result.score,
       result_json: JSON.stringify(result),

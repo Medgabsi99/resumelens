@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
@@ -27,16 +28,8 @@ export async function PUT(
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   const applicationId = params.id;
   if (!applicationId) {
@@ -114,16 +107,8 @@ export async function DELETE(
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   const applicationId = params.id;
   if (!applicationId) {

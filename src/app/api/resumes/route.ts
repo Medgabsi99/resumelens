@@ -1,17 +1,16 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 import { SavedResume } from "@/types";
 
 // GET /api/resumes — list all saved resumes
 export async function GET() {
   const supabase = createRouteHandlerClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+  const user = await requireUser();
+  const session = { user };
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  const { data, error } = await supabase
     .from("resumes")
     .select("*")
     .eq("user_id", session.user.id)
@@ -29,8 +28,8 @@ export async function GET() {
 // POST /api/resumes — save a new resume
 export async function POST(req: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+  const user = await requireUser();
+  const session = { user };
 
   const body = await req.json();
   const { name, resumeText, targetRole, targetCompany, jobDescription, lastScore } = body;
@@ -39,8 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Name and resume text are required" }, { status: 400 });
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  const { data, error } = await supabase
     .from("resumes")
     .insert({
       user_id: session.user.id,

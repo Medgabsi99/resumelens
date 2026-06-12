@@ -1,9 +1,9 @@
+import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 import { generateOutreachMessage } from "@/lib/ai";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
 
@@ -14,12 +14,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      const errRes = NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-      return handleCors(req, errRes);
-    }
+    const user = await requireUser();
+    const session = { user };
 
     const body = await req.json();
     let {
@@ -51,10 +47,8 @@ export async function POST(req: NextRequest) {
       return handleCors(req, errRes);
     }
 
-    const admin = createAdminClient();
-    
     // Fetch the target resume text
-    const { data: resume, error: resumeError } = await admin
+    const { data: resume, error: resumeError } = await supabase
       .from("resumes")
       .select("resume_text")
       .eq("id", resumeId)

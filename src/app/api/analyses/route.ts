@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
@@ -5,16 +6,8 @@ import { cookies } from "next/headers";
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   // ── 2. Fetch analyses summary ────────────────────────────
   // Exclude result_json and resume_text to keep payload lightweight and fast

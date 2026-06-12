@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
@@ -5,10 +6,8 @@ import { cookies } from "next/headers";
 export async function GET(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
+    const user = await requireUser();
+  const session = { user };
 
     const analysisId = req.nextUrl.searchParams.get("analysisId");
     if (!analysisId) {
@@ -37,10 +36,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
+    const user = await requireUser();
+  const session = { user };
 
     const body = await req.json();
     const { analysisId, theme, content } = body;

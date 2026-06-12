@@ -1,7 +1,7 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
 
 export async function OPTIONS(req: NextRequest) {
@@ -11,15 +11,10 @@ export async function OPTIONS(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      const errRes = NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-      return handleCors(req, errRes);
-    }
+    const user = await requireUser();
+    const session = { user };
 
-    const admin = createAdminClient();
-    const { data, error } = await admin
+    const { data, error } = await supabase
       .from("resumes")
       .select("*")
       .eq("user_id", session.user.id)

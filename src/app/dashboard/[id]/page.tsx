@@ -1,7 +1,6 @@
 import { createServerComponentClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase";
 import ResultsPanel from "@/components/ResultsPanel";
 import { AnalysisResult } from "@/types";
 
@@ -17,10 +16,8 @@ export default async function PastAnalysisPage({
 
   if (!session) redirect("/login?next=/dashboard/" + params.id);
 
-  const admin = createAdminClient();
-
   // Fetch the analysis
-  const { data: analysis, error } = await admin
+  const { data: analysis, error } = await supabase
     .from("analyses")
     .select("*")
     .eq("id", params.id)

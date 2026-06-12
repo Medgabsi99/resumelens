@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
@@ -24,16 +25,8 @@ const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   // ── 2. Fetch applications ────────────────────────────────
   const { data, error } = await supabase
@@ -53,16 +46,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
   const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.json(
-      { success: false, error: "Not authenticated" },
-      { status: 401 }
-    );
-  }
+  const user = await requireUser();
+  const session = { user };
 
   // ── 2. Parse and validate request ────────────────────────
   const body = (await req.json()) as CreateApplicationRequest;

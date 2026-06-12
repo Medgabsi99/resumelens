@@ -1,7 +1,7 @@
+import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { createAdminClient } from "@/lib/supabase";
 
 // GET /api/analyses/[id]/versions — list all versions for this analysis
 export async function GET(
@@ -10,11 +10,10 @@ export async function GET(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    const user = await requireUser();
+    const session = { user };
 
-    const admin = createAdminClient();
-    const { data, error } = await admin
+    const { data, error } = await supabase
       .from("resume_versions")
       .select("*")
       .eq("analysis_id", params.id)
@@ -23,7 +22,7 @@ export async function GET(
 
     if (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
@@ -40,8 +39,8 @@ export async function POST(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    const user = await requireUser();
+    const session = { user };
 
     const body = await req.json();
     const { versionName, resumeText, score } = body;
@@ -50,8 +49,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Version name and resume text are required" }, { status: 400 });
     }
 
-    const admin = createAdminClient();
-    const { data, error } = await admin
+    const { data, error } = await supabase
       .from("resume_versions")
       .insert({
         user_id: session.user.id,
@@ -65,7 +63,7 @@ export async function POST(
 
     if (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
@@ -82,16 +80,15 @@ export async function DELETE(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    const user = await requireUser();
+    const session = { user };
 
     const versionId = req.nextUrl.searchParams.get("versionId");
     if (!versionId) {
       return NextResponse.json({ success: false, error: "versionId is required" }, { status: 400 });
     }
 
-    const admin = createAdminClient();
-    const { error } = await admin
+    const { error } = await supabase
       .from("resume_versions")
       .delete()
       .eq("id", versionId)
@@ -100,7 +97,7 @@ export async function DELETE(
 
     if (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
