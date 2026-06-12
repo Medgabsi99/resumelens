@@ -38,27 +38,49 @@ export default async function PastAnalysisPage({
     );
   }
 
-  const resultData = JSON.parse(analysis.result_json) as AnalysisResult;
+  // result_json might be a string or already parsed depending on DB driver
+  const resultData: AnalysisResult =
+    typeof analysis.result_json === "string"
+      ? JSON.parse(analysis.result_json)
+      : analysis.result_json;
+
+  // Handle null safety for older analyses without resume_text/job_description
   const hasJD = !!analysis.job_description;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
+      {/* Background glow blobs */}
+      <div className="glow-blob animate-blob-1 top-[-100px] right-[-50px] md:w-[500px] md:h-[500px]" />
+      <div className="glow-blob animate-blob-2 bottom-[-100px] left-[-50px] md:w-[400px] md:h-[400px]" style={{ animationDelay: "-2s" }} />
+
       {/* Nav */}
-      <nav style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--paper-card)" }}>
-        <a href="/" style={{ fontFamily: "DM Serif Display, serif", fontSize: 22, textDecoration: "none", color: "var(--ink)" }}>
-          Resume<em style={{ color: "var(--accent)" }}>Lens</em>
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
+        style={{
+          background: "var(--nav-bg)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <a href="/" className="font-display text-2xl font-bold tracking-tight no-underline text-ink">
+          Resume<span className="text-accent">Lens</span>
         </a>
-        <div style={{ display: "flex", gap: 16 }}>
-          <a href="/dashboard" style={{ fontSize: 13, color: "var(--ink-muted)", textDecoration: "none" }}>← Dashboard</a>
+        <div className="flex items-center gap-6">
+          <a
+            href="/dashboard"
+            className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200"
+            style={{ background: "var(--paper-card)" }}
+          >
+            ← Dashboard
+          </a>
         </div>
       </nav>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "2.5rem 1.5rem 5rem" }}>
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 12, fontFamily: "DM Mono", color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+      <div className="relative z-10 max-w-4xl mx-auto px-6 py-12 md:py-16">
+        <div className="mb-8">
+          <div className="font-mono text-xs text-ink-faint uppercase tracking-wider mb-2">
             {new Date(analysis.created_at).toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </div>
-          <h1 style={{ fontFamily: "DM Serif Display, serif", fontSize: 32 }}>
+          <h1 className="font-display text-4xl font-bold tracking-tight">
             {analysis.target_role ? `Target Role: ${analysis.target_role}` : "General Resume Review"}
           </h1>
         </div>
@@ -66,9 +88,10 @@ export default async function PastAnalysisPage({
         <ResultsPanel
           result={resultData}
           hasJD={hasJD}
-          resumeText={analysis.resume_text}
-          jobDescription={analysis.job_description}
-          targetRole={analysis.target_role}
+          resumeText={analysis.resume_text || ""}
+          jobDescription={analysis.job_description || undefined}
+          targetRole={analysis.target_role || undefined}
+          analysisId={analysis.id}
         />
       </div>
     </div>

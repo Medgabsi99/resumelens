@@ -55,8 +55,6 @@ export async function POST(req: NextRequest) {
       supabase_user_id: session.user.id,
       plan,
     },
-    // Pre-fill email
-    customer_email: !customerId ? session.user.email : undefined,
   });
 
   return NextResponse.json({ url: checkoutSession.url });

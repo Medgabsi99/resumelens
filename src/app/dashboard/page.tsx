@@ -1,147 +1,840 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { getUserProfile } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase";
-import { PLAN_LIMITS } from "@/lib/stripe";
+"use client";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { upgraded?: string };
-}) {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import DashboardLayout from "@/components/DashboardLayout";
+import { JobApplication, APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from "@/types";
 
-  if (!session) redirect("/login?next=/dashboard");
+interface AnalysisItem {
+  id: string;
+  score: number;
+  target_role: string | null;
+  created_at: string;
+}
 
-  const profile = await getUserProfile(session.user.id);
-  const admin = createAdminClient();
+export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
+  const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: analyses } = await admin
-    .from("analyses")
-    .select("id, score, target_role, created_at")
-    .eq("user_id", session.user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  // Tabs: 'reviews' | 'applications'
+  const [activeTab, setActiveTab] = useState<"reviews" | "applications">("reviews");
+  
+  // Search filters
+  const [reviewsSearch, setReviewsSearch] = useState("");
+  const [appsSearch, setAppsSearch] = useState("");
 
-  const limit = PLAN_LIMITS[profile?.plan || "free"];
-  const used = profile?.analyses_used || 0;
-  const remaining = Math.max(0, limit - used);
+  // Interactive Chart States
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+
+  // Deletion Modal States
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    async function loadData() {
+      try {
+        const [analysesRes, appsRes] = await Promise.all([
+          fetch("/api/analyses"),
+          fetch("/api/applications"),
+        ]);
+
+        const analysesData = await analysesRes.json();
+        const appsData = await appsRes.json();
+
+        if (!analysesRes.ok || !analysesData.success) {
+          throw new Error(analysesData.error || "Failed to load analyses");
+        }
+        if (!appsRes.ok || !appsData.success) {
+          throw new Error(appsData.error || "Failed to load applications");
+        }
+
+        setAnalyses(analysesData.data || []);
+        setApplications(appsData.data || []);
+      } catch (e: any) {
+        console.error(e);
+        setError(e.message || "Failed to fetch dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Format Date helper
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Delete Analysis helper
+  const handleDeleteAnalysis = async (id: string) => {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDeleteAnalysis = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/analyses/${deleteTargetId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(data.error || "Failed to delete analysis");
+        return;
+      }
+      setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
+    } catch (e) {
+      console.error(e);
+      alert("Network error: Failed to delete analysis");
+    } finally {
+      setIsDeleting(false);
+      setDeleteTargetId(null);
+    }
+  };
+
+  // ─── Stat Calculations ─────────────────────────────────
+  const stats = useMemo(() => {
+    const totalReviews = analyses.length;
+    
+    // Average ATS score
+    const avgScore = totalReviews > 0 
+      ? Math.round(analyses.reduce((acc, a) => acc + a.score, 0) / totalReviews)
+      : 0;
+
+    const totalApps = applications.length;
+
+    // Success Rate (Percentage of apps in Screening, Interviewing, Offer, or Accepted stages)
+    const activePipelineCount = applications.filter((a) => 
+      ["screening", "interviewing", "offer", "accepted"].includes(a.status)
+    ).length;
+    const successRate = totalApps > 0 
+      ? Math.round((activePipelineCount / totalApps) * 100)
+      : 0;
+
+    return {
+      avgScore,
+      totalReviews,
+      totalApps,
+      successRate,
+    };
+  }, [analyses, applications]);
+
+  // ─── Filtered Data ─────────────────────────────────────
+  const filteredAnalyses = useMemo(() => {
+    return analyses.filter((a) => {
+      const role = a.target_role?.toLowerCase() || "general resume review";
+      return role.includes(reviewsSearch.toLowerCase());
+    });
+  }, [analyses, reviewsSearch]);
+
+  const filteredApplications = useMemo(() => {
+    return applications.filter((a) => {
+      const company = a.company_name.toLowerCase();
+      const title = a.job_title.toLowerCase();
+      const query = appsSearch.toLowerCase();
+      return company.includes(query) || title.includes(query);
+    });
+  }, [applications, appsSearch]);
+
+  // ─── SVG Score Progression Chart Data ───────────────────
+  const scoreChartData = useMemo(() => {
+    // Chronological order (oldest first)
+    const sorted = [...analyses]
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .slice(-8); // Show last 8 reviews
+
+    if (sorted.length === 0) return null;
+
+    const scores = sorted.map((d) => d.score);
+    const minScore = Math.max(0, Math.min(...scores) - 10);
+    const maxScore = Math.min(100, Math.max(...scores) + 10);
+    const scoreRange = maxScore - minScore || 20;
+
+    const svgW = 550;
+    const svgH = 200;
+    const padding = { top: 20, right: 25, bottom: 35, left: 35 };
+    const plotW = svgW - padding.left - padding.right;
+    const plotH = svgH - padding.top - padding.bottom;
+
+    const points = sorted.map((item, i) => {
+      const x = padding.left + (i / Math.max(sorted.length - 1, 1)) * plotW;
+      const y = padding.top + plotH - ((item.score - minScore) / scoreRange) * plotH;
+      return { x, y, score: item.score, role: item.target_role || "General Review", date: formatDate(item.created_at) };
+    });
+
+    const linePath = points
+      .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+      .join(" ");
+
+    const areaPath = points.length > 0
+      ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
+      : "";
+
+    // Grid lines count
+    const yGridValues = [20, 40, 60, 80, 100].filter((v) => v >= minScore && v <= maxScore);
+
+    return {
+      points,
+      linePath,
+      areaPath,
+      minScore,
+      maxScore,
+      yGridValues,
+      svgW,
+      svgH,
+      padding,
+      plotW,
+      plotH,
+      sorted,
+    };
+  }, [analyses]);
+
+  // ─── Funnel/Pipeline Chart Data ────────────────────────
+  const funnelData = useMemo(() => {
+    const groups = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offer: 0,
+      accepted: 0,
+    };
+
+    applications.forEach((app) => {
+      const status = app.status as keyof typeof groups;
+      if (status in groups) {
+        groups[status]++;
+      }
+    });
+
+    // Merge offer + accepted
+    const offerAcceptedCount = groups.offer + groups.accepted;
+
+    const data = [
+      { label: "Saved Jobs", count: groups.saved, color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)" },
+      { label: "Applied", count: groups.applied, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)" },
+      { label: "Screening", count: groups.screening, color: "#6366f1", bg: "rgba(99, 102, 241, 0.1)" },
+      { label: "Interviewing", count: groups.interviewing, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+      { label: "Offers / Hired", count: offerAcceptedCount, color: "#10b981", bg: "rgba(16, 185, 129, 0.1)" },
+    ];
+
+    const maxCount = Math.max(...data.map((d) => d.count), 1);
+
+    return {
+      stages: data,
+      maxCount,
+    };
+  }, [applications]);
+
+  // Helper score badges
+  const getScoreBadgeStyles = (score: number) => {
+    if (score >= 80) return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20";
+    if (score >= 60) return "text-amber-500 bg-amber-500/10 border-amber-500/20";
+    return "text-rose-500 bg-rose-500/10 border-rose-500/20";
+  };
+
+  const getPriorityBadgeStyles = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "text-rose-500 bg-rose-500/10 border-rose-500/20";
+      case "medium":
+        return "text-amber-500 bg-amber-500/10 border-amber-500/20";
+      default:
+        return "text-slate-500 bg-slate-500/10 border-slate-500/20";
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <nav style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--paper-card)" }}>
-        <a href="/" style={{ fontFamily: "DM Serif Display, serif", fontSize: 22, textDecoration: "none", color: "var(--ink)" }}>
-          Resume<em style={{ color: "var(--accent)" }}>Lens</em>
-        </a>
-        <a href="/api/auth/signout" style={{ fontSize: 13, color: "var(--ink-muted)", textDecoration: "none" }}>Sign out</a>
-      </nav>
+    <DashboardLayout>
+      <div className="fade-up">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5">
+              Dashboard Overview
+            </h1>
+            <p className="text-ink-muted text-sm">
+              Track resume improvements, analyze ATS performance, and review your job search pipeline.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="btn-gradient px-4 py-2.5 rounded-xl text-sm font-semibold no-underline text-center shadow-lg hover:scale-[1.02] active:scale-[1] transition-all duration-200"
+            >
+              📄 New Analysis
+            </Link>
+            <Link
+              href="/dashboard/applications"
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-border bg-paper-card text-ink text-center hover:bg-paper-warm hover:border-accent-border transition-all duration-200"
+            >
+              📋 Track Application
+            </Link>
+          </div>
+        </div>
 
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "2.5rem 1.5rem" }}>
-        {searchParams.upgraded && (
-          <div style={{ background: "#edf7f2", border: "1px solid rgba(45,106,79,0.25)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, color: "#2d6a4f", fontSize: 14, fontWeight: 500 }}>
-            🎉 You're now on the {profile?.plan === "monthly" ? "Pro Monthly" : "Lifetime"} plan. Unlimited analyses unlocked!
+        {error && (
+          <div className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Stats row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 28 }}>
-          <StatCard label="Plan" value={profile?.plan === "free" ? "Free" : profile?.plan === "monthly" ? "Pro Monthly" : "Lifetime"} />
-          <StatCard label="Analyses run" value={String(used)} />
-          <StatCard
-            label="Remaining"
-            value={remaining >= 999 ? "∞" : String(remaining)}
-            sub={profile?.plan === "free" ? <a href="/pricing" style={{ fontSize: 11, color: "var(--accent)", textDecoration: "none" }}>Upgrade →</a> : undefined}
-          />
-        </div>
-
-        {/* CTA */}
-        <div style={{ marginBottom: 28 }}>
-          <a
-            href="/"
-            style={{
-              display: "inline-block",
-              background: "var(--accent)",
-              color: "white",
-              textDecoration: "none",
-              borderRadius: 10,
-              padding: "11px 22px",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            + Analyze a new resume
-          </a>
-        </div>
-
-        {/* History */}
-        <div>
-          <div style={{ fontSize: 11, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-faint)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-            Past Analyses
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          {/* Average ATS Score */}
+          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+            <div className="flex items-center justify-between text-ink-muted mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider font-mono">Avg Score</span>
+              <span className="text-lg">🎯</span>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
+                {loading ? "..." : stats.avgScore || "N/A"}
+              </div>
+              <div className="text-xs text-ink-muted flex items-center gap-1.5">
+                {stats.avgScore > 0 ? (
+                  <>
+                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${stats.avgScore >= 80 ? "bg-emerald-500" : stats.avgScore >= 60 ? "bg-amber-500" : "bg-rose-500"}`} />
+                    <span>Rating: {stats.avgScore >= 80 ? "Excellent" : stats.avgScore >= 60 ? "Good" : "Needs Review"}</span>
+                  </>
+                ) : (
+                  <span>No analyses run</span>
+                )}
+              </div>
+            </div>
           </div>
 
-          {(!analyses || analyses.length === 0) ? (
-            <div style={{ background: "var(--paper-card)", border: "1px solid var(--border)", borderRadius: 12, padding: "28px 20px", textAlign: "center", color: "var(--ink-muted)", fontSize: 14 }}>
-              No analyses yet. <a href="/" style={{ color: "var(--accent)" }}>Run your first one →</a>
+          {/* Total Analyses */}
+          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+            <div className="flex items-center justify-between text-ink-muted mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total Reviews</span>
+              <span className="text-lg">📄</span>
             </div>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {analyses.map((a) => (
-                <a
-                  key={a.id}
-                  href={`/dashboard/${a.id}`}
-                  style={{
-                    background: "var(--paper-card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    padding: "14px 18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    textDecoration: "none",
-                    color: "inherit",
-                    transition: "all 0.15s",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 4, color: "var(--ink)" }}>
-                      {a.target_role || "General Resume Review"}
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--ink-faint)", fontFamily: "DM Mono, monospace" }}>
-                      {new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <div style={{
-                      fontFamily: "DM Serif Display, serif",
-                      fontSize: 28,
-                      color: a.score >= 75 ? "#2d6a4f" : a.score >= 55 ? "#92400e" : "#7a2020",
-                    }}>
-                      {a.score}
-                    </div>
-                    <div style={{ color: "var(--border-strong)" }}>→</div>
-                  </div>
-                </a>
-              ))}
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
+                {loading ? "..." : stats.totalReviews}
+              </div>
+              <div className="text-xs text-ink-muted">
+                Resumes reviewed over time
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Tracked Applications */}
+          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+            <div className="flex items-center justify-between text-ink-muted mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider font-mono">Tracked Jobs</span>
+              <span className="text-lg">📋</span>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
+                {loading ? "..." : stats.totalApps}
+              </div>
+              <div className="text-xs text-ink-muted">
+                Applications in search tracker
+              </div>
+            </div>
+          </div>
+
+          {/* Success Rate */}
+          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+            <div className="flex items-center justify-between text-ink-muted mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider font-mono">Interview Success</span>
+              <span className="text-lg">🚀</span>
+            </div>
+            <div>
+              <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
+                {loading ? "..." : `${stats.successRate}%`}
+              </div>
+              <div className="text-xs text-ink-muted">
+                Active funnel conversion
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
+          {/* Chart 1: Score Progression */}
+          <div className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px] relative overflow-hidden">
+            <div>
+              <h3 className="text-lg font-bold text-ink mb-1 font-display">Score Progression</h3>
+              <p className="text-xs text-ink-muted mb-4">ATS score improvement over your recent resume revisions</p>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center relative">
+              {loading ? (
+                <div className="text-ink-muted text-sm font-mono flex items-center gap-2">
+                  <span className="animate-spin">🔄</span> Loading chart...
+                </div>
+              ) : scoreChartData ? (
+                <div className="w-full relative">
+                  {/* SVG Chart */}
+                  <svg
+                    viewBox={`0 0 ${scoreChartData.svgW} ${scoreChartData.svgH}`}
+                    className="w-full h-auto"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <defs>
+                      <linearGradient id="scoreAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.00" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Y-axis grid lines */}
+                    {scoreChartData.yGridValues.map((val) => {
+                      const yVal = scoreChartData.svgH - scoreChartData.padding.bottom - ((val - scoreChartData.minScore) / (scoreChartData.maxScore - scoreChartData.minScore || 1)) * scoreChartData.plotH;
+                      return (
+                        <g key={val}>
+                          <line
+                            x1={scoreChartData.padding.left}
+                            y1={yVal}
+                            x2={scoreChartData.svgW - scoreChartData.padding.right}
+                            y2={yVal}
+                            stroke="var(--border)"
+                            strokeWidth={1}
+                            strokeDasharray="4,4"
+                          />
+                          <text
+                            x={scoreChartData.padding.left - 8}
+                            y={yVal + 3}
+                            textAnchor="end"
+                            fill="var(--ink-faint)"
+                            className="text-[10px] font-mono"
+                          >
+                            {val}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Area fill */}
+                    {scoreChartData.areaPath && (
+                      <path d={scoreChartData.areaPath} fill="url(#scoreAreaGradient)" />
+                    )}
+
+                    {/* Line path */}
+                    {scoreChartData.linePath && (
+                      <path
+                        d={scoreChartData.linePath}
+                        fill="none"
+                        stroke="var(--accent)"
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+
+                    {/* Hover column line indicator */}
+                    {hoveredPoint !== null && scoreChartData.points[hoveredPoint] && (
+                      <line
+                        x1={scoreChartData.points[hoveredPoint].x}
+                        y1={scoreChartData.padding.top}
+                        x2={scoreChartData.points[hoveredPoint].x}
+                        y2={scoreChartData.svgH - scoreChartData.padding.bottom}
+                        stroke="var(--accent)"
+                        strokeOpacity={0.3}
+                        strokeWidth={1.5}
+                        strokeDasharray="2,2"
+                      />
+                    )}
+
+                    {/* Points */}
+                    {scoreChartData.points.map((pt, idx) => (
+                      <g key={idx}>
+                        <circle
+                          cx={pt.x}
+                          cy={pt.y}
+                          r={hoveredPoint === idx ? 6 : 4}
+                          fill={hoveredPoint === idx ? "var(--accent)" : "var(--paper-card)"}
+                          stroke="var(--accent)"
+                          strokeWidth={2}
+                          className="cursor-pointer transition-all duration-200"
+                          onMouseEnter={() => setHoveredPoint(idx)}
+                          onMouseLeave={() => setHoveredPoint(null)}
+                        />
+                        {hoveredPoint === idx && (
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={10}
+                            fill="var(--accent)"
+                            fillOpacity={0.15}
+                            pointerEvents="none"
+                          />
+                        )}
+                      </g>
+                    ))}
+
+                    {/* X-axis labels (Start, End, Middle) */}
+                    {[0, Math.floor(scoreChartData.points.length / 2), scoreChartData.points.length - 1]
+                      .filter((val, i, self) => self.indexOf(val) === i && scoreChartData.points[val])
+                      .map((val) => {
+                        const pt = scoreChartData.points[val];
+                        return (
+                          <text
+                            key={val}
+                            x={pt.x}
+                            y={scoreChartData.svgH - 12}
+                            textAnchor="middle"
+                            fill="var(--ink-faint)"
+                            className="text-[10px] font-mono"
+                          >
+                            {pt.date}
+                          </text>
+                        );
+                      })}
+                  </svg>
+
+                  {/* Active Tooltip overlay */}
+                  {hoveredPoint !== null && scoreChartData.points[hoveredPoint] && (
+                    <div className="absolute top-2 right-2 glass-card bg-paper-card border border-accent-border px-3 py-2 rounded-xl text-left pointer-events-none shadow-md z-20 transition-all duration-200">
+                      <div className="text-[10px] font-mono text-accent uppercase tracking-wider font-semibold">
+                        {scoreChartData.points[hoveredPoint].date}
+                      </div>
+                      <div className="text-sm font-bold text-ink truncate max-w-[150px]">
+                        {scoreChartData.points[hoveredPoint].role}
+                      </div>
+                      <div className="text-xl font-bold text-ink mt-0.5">
+                        Score: <span className="text-accent">{scoreChartData.points[hoveredPoint].score}</span>/100
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center p-6 border border-dashed border-border rounded-xl w-full flex flex-col items-center justify-center bg-paper-warm/20">
+                  <div className="text-3xl mb-2">📈</div>
+                  <div className="text-sm font-bold text-ink mb-1">Unlock progression chart</div>
+                  <p className="text-xs text-ink-muted max-w-[250px] mb-4">
+                    Upload and analyze multiple versions of your resume to see your scores track over time.
+                  </p>
+                  <Link
+                    href="/"
+                    className="text-xs font-semibold text-accent border border-accent-border hover:bg-accent-bg px-3 py-1.5 rounded-lg no-underline transition-all"
+                  >
+                    Analyze Now
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Chart 2: Pipeline Funnel */}
+          <div className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px]">
+            <div>
+              <h3 className="text-lg font-bold text-ink mb-1 font-display">Application Pipeline</h3>
+              <p className="text-xs text-ink-muted mb-4">Status of active job search tracker opportunities</p>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center gap-3">
+              {loading ? (
+                <div className="text-ink-muted text-sm font-mono flex items-center justify-center gap-2">
+                  <span className="animate-spin">🔄</span> Loading pipeline...
+                </div>
+              ) : applications.length > 0 ? (
+                funnelData.stages.map((stage, idx) => {
+                  const percent = Math.round((stage.count / funnelData.maxCount) * 100);
+                  return (
+                    <div key={idx} className="group">
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="font-semibold text-ink flex items-center gap-1.5">
+                          <span
+                            className="inline-block w-2 h-2 rounded-full"
+                            style={{ backgroundColor: stage.color }}
+                          />
+                          {stage.label}
+                        </span>
+                        <span className="text-ink-muted font-mono">{stage.count} active</span>
+                      </div>
+                      <div className="h-2.5 w-full bg-paper-warm rounded-full overflow-hidden border border-border relative">
+                        <div
+                          className="h-full rounded-full transition-all duration-500 ease-out group-hover:brightness-105"
+                          style={{
+                            width: `${percent}%`,
+                            backgroundColor: stage.color,
+                            boxShadow: `0 0 10px ${stage.color}22`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center p-6 border border-dashed border-border rounded-xl w-full flex flex-col items-center justify-center bg-paper-warm/20">
+                  <div className="text-3xl mb-2">📋</div>
+                  <div className="text-sm font-bold text-ink mb-1">No tracked applications</div>
+                  <p className="text-xs text-ink-muted max-w-[250px] mb-4">
+                    Use our job tracker to manage your applications, screening schedules, and interview progress.
+                  </p>
+                  <Link
+                    href="/dashboard/applications"
+                    className="text-xs font-semibold text-accent border border-accent-border hover:bg-accent-bg px-3 py-1.5 rounded-lg no-underline transition-all"
+                  >
+                    Go to Job Tracker
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabbed Activity History */}
+        <div className="glass-card bg-paper-card rounded-2xl border border-border overflow-hidden">
+          {/* Tabs Navigation */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border p-4 gap-4 bg-paper-warm/20">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTab("reviews")}
+                className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                style={{
+                  color: activeTab === "reviews" ? "var(--accent)" : "var(--ink-muted)",
+                  background: activeTab === "reviews" ? "var(--accent-bg)" : "transparent",
+                  border: `1px solid ${activeTab === "reviews" ? "var(--accent-border)" : "transparent"}`,
+                }}
+              >
+                📄 Resume Reviews ({analyses.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("applications")}
+                className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                style={{
+                  color: activeTab === "applications" ? "var(--accent)" : "var(--ink-muted)",
+                  background: activeTab === "applications" ? "var(--accent-bg)" : "transparent",
+                  border: `1px solid ${activeTab === "applications" ? "var(--accent-border)" : "transparent"}`,
+                }}
+              >
+                📋 Tracked Jobs ({applications.length})
+              </button>
+            </div>
+
+            {/* Tab Search Filter */}
+            <div className="w-full sm:w-64 relative">
+              {activeTab === "reviews" ? (
+                <input
+                  type="text"
+                  placeholder="Filter by target role..."
+                  value={reviewsSearch}
+                  onChange={(e) => setReviewsSearch(e.target.value)}
+                  className="premium-input py-1.5 text-xs rounded-xl"
+                />
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Filter by title or company..."
+                  value={appsSearch}
+                  onChange={(e) => setAppsSearch(e.target.value)}
+                  className="premium-input py-1.5 text-xs rounded-xl"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Table Contents */}
+          <div className="p-4 overflow-x-auto">
+            {loading ? (
+              <div className="text-center py-12 text-ink-muted text-sm font-mono flex items-center justify-center gap-2">
+                <span className="animate-spin">🔄</span> Loading history...
+              </div>
+            ) : activeTab === "reviews" ? (
+              filteredAnalyses.length > 0 ? (
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
+                      <th className="pb-3 font-semibold">Target Role</th>
+                      <th className="pb-3 font-semibold text-center">Score</th>
+                      <th className="pb-3 font-semibold">Date Reviewed</th>
+                      <th className="pb-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAnalyses.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                      >
+                        <td className="py-4 font-bold text-ink">
+                          {item.target_role || "General Resume Assessment"}
+                        </td>
+                        <td className="py-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border ${getScoreBadgeStyles(
+                              item.score
+                            )}`}
+                          >
+                            {item.score} / 100
+                          </span>
+                        </td>
+                        <td className="py-4 text-ink-muted">{formatDate(item.created_at)}</td>
+                        <td className="py-4 text-right flex items-center justify-end gap-2">
+                          <Link
+                            href={`/dashboard/${item.id}`}
+                            className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
+                          >
+                            View Report →
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteAnalysis(item.id)}
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-transparent text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all cursor-pointer"
+                            title="Delete Review"
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-center py-12 text-ink-muted text-sm">
+                  {reviewsSearch ? "No reviews match your filter" : "No resume reviews found"}
+                </div>
+              )
+            ) : filteredApplications.length > 0 ? (
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
+                    <th className="pb-3 font-semibold">Company & Role</th>
+                    <th className="pb-3 font-semibold">Match Score</th>
+                    <th className="pb-3 font-semibold">Priority</th>
+                    <th className="pb-3 font-semibold">Applied Date</th>
+                    <th className="pb-3 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map((app) => {
+                    const statusColor = APPLICATION_STATUS_COLORS[app.status] || { bg: "#f1f5f9", text: "#475569" };
+                    return (
+                      <tr
+                        key={app.id}
+                        className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                      >
+                        <td className="py-4">
+                          <div className="font-bold text-ink leading-tight">{app.job_title}</div>
+                          <div className="text-xs text-ink-muted mt-0.5">{app.company_name}</div>
+                        </td>
+                        <td className="py-4">
+                          {app.match_score !== null && app.match_score !== undefined ? (
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-md text-xs font-bold border ${getScoreBadgeStyles(
+                                app.match_score
+                              )}`}
+                            >
+                              {app.match_score}%
+                            </span>
+                          ) : (
+                            <span className="text-ink-faint text-xs font-mono">—</span>
+                          )}
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-md text-xs font-semibold border ${getPriorityBadgeStyles(
+                              app.priority
+                            )}`}
+                          >
+                            {app.priority}
+                          </span>
+                        </td>
+                        <td className="py-4 text-ink-muted">
+                          {app.applied_at ? formatDate(app.applied_at) : "Not applied yet"}
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                            style={{
+                              backgroundColor: `${statusColor.bg}`,
+                              color: `${statusColor.text}`,
+                              borderColor: `${statusColor.text}1c`,
+                            }}
+                          >
+                            {APPLICATION_STATUS_LABELS[app.status]}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <Link
+                            href="/dashboard/applications"
+                            className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
+                          >
+                            Manage →
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-12 text-ink-muted text-sm">
+                {appsSearch ? "No applications match your filter" : "No tracked applications found"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: React.ReactNode }) {
-  return (
-    <div style={{ background: "var(--paper-warm)", borderRadius: 12, padding: "14px 16px" }}>
-      <div style={{ fontSize: 11, fontFamily: "DM Mono, monospace", color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontFamily: "DM Serif Display, serif", color: "var(--ink)", lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ marginTop: 4 }}>{sub}</div>}
-    </div>
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-paper-card border border-border/80 rounded-2xl p-6 max-w-md w-full shadow-2xl hover:scale-[1.01] transition-transform duration-300 relative overflow-hidden">
+            {/* Ambient glow accent */}
+            <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl" />
+            
+            <div className="flex items-start gap-4 mb-5">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-ink mb-1">Delete Review</h3>
+                <p className="text-sm text-ink-muted leading-relaxed">
+                  Are you sure you want to delete this resume review? This action is permanent and cannot be undone.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-border rounded-xl text-sm font-semibold text-ink bg-paper-card hover:bg-paper-warm/50 hover:text-ink transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAnalysis}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-all shadow-md shadow-red-500/15 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Review"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 }

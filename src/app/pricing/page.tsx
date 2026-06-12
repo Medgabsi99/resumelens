@@ -56,99 +56,123 @@ export default function PricingPage() {
     } finally {
       setLoading(null);
     }
-  }
+  }  return (
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
+      {/* Background glow blobs */}
+      <div className="glow-blob top-[-50px] right-[-50px] w-[350px] h-[350px]" />
+      <div className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]" style={{ animationDelay: "-1s" }} />
 
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <nav style={{ borderBottom: "1px solid var(--border)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--paper-card)" }}>
-        <a href="/" style={{ fontFamily: "DM Serif Display, serif", fontSize: 22, textDecoration: "none", color: "var(--ink)" }}>
-          Resume<em style={{ color: "var(--accent)" }}>Lens</em>
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
+        style={{
+          background: "var(--nav-bg)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <a href="/" className="font-display text-2xl font-bold tracking-tight no-underline text-ink">
+          Resume<span style={{ color: "var(--accent)" }}>Lens</span>
         </a>
-        <a href="/login" style={{ fontSize: 13, color: "var(--ink-muted)", textDecoration: "none" }}>Sign in</a>
+        <a
+          href="/login"
+          className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200"
+          style={{ background: "var(--paper-card)" }}
+        >
+          Sign in
+        </a>
       </nav>
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "3rem 1.5rem" }}>
-        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <h1 style={{ fontFamily: "DM Serif Display, serif", fontSize: "clamp(28px, 4vw, 44px)", marginBottom: 12 }}>
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
+        <div className="text-center max-w-xl mx-auto mb-16 fade-up">
+          <h1 className="font-display tracking-tight leading-tight mb-4" style={{ fontSize: "clamp(32px, 5vw, 48px)" }}>
             Simple, honest pricing
           </h1>
-          <p style={{ color: "var(--ink-muted)", fontSize: 16, maxWidth: 400, margin: "0 auto" }}>
-            Start free. Upgrade when you need full feedback.
+          <p className="text-ink-muted text-base md:text-lg max-w-md mx-auto leading-relaxed">
+            Choose the plan that matches your job search speed. Upgrades pay for themselves in just one application review.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
           {PLANS.map((plan) => (
             <div
               key={plan.key}
+              className="glass-card flex flex-col justify-between p-8 rounded-2xl relative bg-paper-card transition-all duration-300 hover:scale-[1.02] shadow-premium"
               style={{
-                background: "var(--paper-card)",
-                border: plan.featured ? "2px solid var(--accent)" : "1px solid var(--border)",
-                borderRadius: 16,
-                padding: 24,
-                position: "relative",
+                borderColor: plan.featured ? "var(--accent)" : "var(--border)",
+                borderWidth: plan.featured ? "2px" : "1px",
               }}
             >
               {plan.featured && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "var(--accent)", color: "white", fontSize: 11, fontWeight: 600, padding: "4px 14px", borderRadius: 99, whiteSpace: "nowrap" }}>
+                <div
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[10px] font-mono font-bold tracking-widest text-white uppercase px-3 py-1 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+                    boxShadow: "0 4px 10px var(--brand-glow)",
+                  }}
+                >
                   Most Popular
                 </div>
               )}
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontFamily: "DM Mono, monospace", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-faint)", marginBottom: 6 }}>{plan.name}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                  <span style={{ fontFamily: "DM Serif Display, serif", fontSize: 36, color: plan.featured ? "var(--accent)" : "var(--ink)" }}>{plan.price}</span>
-                  {plan.period && <span style={{ fontSize: 13, color: "var(--ink-faint)" }}>{plan.period}</span>}
+              <div>
+                <div className="font-mono text-[10px] font-bold tracking-widest uppercase text-ink-faint mb-2">
+                  {plan.name}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--ink-muted)" }}>{plan.desc}</div>
-              </div>
-
-              <ul style={{ listStyle: "none", display: "grid", gap: 9, marginBottom: 22 }}>
-                {plan.features.map((f) => (
-                  <li key={f} style={{ fontSize: 13.5, color: f === "—" ? "var(--ink-faint)" : "var(--ink)", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <span style={{ color: f === "—" ? "var(--ink-faint)" : "#2d6a4f", flexShrink: 0, marginTop: 1 }}>
-                      {f === "—" ? "—" : "✓"}
+                <div className="flex items-baseline gap-1 mb-3">
+                  <span className="font-display text-4xl font-bold tracking-tight text-ink">
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-sm font-medium text-ink-faint">
+                      {plan.period}
                     </span>
-                    {f === "—" ? "Priority support" : f}
-                  </li>
-                ))}
-              </ul>
+                  )}
+                </div>
+                <p className="text-xs text-ink-muted leading-relaxed mb-6">
+                  {plan.desc}
+                </p>
+
+                <div className="h-px w-full my-6" style={{ background: "var(--border)" }} />
+
+                <ul className="list-none p-0 m-0 flex flex-col gap-4 mb-8">
+                  {plan.features.map((f, i) => (
+                    <li
+                      key={i}
+                      className="text-sm flex items-start gap-3"
+                      style={{ color: f === "—" ? "var(--ink-faint)" : "var(--ink)" }}
+                    >
+                      <span
+                        className="text-base flex-shrink-0"
+                        style={{ color: f === "—" ? "var(--ink-faint)" : "#10b981" }}
+                      >
+                        {f === "—" ? "—" : "✓"}
+                      </span>
+                      <span>
+                        {f === "—" ? "Priority support" : f}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               {plan.stripe ? (
                 <button
                   onClick={() => checkout(plan.key)}
                   disabled={loading === plan.key}
-                  style={{
-                    width: "100%",
-                    background: plan.featured ? "var(--accent)" : "transparent",
-                    color: plan.featured ? "white" : "var(--accent)",
-                    border: "1.5px solid var(--accent)",
-                    borderRadius: 10,
-                    padding: "11px 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: loading === plan.key ? "not-allowed" : "pointer",
-                    opacity: loading === plan.key ? 0.6 : 1,
-                  }}
+                  className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
+                  style={!plan.featured ? {
+                    background: "transparent",
+                    border: "2px solid var(--accent)",
+                    color: "var(--accent)",
+                    boxShadow: "none",
+                  } : undefined}
                 >
-                  {loading === plan.key ? "..." : plan.cta}
+                  {loading === plan.key ? "Connecting..." : plan.cta}
                 </button>
               ) : (
                 <a
                   href={plan.href}
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    textDecoration: "none",
-                    background: "transparent",
-                    color: "var(--ink-muted)",
-                    border: "1.5px solid var(--border-strong)",
-                    borderRadius: 10,
-                    padding: "11px 0",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
+                  className="w-full flex items-center justify-center border border-border-strong hover:border-ink rounded-xl py-3 text-sm font-semibold text-ink-muted hover:text-ink no-underline transition-all duration-200 text-center"
+                  style={{ background: "var(--paper)" }}
                 >
                   {plan.cta}
                 </a>
@@ -157,8 +181,8 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <p style={{ textAlign: "center", fontSize: 13, color: "var(--ink-faint)", marginTop: 28 }}>
-          Payments handled by Stripe. Cancel subscriptions anytime from your dashboard.
+        <p className="text-center text-xs text-ink-faint mt-10">
+          Secure checkout and billing handled via Stripe. Cancel subscription anytime with one click in your settings.
         </p>
       </div>
     </div>

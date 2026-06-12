@@ -29,73 +29,61 @@ export default function UpgradeModal({ preview, onClose }: Props) {
   return (
     <div
       onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md"
       style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(26,26,24,0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-        padding: 20,
+        background: "var(--modal-backdrop)",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="glass-card bg-paper-card border border-border p-8 rounded-2xl relative shadow-premium max-w-xl w-full fade-up"
         style={{
-          background: "var(--paper-card)",
-          borderRadius: 20,
-          maxWidth: 480,
-          width: "100%",
-          padding: 32,
-          position: "relative",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px var(--brand-glow)",
         }}
       >
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            background: "none",
-            border: "none",
-            fontSize: 20,
-            cursor: "pointer",
-            color: "var(--ink-faint)",
-            lineHeight: 1,
-          }}
+          className="absolute top-4 right-4 bg-transparent border-none text-xl font-bold cursor-pointer text-ink-faint hover:text-ink transition-colors duration-150"
         >
           ×
         </button>
 
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 28, marginBottom: 8 }}>
+        <div className="text-center mb-8">
+          <div className="font-display text-2xl font-bold mb-2">
             You've used your free analyses
           </div>
           {preview && (
-            <>
-              <div style={{ fontSize: 48, fontFamily: "DM Serif Display, serif", color: "var(--accent)", lineHeight: 1, marginBottom: 8 }}>
+            <div className="mt-4">
+              <div className="font-display text-5xl text-accent font-bold mb-2">
                 {preview.score}
               </div>
-              <p style={{ fontSize: 14, color: "var(--ink-muted)", lineHeight: 1.6, maxWidth: 360, margin: "0 auto 16px" }}>
+              <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto mb-4">
                 {preview.summary}
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 20 }}>
-                {preview.strengths.map((s) => (
-                  <span key={s} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "#edf7f2", color: "#2d6a4f", border: "1px solid rgba(45,106,79,0.25)" }}>
-                    {s}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {preview.strengths.slice(0, 2).map((s) => (
+                  <span
+                    key={s}
+                    className="text-xs px-2.5 py-1 rounded-lg font-medium border"
+                    style={{
+                      background: "rgba(16, 185, 129, 0.08)",
+                      color: "#10b981",
+                      borderColor: "rgba(16, 185, 129, 0.2)",
+                    }}
+                  >
+                    ✓ {s}
                   </span>
                 ))}
-                <span style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: "var(--paper-warm)", color: "var(--ink-muted)", border: "1px solid var(--border)" }}>
-                  + full report locked...
+                <span className="text-xs px-2.5 py-1 rounded-lg font-medium border border-border text-ink-muted bg-paper">
+                  + full report locked
                 </span>
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {/* Plans */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <PlanCard
             title="One-time"
             price="$9"
@@ -115,8 +103,8 @@ export default function UpgradeModal({ preview, onClose }: Props) {
           />
         </div>
 
-        <p style={{ textAlign: "center", fontSize: 12, color: "var(--ink-faint)", marginTop: 16 }}>
-          Powered by Stripe. Cancel anytime.
+        <p className="text-center text-[10px] text-ink-faint mt-6 uppercase tracking-wider font-mono">
+          Powered by Stripe. Cancel subscriptions anytime.
         </p>
       </div>
     </div>
@@ -142,52 +130,41 @@ function PlanCard({
 }) {
   return (
     <div
+      className="border rounded-2xl p-5 relative flex flex-col justify-between transition-all duration-300 hover:scale-[1.01]"
       style={{
-        border: featured ? "2px solid var(--accent)" : "1px solid var(--border)",
-        borderRadius: 12,
-        padding: 18,
-        position: "relative",
+        borderColor: featured ? "var(--accent)" : "var(--border)",
+        borderWidth: featured ? "2px" : "1px",
+        background: featured ? "var(--accent-bg)" : "var(--paper)",
       }}
     >
       {featured && (
         <div
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-widest text-white uppercase px-2.5 py-0.5 rounded-full"
           style={{
-            position: "absolute",
-            top: -10,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "var(--accent)",
-            color: "white",
-            fontSize: 10,
-            fontWeight: 600,
-            padding: "2px 10px",
-            borderRadius: 99,
-            whiteSpace: "nowrap",
+            background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+            boxShadow: "0 2px 6px var(--brand-glow)",
           }}
         >
-          Most Popular
+          Popular
         </div>
       )}
-      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{title}</div>
-      <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 24, color: featured ? "var(--accent)" : "var(--ink)", marginBottom: 6 }}>
-        {price}
+      <div>
+        <div className="font-semibold text-sm mb-1">{title}</div>
+        <div className="font-display text-2xl font-bold text-ink mb-2">
+          {price}
+        </div>
+        <div className="text-xs text-ink-muted leading-relaxed mb-4">{desc}</div>
       </div>
-      <div style={{ fontSize: 12, color: "var(--ink-muted)", marginBottom: 14, lineHeight: 1.4 }}>{desc}</div>
       <button
         onClick={onClick}
         disabled={loading}
-        style={{
-          width: "100%",
-          background: featured ? "var(--accent)" : "transparent",
-          color: featured ? "white" : "var(--accent)",
-          border: `1.5px solid var(--accent)`,
-          borderRadius: 8,
-          padding: "9px 0",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: loading ? "not-allowed" : "pointer",
-          opacity: loading ? 0.6 : 1,
-        }}
+        className="w-full btn-gradient py-2 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
+        style={!featured ? {
+          background: "transparent",
+          border: "2px solid var(--accent)",
+          color: "var(--accent)",
+          boxShadow: "none",
+        } : undefined}
       >
         {loading ? "..." : cta}
       </button>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { AnalysisResult } from "@/types";
 import ResultsPanel from "@/components/ResultsPanel";
 import UpgradeModal from "@/components/UpgradeModal";
+import ThemeToggle from "@/components/ThemeToggle";
+import { createBrowserClient } from "@/lib/supabase";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -28,6 +30,50 @@ export default function HomePage() {
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+  const [profile, setProfile] = useState<{ plan: string; analyses_used: number; analyses_limit: number } | null>(null);
+
+  // ── Load session + handle ?rerun= ──────────────────────
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUserEmail(session.user.email || null);
+        
+        // Fetch active plan and quota limits from database profile
+        const { data } = await supabase
+          .from("profiles")
+          .select("plan, analyses_used, analyses_limit")
+          .eq("id", session.user.id)
+          .single();
+          
+        if (data) {
+          setProfile(data);
+        }
+      }
+      setIsSessionLoaded(true);
+    });
+
+    // Handle ?rerun= parameter — pre-populate form from a past analysis
+    const rerunId = new URLSearchParams(window.location.search).get("rerun");
+    if (rerunId) {
+      fetch(`/api/analyses/${rerunId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setResumeText(data.data.resumeText || "");
+            setJobDescription(data.data.jobDescription || "");
+            setTargetRole(data.data.targetRole || "");
+            // Clean the URL so subsequent refreshes don't re-trigger
+            window.history.replaceState({}, "", "/");
+          }
+        })
+        .catch(() => {
+          // silently fail — user can paste manually
+        });
+    }
+  }, []);
 
   // ── File drop ────────────────────────────────────────────
   const onDrop = useCallback((accepted: File[]) => {
@@ -125,94 +171,146 @@ export default function HomePage() {
   const hasJD = !!jobDescription.trim();
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--paper)" }}>
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
+      {/* Background glow blobs */}
+      <div className="glow-blob animate-blob-1 top-[-100px] right-[-50px] md:w-[500px] md:h-[500px]" />
+      <div className="glow-blob animate-blob-2 bottom-[-100px] left-[-50px] md:w-[400px] md:h-[400px]" style={{ animationDelay: "-2s" }} />
+      <div className="glow-blob animate-blob-1 top-[35%] left-[25%] md:w-[350px] md:h-[350px] opacity-40" style={{ animationDelay: "-5s", background: "radial-gradient(circle, var(--accent-border) 0%, transparent 70%)" }} />
+
       {/* Nav */}
       <nav
+        className="sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
         style={{
-          borderBottom: "1px solid var(--border)",
-          padding: "14px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          background: "var(--paper-card)",
+          background: "var(--nav-bg)",
+          borderColor: "var(--border)",
         }}
       >
-        <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 22 }}>
-          Resume<em style={{ color: "var(--accent)" }}>Lens</em>
+        <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>
+          Resume<span style={{ color: "var(--accent)" }}>Lens</span>
         </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <a href="/pricing" style={{ fontSize: 13, color: "var(--ink-muted)", textDecoration: "none" }}>
+        <div className="flex items-center gap-6">
+          <ThemeToggle />
+          <a
+            href="/pricing"
+            className="text-sm text-ink-muted hover:text-accent font-medium no-underline transition-colors duration-200"
+          >
             Pricing
           </a>
-          <a href="/dashboard" style={{ fontSize: 13, color: "var(--ink-muted)", textDecoration: "none" }}>
-            Dashboard
-          </a>
-          <a
-            href="/login"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--accent)",
-              textDecoration: "none",
-              border: "1px solid var(--accent-border)",
-              padding: "6px 14px",
-              borderRadius: 8,
-            }}
-          >
-            Sign in
-          </a>
+          {isSessionLoaded && userEmail ? (
+            <>
+              <a
+                href="/dashboard"
+                className="text-sm text-ink-muted hover:text-accent font-medium no-underline flex items-center gap-2 transition-colors duration-200"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Dashboard
+              </a>
+              <a
+                href="/api/auth/signout"
+                className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200"
+                style={{ background: "var(--paper-card)" }}
+              >
+                Sign out
+              </a>
+            </>
+          ) : isSessionLoaded ? (
+            <a
+              href="/login"
+              className="text-sm font-semibold text-white bg-accent hover:bg-accent-hover px-4 py-2 rounded-xl no-underline transition-all duration-200 shadow-sm"
+              style={{
+                background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+              }}
+            >
+              Sign in
+            </a>
+          ) : (
+            <div className="w-16 h-8 bg-border/20 animate-pulse rounded-xl" />
+          )}
         </div>
       </nav>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "2.5rem 1.5rem 5rem" }}>
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
         {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <div className="text-center max-w-2xl mx-auto mb-12">
           <h1
+            className="font-display tracking-tight leading-tight mb-4"
             style={{
-              fontFamily: "DM Serif Display, serif",
-              fontSize: "clamp(32px, 5vw, 52px)",
-              lineHeight: 1.1,
-              marginBottom: 14,
-              letterSpacing: "-0.5px",
+              fontSize: "clamp(36px, 5.5vw, 60px)",
+              letterSpacing: "-1px",
             }}
           >
-            Your resume, <em style={{ color: "var(--accent)" }}>honestly reviewed</em>
+            Your resume, <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic">honestly reviewed</span>
           </h1>
-          <p style={{ color: "var(--ink-muted)", fontSize: 17, maxWidth: 480, margin: "0 auto" }}>
-            Paste your resume, add a job description, and get a detailed AI analysis with a score, strengths, weaknesses, and line-by-line rewrites.
+          <p className="text-ink-muted text-base md:text-lg leading-relaxed max-w-xl mx-auto">
+            Get instant, deep analysis on your resume. Identify ATS keywords gaps, receive tailored rewrite suggestions, and match yourself perfectly to target jobs.
           </p>
         </div>
 
+        {/* Quota indicator */}
+        {isSessionLoaded && userEmail && profile && (
+          <div className="glass-card max-w-xl mx-auto mb-10 p-4 rounded-2xl flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2.5">
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{
+                  background: profile.plan === "free" ? "var(--accent)" : "#10b981",
+                  boxShadow: `0 0 10px ${profile.plan === "free" ? "var(--accent)" : "#10b981"}`,
+                }}
+              />
+              <span className="text-ink-muted">
+                Plan:{" "}
+                <strong
+                  className="capitalize font-semibold"
+                  style={{ color: profile.plan === "free" ? "var(--accent)" : "#10b981" }}
+                >
+                  {profile.plan === "free" ? "Free Tier" : profile.plan === "monthly" ? "Pro Monthly" : "Lifetime Pro"}
+                </strong>
+              </span>
+            </div>
+            <div>
+              {profile.plan === "free" ? (
+                <span className="text-ink-muted">
+                  Quota: <strong className="text-ink">{Math.max(0, profile.analyses_limit - profile.analyses_used)} / {profile.analyses_limit}</strong> remaining
+                </span>
+              ) : (
+                <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span>Unlimited Reviews</span>
+                  <span>✨</span>
+                </strong>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Input Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
           {/* Left — Resume */}
           <Panel label="Your Resume">
             {/* Drop zone */}
             <div
               {...getRootProps()}
+              className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-2 transition-all duration-300"
               style={{
-                border: `1.5px dashed ${isDragActive ? "var(--accent)" : "var(--border-strong)"}`,
-                borderRadius: 10,
-                padding: "14px 16px",
-                marginBottom: 12,
-                cursor: "pointer",
+                borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
                 background: isDragActive ? "var(--accent-bg)" : "var(--paper-warm)",
-                transition: "all 0.15s",
-                textAlign: "center",
               }}
             >
               <input {...getInputProps()} />
-              <p style={{ fontSize: 12.5, color: "var(--ink-muted)", fontFamily: "DM Mono, monospace" }}>
+              <div className="text-2xl mb-1">{fileName ? "📄" : "📤"}</div>
+              <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
                 {fileName
-                  ? `📄 ${fileName}`
+                  ? `${fileName}`
                   : isDragActive
-                  ? "Drop it here..."
-                  : "Drop PDF, DOCX, or TXT — or click to browse"}
+                  ? "Drop your file here..."
+                  : "Drop PDF, DOCX, or TXT here, or click to browse"}
               </p>
             </div>
 
-            <div style={{ fontSize: 11, color: "var(--ink-faint)", textAlign: "center", marginBottom: 10, fontFamily: "DM Mono, monospace" }}>
-              — or paste text below —
+            <div className="relative my-5 text-center">
+              <span className="absolute inset-y-1/2 left-0 right-0 h-px" style={{ background: "var(--border)" }} />
+              <span className="relative px-3 font-mono text-[10px] tracking-widest text-ink-faint uppercase" style={{ background: "var(--paper-card)" }}>
+                or paste resume text
+              </span>
             </div>
 
             <textarea
@@ -221,22 +319,8 @@ export default function HomePage() {
                 setResumeText(e.target.value);
                 if (e.target.value) { setUploadedFile(null); setFileName(null); }
               }}
-              placeholder="Paste your resume here — plain text, all sections..."
-              style={{
-                width: "100%",
-                minHeight: 260,
-                resize: "vertical",
-                border: "1.5px solid var(--border)",
-                borderRadius: 10,
-                padding: "12px 14px",
-                fontFamily: "DM Mono, monospace",
-                fontSize: 12.5,
-                lineHeight: 1.7,
-                background: "var(--paper)",
-                color: "var(--ink)",
-                outline: "none",
-                display: "block",
-              }}
+              placeholder="Paste the raw text of your resume here..."
+              className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed"
             />
           </Panel>
 
@@ -245,90 +329,57 @@ export default function HomePage() {
             <textarea
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the job description here. Enables keyword gap analysis and targeted feedback..."
-              style={{
-                width: "100%",
-                minHeight: 260,
-                resize: "vertical",
-                border: "1.5px solid var(--border)",
-                borderRadius: 10,
-                padding: "12px 14px",
-                fontFamily: "DM Mono, monospace",
-                fontSize: 12.5,
-                lineHeight: 1.7,
-                background: "var(--paper)",
-                color: "var(--ink)",
-                outline: "none",
-                display: "block",
-                marginBottom: 12,
-              }}
+              placeholder="Paste the job description here. Enabling this unlocks personalized matching, ATS gap analysis, and tailored rewrites..."
+              className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed mb-4"
             />
             <input
               type="text"
               value={targetRole}
               onChange={(e) => setTargetRole(e.target.value)}
-              placeholder='Target role, e.g. "Senior Product Designer"'
-              style={{
-                width: "100%",
-                border: "1.5px solid var(--border)",
-                borderRadius: 10,
-                padding: "10px 14px",
-                fontSize: 13.5,
-                fontFamily: "Instrument Sans, sans-serif",
-                background: "var(--paper)",
-                color: "var(--ink)",
-                outline: "none",
-              }}
+              placeholder='Target role, e.g. "Senior Frontend Developer"'
+              className="premium-input w-full"
             />
           </Panel>
         </div>
 
         {/* CTA */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+        <div className="flex flex-col items-center justify-center mb-12">
           <button
             onClick={handleAnalyze}
             disabled={loading}
-            style={{
-              background: loading ? "var(--ink-faint)" : "var(--accent)",
-              color: "white",
-              border: "none",
-              borderRadius: 10,
-              padding: "13px 32px",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontFamily: "Instrument Sans, sans-serif",
-              transition: "opacity 0.15s",
-              minWidth: 180,
-            }}
+            className="btn-gradient px-8 py-3.5 rounded-xl text-base font-semibold min-w-[200px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? LOADING_STEPS[loadingStep] : "Analyze Resume →"}
+            {loading ? (
+              <span className="flex items-center gap-1.5">
+                <span>{LOADING_STEPS[loadingStep]}</span>
+              </span>
+            ) : (
+              <span>Analyze Resume →</span>
+            )}
           </button>
+
+          {error && (
+            <p className="text-red-500 font-medium text-sm mt-4 text-center max-w-md bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">
+              {error}
+            </p>
+          )}
+
+          {/* Loading indicator */}
+          {loading && (
+            <div className="flex justify-center gap-2 mt-6">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    background: "var(--accent)",
+                    animation: `pulse-dot 1.4s ease ${i * 0.2}s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
-
-        {error && (
-          <p style={{ color: "#7a2020", textAlign: "center", fontSize: 13.5, marginTop: 8 }}>
-            {error}
-          </p>
-        )}
-
-        {/* Loading indicator */}
-        {loading && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 20 }}>
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                  animation: `pulse-dot 1.4s ease ${i * 0.2}s infinite`,
-                }}
-              />
-            ))}
-          </div>
-        )}
 
         {/* Results */}
         {result && (
@@ -343,32 +394,14 @@ export default function HomePage() {
 
         {/* Upgrade preview */}
         {requiresUpgrade && preview && !showUpgradeModal && (
-          <div
-            style={{
-              background: "var(--paper-card)",
-              border: "1px solid var(--border)",
-              borderRadius: 16,
-              padding: 24,
-              marginTop: 24,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 42, color: "var(--accent)", marginBottom: 4 }}>
+          <div className="glass-card max-w-xl mx-auto p-8 rounded-2xl text-center shadow-premium bg-gradient-to-b from-paper-card to-paper-warm/20 mt-8">
+            <div className="font-display text-5xl text-accent mb-2">
               {preview.score}
             </div>
-            <p style={{ color: "var(--ink-muted)", marginBottom: 16, fontSize: 14 }}>{preview.summary}</p>
+            <p className="text-ink-muted mb-6 text-sm leading-relaxed max-w-sm mx-auto">{preview.summary}</p>
             <button
               onClick={() => setShowUpgradeModal(true)}
-              style={{
-                background: "var(--accent)",
-                color: "white",
-                border: "none",
-                borderRadius: 8,
-                padding: "10px 24px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: 14,
-              }}
+              className="btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
             >
               Unlock Full Report →
             </button>
@@ -385,30 +418,17 @@ export default function HomePage() {
 
 function Panel({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        background: "var(--paper-card)",
-        border: "1px solid var(--border)",
-        borderRadius: 16,
-        overflow: "hidden",
-      }}
-    >
+    <div className="glass-card rounded-2xl overflow-hidden flex flex-col h-full bg-paper-card">
       <div
-        style={{
-          padding: "12px 18px",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--paper-warm)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
+        className="px-5 py-3 border-b flex items-center gap-2 bg-paper-warm/40"
+        style={{ borderColor: "var(--border)" }}
       >
-        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
-        <span style={{ fontSize: 11, fontFamily: "DM Mono, monospace", color: "var(--ink-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div className="w-2 h-2 rounded-full" style={{ background: "var(--accent)" }} />
+        <span className="text-[10px] font-mono font-bold tracking-wider text-ink-muted uppercase">
           {label}
         </span>
       </div>
-      <div style={{ padding: 18 }}>{children}</div>
+      <div className="p-5 flex-1 flex flex-col justify-between">{children}</div>
     </div>
   );
 }

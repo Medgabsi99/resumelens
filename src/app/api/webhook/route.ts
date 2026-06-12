@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   // ── Handle events ─────────────────────────────────────────
   switch (event.type) {
     case "checkout.session.completed": {
-      const session = event.data.object as Stripe.CheckoutSession;
+      const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.supabase_user_id;
       const plan = session.metadata?.plan as "one_time" | "monthly";
 
