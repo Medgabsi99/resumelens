@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ResumeLens Job Matcher",
+  "version": "1.0.0",
+  "description": "Instantly match job listings against your ResumeLens resume library and track applications.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon128.png"
+    }
+  }
+}
