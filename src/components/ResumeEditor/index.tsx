@@ -4,12 +4,16 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useReactToPrint } from "react-to-print";
 import { RewriteSuggestion } from "@/types";
 import { type ParsedResume } from "@/lib/parseResume";
-import ProfessionalTemplate from "./resume-templates/ProfessionalTemplate";
-import ModernTemplate from "./resume-templates/ModernTemplate";
-import CreativeTemplate from "./resume-templates/CreativeTemplate";
-import MinimalTemplate from "./resume-templates/MinimalTemplate";
-import ExecutiveTemplate from "./resume-templates/ExecutiveTemplate";
-import * as Diff from "diff";
+import ProfessionalTemplate from "../resume-templates/ProfessionalTemplate";
+import ModernTemplate from "../resume-templates/ModernTemplate";
+import CreativeTemplate from "../resume-templates/CreativeTemplate";
+import MinimalTemplate from "../resume-templates/MinimalTemplate";
+import ExecutiveTemplate from "../resume-templates/ExecutiveTemplate";
+import { useResumeVersions } from "./useResumeVersions";
+import ToolbarButton from "./ToolbarButton";
+import ScoreTrendChart from "./ScoreTrendChart";
+import VersionDiffModal from "./VersionDiffModal";
+import { TemplateId, ResumeVersion } from "./types";
 
 interface Props {
   initialText: string;
@@ -18,16 +22,6 @@ interface Props {
   resultScore: number;
   analysisId?: string;
 }
-
-export interface ResumeVersion {
-  id: string;
-  version_name: string;
-  resume_text: string;
-  score: number | null;
-  created_at: string;
-}
-
-type TemplateId = "professional" | "modern" | "creative" | "minimal" | "executive";
 
 const TEMPLATES: { id: TemplateId; label: string }[] = [
   { id: "professional", label: "Professional" },
@@ -57,82 +51,42 @@ export default function ResumeEditor({
   const previewRef = useRef<HTMLDivElement>(null);
 
   // Version History States
-  const [versions, setVersions] = useState<ResumeVersion[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [newVersionName, setNewVersionName] = useState("");
-  const [isSavingVersion, setIsSavingVersion] = useState(false);
-  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [compareVersion, setCompareVersion] = useState<ResumeVersion | null>(null);
-  const [versionError, setVersionError] = useState<string | null>(null);
 
-  // Fetch versions
-  const fetchVersions = useCallback(async () => {
-    if (!analysisId) return;
-    setIsLoadingVersions(true);
-    setVersionError(null);
-    try {
-      const res = await fetch(`/api/analyses/${analysisId}/versions`);
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Failed to fetch versions");
-      setVersions(data.data || []);
-    } catch (err: any) {
-      setVersionError(err.message || "Could not load version history");
-    } finally {
-      setIsLoadingVersions(false);
-    }
-  }, [analysisId]);
-
-  useEffect(() => {
-    if (analysisId && showHistory) {
-      fetchVersions();
-    }
-  }, [analysisId, showHistory, fetchVersions]);
+  // Version History Hook
+  const {
+    versions,
+    isLoadingVersions,
+    isSavingVersion,
+    versionError,
+    setVersionError,
+    saveVersion,
+    deleteVersion,
+  } = useResumeVersions(analysisId, showHistory, text, resultScore);
 
   const handleSaveVersion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!analysisId || !newVersionName.trim()) return;
-    setIsSavingVersion(true);
-    setVersionError(null);
     try {
-      const res = await fetch(`/api/analyses/${analysisId}/versions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          versionName: newVersionName.trim(),
-          resumeText: text,
-          score: resultScore,
-        }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Failed to save version");
-      
+      await saveVersion(newVersionName.trim());
       setNewVersionName("");
-      setVersions((prev) => [data.data, ...prev]);
     } catch (err: any) {
-      setVersionError(err.message || "Could not save version");
-    } finally {
-      setIsSavingVersion(false);
+      // Error handled by hook state, but we can log it
     }
   };
 
   const handleDeleteVersion = async (versionId: string) => {
     if (!analysisId) return;
     if (!confirm("Are you sure you want to delete this version snapshot?")) return;
-    
-    setVersionError(null);
     try {
-      const res = await fetch(`/api/analyses/${analysisId}/versions?versionId=${versionId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Failed to delete version");
-      
-      setVersions((prev) => prev.filter((v) => v.id !== versionId));
+      await deleteVersion(versionId);
       if (compareVersion?.id === versionId) {
         setCompareVersion(null);
       }
     } catch (err: any) {
-      setVersionError(err.message || "Could not delete version");
+      // Error handled by hook state
     }
   };
 
@@ -190,7 +144,6 @@ export default function ResumeEditor({
       window.removeEventListener("apply-tailored-resume", handleApplyTailored);
     };
   }, []);
-
 
   const handlePrint = useReactToPrint({
     contentRef: previewRef,
@@ -865,440 +818,6 @@ export default function ResumeEditor({
           }}
         />
       )}
-    </div>
-  );
-}
-
-// ─── Toolbar Button ─────────────────────────────────────────
-
-function ToolbarButton({
-  onClick,
-  label,
-  disabled = false,
-  variant = "default",
-  active = true,
-}: {
-  onClick: () => void;
-  label: string;
-  disabled?: boolean;
-  variant?: "default" | "primary" | "danger";
-  active?: boolean;
-}) {
-  const styles: Record<string, React.CSSProperties> = {
-    default: {
-      background: "transparent",
-      color: "var(--ink)",
-      border: "1px solid var(--border)",
-    },
-    primary: {
-      background: "var(--accent)",
-      color: "white",
-      border: "none",
-    },
-    danger: {
-      background: "transparent",
-      color: active ? "#7a2020" : "var(--ink-faint)",
-      border: `1px solid ${active ? "rgba(122,32,32,0.3)" : "var(--border)"}`,
-    },
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        ...styles[variant],
-        borderRadius: 6,
-        padding: "4px 10px",
-        fontSize: 11,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        fontFamily: "Instrument Sans, sans-serif",
-        opacity: disabled ? 0.5 : 1,
-        transition: "all 0.15s",
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-// ─── Score Progression Chart (Custom SVG) ───────────────────────
-
-function ScoreTrendChart({ versions }: { versions: ResumeVersion[] }) {
-  const chartData = useMemo(() => {
-    return [...versions]
-      .reverse()
-      .map((v) => ({
-        name: v.version_name,
-        score: v.score || 0,
-        date: new Date(v.created_at).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        }),
-      }));
-  }, [versions]);
-
-  if (chartData.length < 2) {
-    return (
-      <div style={{
-        padding: "16px 12px",
-        textAlign: "center",
-        color: "var(--ink-faint)",
-        fontSize: "11.5px",
-        border: "1px dashed var(--border)",
-        borderRadius: 8,
-        background: "rgba(0,0,0,0.02)",
-        marginBottom: "16px",
-      }}>
-        📈 Save at least 2 versions to see score trend analytics.
-      </div>
-    );
-  }
-
-  const width = 300;
-  const height = 80;
-  const paddingX = 20;
-  const paddingY = 15;
-
-  const minScore = 0;
-  const maxScore = 100;
-
-  const points = chartData.map((d, i) => {
-    const x = paddingX + (i / (chartData.length - 1)) * (width - 2 * paddingX);
-    const y = height - paddingY - ((d.score - minScore) / (maxScore - minScore)) * (height - 2 * paddingY);
-    return { x, y, score: d.score, name: d.name, date: d.date };
-  });
-
-  const pathD = points.reduce((acc, p, i) => {
-    return acc + `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`;
-  }, "");
-
-  const areaD = points.length > 0 
-    ? `${pathD} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`
-    : "";
-
-  return (
-    <div style={{
-      background: "var(--paper-warm)",
-      border: "1px solid var(--border)",
-      borderRadius: 10,
-      padding: "12px",
-      marginBottom: "16px",
-    }}>
-      <div style={{
-        fontSize: 10,
-        fontFamily: "DM Mono, monospace",
-        color: "var(--ink-muted)",
-        marginBottom: 8,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-        <span>📈 SCORE TREND</span>
-        <span style={{ fontWeight: 700, color: "var(--accent)" }}>
-          {chartData[chartData.length - 1].score - chartData[0].score >= 0 ? "+" : ""}
-          {chartData[chartData.length - 1].score - chartData[0].score} pts
-        </span>
-      </div>
-      <div style={{ position: "relative", width: "100%", height: `${height}px` }}>
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "100%", overflow: "visible" }}>
-          <defs>
-            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-
-          {[0, 0.5, 1].map((val, idx) => {
-            const y = paddingY + val * (height - 2 * paddingY);
-            return (
-              <line
-                key={idx}
-                x1={paddingX}
-                y1={y}
-                x2={width - paddingX}
-                y2={y}
-                stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="2 2"
-              />
-            );
-          })}
-
-          {areaD && <path d={areaD} fill="url(#chartGradient)" />}
-
-          {pathD && (
-            <path
-              d={pathD}
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-
-          {points.map((p, i) => (
-            <g key={i}>
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r="3.5"
-                fill="var(--paper-card)"
-                stroke="var(--accent)"
-                strokeWidth="2"
-              />
-              {i === 0 || i === points.length - 1 || points.length <= 5 ? (
-                <text
-                  x={p.x}
-                  y={p.y - 7}
-                  textAnchor="middle"
-                  fontSize="8.5"
-                  fontWeight="700"
-                  fill="var(--ink)"
-                  style={{ fontFamily: "Instrument Sans, sans-serif" }}
-                >
-                  {p.score}
-                </text>
-              ) : null}
-            </g>
-          ))}
-        </svg>
-      </div>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        fontSize: "9px",
-        fontFamily: "DM Mono, monospace",
-        color: "var(--ink-faint)",
-        marginTop: "4px",
-        padding: "0 4px",
-      }}>
-        <span>{chartData[0].date}</span>
-        <span>{chartData[chartData.length - 1].date}</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Git-Style Visual Diff Modal ───────────────────────────────
-
-function VersionDiffModal({
-  version,
-  currentText,
-  onClose,
-  onRestore,
-}: {
-  version: ResumeVersion;
-  currentText: string;
-  onClose: () => void;
-  onRestore: () => void;
-}) {
-  const diffs = useMemo(() => {
-    return Diff.diffWordsWithSpace(version.resume_text, currentText);
-  }, [version.resume_text, currentText]);
-
-  return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: "rgba(15, 23, 42, 0.65)",
-      backdropFilter: "blur(4px)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-      padding: "20px",
-      animation: "fadeIn 0.2s ease",
-    }}>
-      <div style={{
-        background: "var(--paper-card)",
-        border: "1px solid var(--border)",
-        borderRadius: "16px",
-        width: "100%",
-        maxWidth: "850px",
-        height: "80vh",
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04)",
-        overflow: "hidden",
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: "16px 24px",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "var(--accent-bg)",
-        }}>
-          <div>
-            <h3 style={{
-              margin: 0,
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "var(--ink)",
-              fontFamily: "Instrument Sans, sans-serif",
-            }}>
-              Comparing: {version.version_name}
-            </h3>
-            <p style={{
-              margin: "4px 0 0 0",
-              fontSize: "11px",
-              color: "var(--ink-muted)",
-              fontFamily: "DM Mono, monospace",
-            }}>
-              Saved on {new Date(version.created_at).toLocaleString()} • Score: {version.score ?? "N/A"}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "var(--ink-muted)",
-              fontSize: "20px",
-              cursor: "pointer",
-              padding: "4px 8px",
-            }}
-          >
-            &times;
-          </button>
-        </div>
-
-        {/* Legend */}
-        <div style={{
-          padding: "10px 24px",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--paper-warm)",
-          display: "flex",
-          gap: "16px",
-          fontSize: "11px",
-          fontWeight: 600,
-          fontFamily: "Instrument Sans, sans-serif",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "#ffebe9",
-              border: "1px solid #ffc1c1",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "#b91c1c" }}>Deleted from Snapshot</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "#e6ffec",
-              border: "1px solid #abf2af",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "#15803d" }}>Added in Active Editor</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "var(--paper)",
-              border: "1px solid var(--border)",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "var(--ink-muted)" }}>Unchanged</span>
-          </div>
-        </div>
-
-        {/* Diff view */}
-        <div style={{
-          flex: 1,
-          overflow: "auto",
-          padding: "24px",
-          background: "var(--paper)",
-          fontFamily: "DM Mono, monospace",
-          fontSize: "13px",
-          lineHeight: "1.7",
-          whiteSpace: "pre-wrap",
-        }}>
-          {diffs.map((part, index) => {
-            let style: React.CSSProperties = {};
-            if (part.added) {
-              style = {
-                background: "#e6ffec",
-                color: "#15803d",
-                textDecoration: "none",
-                fontWeight: 600,
-              };
-            } else if (part.removed) {
-              style = {
-                background: "#ffebe9",
-                color: "#b91c1c",
-                textDecoration: "line-through",
-              };
-            }
-            return (
-              <span key={index} style={style}>
-                {part.value}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* Footer Actions */}
-        <div style={{
-          padding: "16px 24px",
-          borderTop: "1px solid var(--border)",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "12px",
-          background: "var(--paper-card)",
-        }}>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              color: "var(--ink)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              padding: "8px 16px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
-          <button
-            onClick={() => {
-              if (confirm(`Are you sure you want to restore "${version.version_name}"? This will overwrite your current draft.`)) {
-                onRestore();
-                onClose();
-              }
-            }}
-            style={{
-              background: "var(--accent)",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              padding: "8px 16px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              boxShadow: "0 2px 8px var(--brand-glow)",
-            }}
-          >
-            ↺ Restore This Version
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
