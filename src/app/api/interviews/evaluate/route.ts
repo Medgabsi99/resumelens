@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, evaluation });
   } catch (error: unknown) {
-    console.error("Simulator turn evaluation route error:", error);
+    logger.error("Simulator turn evaluation route error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to evaluate answer";
     return NextResponse.json(

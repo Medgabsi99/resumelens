@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     });
     return handleCors(req, okRes);
   } catch (err: any) {
-    console.error("Outreach generation endpoint error:", err);
+    logger.error("Outreach generation endpoint error:", err);
     const errRes = NextResponse.json({ success: false, error: err.message }, { status: 500 });
     return handleCors(req, errRes);
   }

@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -69,13 +70,13 @@ export async function POST(req: NextRequest) {
       });
     } catch (dbErr) {
       // Don't fail the request if persistence fails
-      console.warn("Failed to persist job match:", dbErr);
+      logger.warn("Failed to persist job match:", dbErr);
     }
 
     return NextResponse.json({ success: true, data: matchResult });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Job match failed";
-    console.error("Job match error:", err);
+    logger.error("Job match error:", err);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

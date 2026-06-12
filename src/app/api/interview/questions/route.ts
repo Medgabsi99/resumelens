@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, questions });
   } catch (error: unknown) {
-    console.error("Structured mock questions API error:", error);
+    logger.error("Structured mock questions API error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate mock interview questions";
     return NextResponse.json(

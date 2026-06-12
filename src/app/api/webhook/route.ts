@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase";
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook error";
-    console.error("Stripe webhook error:", message);
+    logger.error("Stripe webhook error:", message);
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
         analyses_used: 0, // reset counter on upgrade
       }).eq("id", userId);
 
-      console.log(`✓ Upgraded user ${userId} to ${plan}`);
+      logger.info(`✓ Upgraded user ${userId} to ${plan}`);
       break;
     }
 
@@ -64,14 +65,14 @@ export async function POST(req: NextRequest) {
         analyses_limit: PLAN_LIMITS.free,
       }).eq("id", userId);
 
-      console.log(`✓ Downgraded user ${userId} to free (subscription cancelled)`);
+      logger.info(`✓ Downgraded user ${userId} to free (subscription cancelled)`);
       break;
     }
 
     case "invoice.payment_failed": {
       // Optionally email user about failed payment
       const invoice = event.data.object as Stripe.Invoice;
-      console.warn(`Payment failed for customer ${invoice.customer}`);
+      logger.warn(`Payment failed for customer ${invoice.customer}`);
       break;
     }
 

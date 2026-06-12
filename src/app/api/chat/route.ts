@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     const reply = await chatWithResume(message, resumeText, jobDescription, targetRole);
     return NextResponse.json({ success: true, data: reply });
   } catch (err: unknown) {
-    console.error("Chat API error:", err);
+    logger.error("Chat API error:", err);
     const errorMsg = err instanceof Error ? err.message : "Chat failed";
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }

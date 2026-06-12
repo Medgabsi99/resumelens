@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, path });
   } catch (error: any) {
-    console.error("Learning path generation API error:", error);
+    logger.error("Learning path generation API error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to generate learning path" },
       { status: 500 }

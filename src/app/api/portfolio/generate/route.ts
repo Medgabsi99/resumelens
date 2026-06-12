@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
       data,
     });
   } catch (error: any) {
-    console.error("Generate portfolio error:", error);
+    logger.error("Generate portfolio error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to generate portfolio copy" },
       { status: 500 }

@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import playwright from "playwright";
 import { createAdminClient } from "../../../lib/supabase";
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
         .upload(fileName, pdf, { contentType: "application/pdf" });
 
       if (uploadError) {
-        console.warn(
+        logger.warn(
           "Supabase upload error:",
           uploadError.message || uploadError,
         );
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest) {
           .createSignedUrl(fileName, expiresIn);
 
         if (signedErr || !signedData?.signedUrl) {
-          console.warn(
+          logger.warn(
             "Supabase createSignedUrl error:",
             signedErr?.message || signedErr,
           );
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
           { status: 200 },
         );
       } catch (e) {
-        console.warn("Signed URL fallback failed:", e);
+        logger.warn("Signed URL fallback failed:", e);
         throw e;
       }
     } catch (uploadErr) {

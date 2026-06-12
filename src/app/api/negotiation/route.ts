@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, turn });
   } catch (error: any) {
-    console.error("Salary negotiation API error:", error);
+    logger.error("Salary negotiation API error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to negotiate" },
       { status: 500 }

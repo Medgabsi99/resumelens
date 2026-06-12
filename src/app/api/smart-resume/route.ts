@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       enhancedText,
     });
   } catch (error: unknown) {
-    console.error("Smart resume generation error:", error);
+    logger.error("Smart resume generation error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to generate smart resume";
     return NextResponse.json(

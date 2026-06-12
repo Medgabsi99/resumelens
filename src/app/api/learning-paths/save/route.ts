@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -55,14 +56,14 @@ export async function POST(req: NextRequest) {
 
       if (error) {
         dbError = error.message;
-        console.warn("Supabase save error (falling back to frontend storage):", error);
+        logger.warn("Supabase save error (falling back to frontend storage):", error);
       } else {
         savedInDb = true;
         savedItem = data;
       }
     } catch (err: any) {
       dbError = err.message;
-      console.warn("Graceful DB exception caught, falling back to local storage:", err);
+      logger.warn("Graceful DB exception caught, falling back to local storage:", err);
     }
 
     return NextResponse.json({
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       data: savedItem,
     });
   } catch (error: any) {
-    console.error("Learning path save API error:", error);
+    logger.error("Learning path save API error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to save learning path" },
       { status: 500 }

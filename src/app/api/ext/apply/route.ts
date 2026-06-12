@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       });
 
     if (matchError) {
-      console.error("Match insert error:", matchError);
+      logger.error("Match insert error:", matchError);
       const errRes = NextResponse.json({ success: false, error: `Failed to save match: ${matchError.message}` }, { status: 500 });
       return handleCors(req, errRes);
     }
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       });
 
     if (appError) {
-      console.error("Application insert error:", appError);
+      logger.error("Application insert error:", appError);
       const errRes = NextResponse.json({ success: false, error: `Failed to save application: ${appError.message}` }, { status: 500 });
       return handleCors(req, errRes);
     }
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     const okRes = NextResponse.json({ success: true, message: "Application tracked successfully!" });
     return handleCors(req, okRes);
   } catch (err: any) {
-    console.error("Extension track application error:", err);
+    logger.error("Extension track application error:", err);
     const errRes = NextResponse.json({ success: false, error: err.message }, { status: 500 });
     return handleCors(req, errRes);
   }
