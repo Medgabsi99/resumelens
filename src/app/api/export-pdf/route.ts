@@ -2,7 +2,7 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import playwright from "playwright";
 import { createAdminClient } from "../../../lib/supabase";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";

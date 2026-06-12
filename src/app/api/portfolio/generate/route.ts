@@ -1,7 +1,7 @@
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerComponentClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { generatePortfolio } from "@/lib/ai";
 

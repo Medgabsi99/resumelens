@@ -1,8 +1,43 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createBrowserClient as ssrCreateBrowserClient, createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 // ─── Browser client (for React components) ────────────────
-export const createBrowserClient = () => createClientComponentClient();
+export const createClientComponentClient = () => {
+  return ssrCreateBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+};
+
+export const createBrowserClient = createClientComponentClient;
+
+// ─── Server client (for Route Handlers, Server Components, Server Actions) ────────────────
+export const createRouteHandlerClient = (context: { cookies: typeof cookies }) => {
+  const cookieStore = context.cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignored on Server Components (read-only)
+          }
+        },
+      },
+    }
+  );
+};
+
+export const createServerComponentClient = createRouteHandlerClient;
 
 // ─── Server-side admin client (for API routes) ────────────
 // Uses service role key — never expose to browser
