@@ -1,0 +1,93 @@
+import { useState } from "react";
+
+export function useInterviewPrep(
+  resumeText?: string,
+  jobDescription?: string,
+  targetRole?: string
+) {
+  const [interviewQuestions, setInterviewQuestions] = useState<string | null>(null);
+  const [isGeneratingIQ, setIsGeneratingIQ] = useState(false);
+  const [iqError, setIqError] = useState<string | null>(null);
+
+  // Mock Interview States
+  const [showMockInterview, setShowMockInterview] = useState(false);
+  const [mockQuestions, setMockQuestions] = useState<string[]>([]);
+  const [isFetchingMock, setIsFetchingMock] = useState(false);
+
+  const handleGenerateInterviewQuestions = async () => {
+    if (!resumeText) {
+      setIqError("No resume text available to generate interview questions.");
+      return;
+    }
+
+    setIsGeneratingIQ(true);
+    setIqError(null);
+
+    try {
+      const res = await fetch("/api/interview-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText, jobDescription, targetRole }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || !data.success) {
+        setIqError(data?.error || "Failed to generate interview questions.");
+        return;
+      }
+
+      setInterviewQuestions(data.data || "");
+    } catch (e) {
+      console.error(e);
+      setIqError("Network error while generating interview questions.");
+    } finally {
+      setIsGeneratingIQ(false);
+    }
+  };
+
+  const handleStartMockInterview = async () => {
+    if (!resumeText) return;
+
+    if (mockQuestions.length > 0) {
+      setShowMockInterview(true);
+      return;
+    }
+
+    setIsFetchingMock(true);
+    setIqError(null);
+
+    try {
+      const res = await fetch("/api/interview/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText, jobDescription, targetRole }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.error || "Failed to generate mock questions.");
+      }
+
+      setMockQuestions(data.questions || []);
+      setShowMockInterview(true);
+    } catch (err: any) {
+      console.error(err);
+      setIqError(err.message || "Failed to start mock interview.");
+    } finally {
+      setIsFetchingMock(false);
+    }
+  };
+
+  return {
+    interviewQuestions,
+    isGeneratingIQ,
+    iqError,
+    setIqError,
+    showMockInterview,
+    setShowMockInterview,
+    mockQuestions,
+    isFetchingMock,
+    handleGenerateInterviewQuestions,
+    handleStartMockInterview,
+  };
+}
