@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -57,7 +58,13 @@ export async function POST(req: NextRequest) {
       resumeText = body.resumeText || "";
     }
 
-    if (!resumeText || resumeText.trim().length < 100) {
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    }
+
+    if (resumeText.trim().length < 100) {
       return NextResponse.json(
         { success: false, error: "Resume text is too short or empty." },
         { status: 400 }

@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -78,7 +79,19 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     targetRole = body.targetRole;
   }
 
-  if (!resumeText || resumeText.trim().length < 100) {
+  try {
+    resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+    if (jobDescription) {
+      jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+    }
+    if (targetRole) {
+      targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+    }
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+  }
+
+  if (resumeText.trim().length < 100) {
     return NextResponse.json(
       { success: false, error: "Resume text is too short or empty." },
       { status: 400 }

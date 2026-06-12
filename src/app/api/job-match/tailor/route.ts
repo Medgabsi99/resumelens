@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -34,20 +35,19 @@ export async function POST(req: NextRequest) {
 
     // ── 3. Parse request ──────────────────────────────────────
     const body = await req.json();
-    const { resumeText, jobDescription, targetRole } = body;
+    let { resumeText, jobDescription, targetRole } = body;
 
-    if (!resumeText) {
-      return NextResponse.json(
-        { success: false, error: "Resume text is required" },
-        { status: 400 }
-      );
-    }
-
-    if (!jobDescription || jobDescription.trim().length < 50) {
-      return NextResponse.json(
-        { success: false, error: "Job description is required and must be at least 50 characters" },
-        { status: 400 }
-      );
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description", true);
+      if (jobDescription.length < 50) {
+        throw new Error("Job description must be at least 50 characters.");
+      }
+      if (targetRole) {
+        targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // ── 4. Call AI to tailor resume ──────────────────────────

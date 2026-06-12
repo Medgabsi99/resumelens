@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -21,10 +22,23 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { resumeId, jobTitle, companyName, jobDescription } = body;
+    let { resumeId, jobTitle, companyName, jobDescription } = body;
 
-    if (!resumeId || !jobDescription) {
-      const errRes = NextResponse.json({ success: false, error: "resumeId and jobDescription are required" }, { status: 400 });
+    if (!resumeId) {
+      const errRes = NextResponse.json({ success: false, error: "resumeId is required" }, { status: 400 });
+      return handleCors(req, errRes);
+    }
+
+    try {
+      jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description", true);
+      if (jobTitle) {
+        jobTitle = validateAndSanitizeInput(jobTitle, 200, "Job title");
+      }
+      if (companyName) {
+        companyName = validateAndSanitizeInput(companyName, 200, "Company name");
+      }
+    } catch (err: any) {
+      const errRes = NextResponse.json({ success: false, error: err.message }, { status: 400 });
       return handleCors(req, errRes);
     }
 

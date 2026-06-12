@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -32,20 +33,22 @@ export async function POST(req: NextRequest) {
 
   // ── 3. Parse request ──────────────────────────────────────
   const body = await req.json();
-  const { resumeText, jobDescription, jobTitle, companyName } = body;
+  let { resumeText, jobDescription, jobTitle, companyName } = body;
 
-  if (!resumeText) {
-    return NextResponse.json(
-      { success: false, error: "Resume text is required" },
-      { status: 400 }
-    );
-  }
-
-  if (!jobDescription || jobDescription.trim().length < 50) {
-    return NextResponse.json(
-      { success: false, error: "Job description is required and must be at least 50 characters" },
-      { status: 400 }
-    );
+  try {
+    resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+    jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description", true);
+    if (jobDescription.length < 50) {
+      throw new Error("Job description must be at least 50 characters.");
+    }
+    if (jobTitle) {
+      jobTitle = validateAndSanitizeInput(jobTitle, 200, "Job title");
+    }
+    if (companyName) {
+      companyName = validateAndSanitizeInput(companyName, 200, "Company name");
+    }
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 400 });
   }
 
   // ── 4. Run job match ─────────────────────────────────────

@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -23,20 +24,17 @@ export async function POST(req: NextRequest) {
 
     // 2. Parse request
     const body = await req.json();
-    const { resumeText, question, answer, jobDescription } = body;
+    let { resumeText, question, answer, jobDescription } = body;
 
-    if (!resumeText) {
-      return NextResponse.json(
-        { success: false, error: "Resume text required" },
-        { status: 400 }
-      );
-    }
-
-    if (!question || !answer) {
-      return NextResponse.json(
-        { success: false, error: "Question and answer text are required" },
-        { status: 400 }
-      );
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      question = validateAndSanitizeInput(question, 2000, "Question", true);
+      answer = validateAndSanitizeInput(answer, 4000, "Answer", true);
+      if (jobDescription) {
+        jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // 3. Evaluate response

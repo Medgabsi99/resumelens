@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -33,13 +34,18 @@ export async function POST(req: NextRequest) {
 
     // ── 3. Parse request ──────────────────────────────────────
     const body = await req.json();
-    const { resumeText, jobDescription, targetRole } = body;
+    let { resumeText, jobDescription, targetRole } = body;
 
-    if (!resumeText) {
-      return NextResponse.json(
-        { success: false, error: "Resume text required" },
-        { status: 400 }
-      );
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      if (jobDescription) {
+        jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+      }
+      if (targetRole) {
+        targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // ── 4. Generate questions array ──────────────────────────

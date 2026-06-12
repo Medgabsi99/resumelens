@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -32,13 +33,19 @@ export async function POST(req: NextRequest) {
 
   // ── 3. Parse request ──────────────────────────────────────
   const body = await req.json();
-  const { message, resumeText, jobDescription, targetRole } = body;
+  let { message, resumeText, jobDescription, targetRole } = body;
 
-  if (!message || !resumeText) {
-    return NextResponse.json(
-      { success: false, error: "Message and resume text are required" },
-      { status: 400 }
-    );
+  try {
+    message = validateAndSanitizeInput(message, 2000, "Message", true);
+    resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+    if (jobDescription) {
+      jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+    }
+    if (targetRole) {
+      targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+    }
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 400 });
   }
 
   // ── 4. Chat with AI ───────────────────────────────────────

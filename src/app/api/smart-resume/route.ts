@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -21,13 +22,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { resumeText, targetRole, jobDescription } = body;
+    let { resumeText, targetRole, jobDescription } = body;
 
-    if (!resumeText || typeof resumeText !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Resume text is required" },
-        { status: 400 },
-      );
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      if (targetRole) {
+        targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
+      }
+      if (jobDescription) {
+        jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // Call AI to generate structured resume

@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();
-    const {
+    let {
       resumeText,
       roleTitle,
       companyName,
@@ -34,18 +35,45 @@ export async function POST(req: NextRequest) {
       userResponse,
     } = body;
 
-    if (!resumeText) {
-      return NextResponse.json(
-        { success: false, error: "Resume text is required" },
-        { status: 400 }
-      );
-    }
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      roleTitle = validateAndSanitizeInput(roleTitle, 200, "Role title", true);
+      companyName = validateAndSanitizeInput(companyName, 200, "Company name", true);
+      scenario = validateAndSanitizeInput(scenario, 4000, "Scenario", true);
+      userResponse = validateAndSanitizeInput(userResponse, 4000, "User response", true);
 
-    if (!roleTitle || !companyName || !scenario || !initialOffer || !currentOffer || !userResponse) {
-      return NextResponse.json(
-        { success: false, error: "Missing required negotiation details" },
-        { status: 400 }
-      );
+      const validateOffer = (offer: any, name: string) => {
+        if (!offer || typeof offer !== "object") {
+          throw new Error(`${name} must be an object.`);
+        }
+        if (typeof offer.base !== "number" || typeof offer.bonus !== "number" || typeof offer.equity !== "number" || typeof offer.signOn !== "number") {
+          throw new Error(`${name} base, bonus, equity, and signOn must be numbers.`);
+        }
+        if (offer.other !== undefined && offer.other !== null) {
+          offer.other = validateAndSanitizeInput(offer.other, 1000, `${name} other field`);
+        }
+      };
+
+      validateOffer(initialOffer, "Initial offer");
+      validateOffer(currentOffer, "Current offer");
+
+      if (messageHistory && !Array.isArray(messageHistory)) {
+        throw new Error("Message history must be an array.");
+      }
+      if (messageHistory) {
+        for (let i = 0; i < messageHistory.length; i++) {
+          const m = messageHistory[i];
+          if (!m || typeof m !== "object") {
+            throw new Error(`Message history entry at index ${i} is invalid.`);
+          }
+          if (m.role !== "user" && m.role !== "recruiter") {
+            throw new Error(`Message history entry role at index ${i} must be 'user' or 'recruiter'.`);
+          }
+          m.content = validateAndSanitizeInput(m.content, 4000, `Message history content at index ${i}`, true);
+        }
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // ── 3. Call AI ───────────────────────────────────────────

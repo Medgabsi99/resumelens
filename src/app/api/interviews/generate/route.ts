@@ -1,3 +1,4 @@
+import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -33,13 +34,23 @@ export async function POST(req: NextRequest) {
 
     // 3. Parse request
     const body = await req.json();
-    const { resumeText, targetRole, companyName, jobDescription, interviewType, difficulty } = body;
+    let { resumeText, targetRole, companyName, jobDescription, interviewType, difficulty } = body;
 
-    if (!resumeText || !targetRole || !companyName) {
-      return NextResponse.json(
-        { success: false, error: "Resume text, target role, and company name are required" },
-        { status: 400 }
-      );
+    try {
+      resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
+      targetRole = validateAndSanitizeInput(targetRole, 200, "Target role", true);
+      companyName = validateAndSanitizeInput(companyName, 200, "Company name", true);
+      if (jobDescription) {
+        jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
+      }
+      if (interviewType) {
+        interviewType = validateAndSanitizeInput(interviewType, 100, "Interview type");
+      }
+      if (difficulty) {
+        difficulty = validateAndSanitizeInput(difficulty, 100, "Difficulty");
+      }
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
 
     // 4. Generate custom simulator questions
