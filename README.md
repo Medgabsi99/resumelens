@@ -1,13 +1,13 @@
 # ResumeLens — AI Resume Reviewer
 
-A production-ready Next.js app that gives honest, structured AI feedback on resumes. Built with Claude AI, Supabase Auth, and Stripe payments.
+A production-ready Next.js app that gives honest, structured AI feedback on resumes. Built with Google Gemini, Supabase Auth, and Stripe payments.
 
 ## Stack
 
 | Layer | Tech |
 |---|---|
 | Framework | Next.js 14 (App Router) |
-| AI | Anthropic Claude Sonnet (via `@anthropic-ai/sdk`) |
+| AI | Google Gemini 2.5 Flash (via `@google/generative-ai`) |
 | Auth | Supabase Auth (email + Google OAuth) |
 | Database | Supabase (Postgres + RLS) |
 | Payments | Stripe Checkout + Webhooks |
@@ -62,10 +62,10 @@ cp .env.local.example .env.local
    ```
    Copy the `whsec_...` secret to `STRIPE_WEBHOOK_SECRET`
 
-### 4. Get Anthropic API key
+### 4. Get Google Gemini API key
 
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Create an API key → paste into `ANTHROPIC_API_KEY`
+1. Go to [aistudio.google.com](https://aistudio.google.com)
+2. Create an API key → paste into `GOOGLE_AI_API_KEY`
 
 ### 5. Run locally
 
@@ -116,7 +116,7 @@ src/
 │   ├── ResultsPanel.tsx           ← Full analysis display
 │   └── UpgradeModal.tsx           ← Paywall modal
 ├── lib/
-│   ├── ai.ts                      ← Claude API + file parsing
+│   ├── ai.ts                      ← Gemini API + file parsing
 │   ├── auth.ts                    ← Session helpers
 │   ├── stripe.ts                  ← Stripe client + plan config
 │   └── supabase.ts               ← Supabase clients
