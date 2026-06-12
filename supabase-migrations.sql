@@ -329,6 +329,10 @@ CREATE TABLE IF NOT EXISTS public.user_portfolios (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_user_portfolios_user_id ON public.user_portfolios(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_portfolios_analysis_id ON public.user_portfolios(analysis_id);
+
 -- Enable RLS
 ALTER TABLE public.user_portfolios ENABLE ROW LEVEL SECURITY;
 
