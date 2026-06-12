@@ -301,6 +301,25 @@ Do NOT include placeholder addresses like "[Your Address]" or "[Company Address]
   return result.response.text().trim();
 }
 
+export async function generateCoverLetterStream(
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string,
+) {
+  let prompt = `Write a professional, compelling, and modern cover letter based on the following resume.
+Keep it to 3 or 4 concise paragraphs. Make it impactful and engaging, avoiding overly robotic language.
+Do NOT include placeholder addresses like "[Your Address]" or "[Company Address]" — just write the body of the letter and sign off with "[Your Name]".`;
+
+  if (targetRole) prompt += `\n\nThe target role is: ${targetRole}`;
+  if (jobDescription) {
+    prompt += `\n\nEnsure the cover letter specifically addresses these job requirements and highlights relevant matching experience:\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
+  }
+
+  prompt += `\n\n[RESUME START]\n${resumeText.slice(0, 6000)}\n[RESUME END]\n\nReturn ONLY the cover letter text.`;
+
+  return withRetryAndTimeout(() => coverLetterModel.generateContentStream(prompt));
+}
+
 // ─── Interview Questions Generation ────────────────────────
 
 export async function generateInterviewQuestions(
@@ -334,6 +353,36 @@ ${resumeText.slice(0, 6000)}
   return result.response.text().trim();
 }
 
+export async function generateInterviewQuestionsStream(
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string,
+) {
+  let prompt = `Based on the following resume`;
+  if (targetRole) prompt += ` and the target role of "${targetRole}"`;
+  if (jobDescription) prompt += ` and the job description provided`;
+  prompt += `, generate 8-10 targeted interview questions that a hiring manager would likely ask.
+
+The questions should:
+- Test both technical skills and behavioral competencies
+- Reference specific experiences or projects from the resume
+- Include follow-up probes for deeper exploration
+- Cover areas like: technical depth, problem-solving, teamwork, leadership, and cultural fit
+- Be specific to this candidate, not generic interview questions
+
+Format the output as a numbered list with each question on its own line. For questions with follow-ups, indent the follow-up with a dash.
+
+[RESUME START]
+${resumeText.slice(0, 6000)}
+[RESUME END]`;
+
+  if (jobDescription) {
+    prompt += `\n\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
+  }
+
+  return withRetryAndTimeout(() => interviewModel.generateContentStream(prompt));
+}
+
 // ─── Interactive Chat ──────────────────────────────────────
 
 export async function chatWithResume(
@@ -351,6 +400,22 @@ export async function chatWithResume(
 
   const result = await withRetryAndTimeout(() => chatModel.generateContent(prompt));
   return result.response.text().trim();
+}
+
+export async function chatWithResumeStream(
+  message: string,
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string,
+) {
+  let context = `[RESUME START]\n${resumeText.slice(0, 6000)}\n[RESUME END]\n\n`;
+  if (targetRole) context += `Target Role: ${targetRole}\n\n`;
+  if (jobDescription)
+    context += `[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]\n\n`;
+
+  const prompt = `${context}[MESSAGE START]\n${message}\n[MESSAGE END]\n\nProvide a helpful, actionable, and specific response.`;
+
+  return withRetryAndTimeout(() => chatModel.generateContentStream(prompt));
 }
 
 // ─── Job Match (Resume ↔ Job Description) ────────────────

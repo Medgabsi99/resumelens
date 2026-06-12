@@ -44,23 +44,49 @@ export function useResumeChat(
           targetRole,
         }),
       });
-      const data = await res.json();
 
-      if (res.ok && data.success) {
-        setChatHistory((prev) => [...prev, { role: "ai", text: data.data }]);
-      } else {
-        setChatHistory((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            text: "Sorry, I encountered an error. Please try again.",
-          },
-        ]);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Sorry, I encountered an error. Please try again.");
       }
-    } catch {
+
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("No readable stream reader available.");
+      }
+
+      // Add a placeholder message for the AI response
+      setChatHistory((prev) => [...prev, { role: "ai", text: "" }]);
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulated = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: !done });
+          accumulated += chunk;
+          setChatHistory((prev) => {
+            const nextHistory = [...prev];
+            if (nextHistory.length > 0) {
+              const lastIdx = nextHistory.length - 1;
+              if (nextHistory[lastIdx].role === "ai") {
+                nextHistory[lastIdx] = { ...nextHistory[lastIdx], text: accumulated };
+              }
+            }
+            return nextHistory;
+          });
+        }
+      }
+    } catch (err: any) {
       setChatHistory((prev) => [
         ...prev,
-        { role: "ai", text: "Network error. Please try again." },
+        {
+          role: "ai",
+          text: err.message || "Network error. Please try again.",
+        },
       ]);
     } finally {
       setIsChatting(false);

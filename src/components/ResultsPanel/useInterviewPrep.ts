@@ -22,6 +22,7 @@ export function useInterviewPrep(
 
     setIsGeneratingIQ(true);
     setIqError(null);
+    setInterviewQuestions("");
 
     try {
       const res = await fetch("/api/interview-questions", {
@@ -30,16 +31,33 @@ export function useInterviewPrep(
         body: JSON.stringify({ resumeText, jobDescription, targetRole }),
       });
 
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data || !data.success) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
         setIqError(data?.error || "Failed to generate interview questions.");
         return;
       }
 
-      setInterviewQuestions(data.data || "");
-    } catch (e) {
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("No readable stream reader available.");
+      }
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulated = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: !done });
+          accumulated += chunk;
+          setInterviewQuestions(accumulated);
+        }
+      }
+    } catch (e: any) {
       console.error(e);
-      setIqError("Network error while generating interview questions.");
+      setIqError(e.message || "Network error while generating interview questions.");
     } finally {
       setIsGeneratingIQ(false);
     }

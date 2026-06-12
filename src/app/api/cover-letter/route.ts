@@ -1,8 +1,9 @@
 import { validateAndSanitizeInput } from "@/lib/validation";
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { generateCoverLetter } from "@/lib/ai";
+import { generateCoverLetterStream } from "@/lib/ai";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -49,9 +50,31 @@ export async function POST(req: NextRequest) {
 
   // ── 4. Generate Cover Letter ──────────────────────────────
   try {
-    const coverLetter = await generateCoverLetter(resumeText, jobDescription, targetRole);
-    return NextResponse.json({ success: true, data: coverLetter });
+    const streamResult = await generateCoverLetterStream(resumeText, jobDescription, targetRole);
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          for await (const chunk of streamResult.stream) {
+            const text = chunk.text();
+            controller.enqueue(encoder.encode(text));
+          }
+        } catch (streamErr) {
+          logger.error("Cover letter stream error:", streamErr);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(responseStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
+    });
   } catch (err: unknown) {
+    logger.error("Cover letter API error:", err);
     const message = err instanceof Error ? err.message : "Cover letter generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

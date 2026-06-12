@@ -18,6 +18,7 @@ export function useCoverLetter(
 
     setIsGeneratingCL(true);
     setClError(null);
+    setCoverLetter("");
 
     try {
       const res = await fetch("/api/cover-letter", {
@@ -26,16 +27,33 @@ export function useCoverLetter(
         body: JSON.stringify({ resumeText, jobDescription, targetRole }),
       });
 
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data || !data.success) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
         setClError(data?.error || "Failed to generate cover letter.");
         return;
       }
 
-      setCoverLetter(data.coverLetter || data.data || "");
-    } catch (e) {
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("No readable stream reader available.");
+      }
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulated = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: !done });
+          accumulated += chunk;
+          setCoverLetter(accumulated);
+        }
+      }
+    } catch (e: any) {
       console.error(e);
-      setClError("Network error while generating cover letter.");
+      setClError(e.message || "Network error while generating cover letter.");
     } finally {
       setIsGeneratingCL(false);
     }

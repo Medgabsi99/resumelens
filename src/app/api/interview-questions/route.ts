@@ -1,8 +1,9 @@
 import { validateAndSanitizeInput } from "@/lib/validation";
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { generateInterviewQuestions } from "@/lib/ai";
+import { generateInterviewQuestionsStream } from "@/lib/ai";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -48,9 +49,31 @@ export async function POST(req: NextRequest) {
 
   // ── 4. Generate Interview Questions ───────────────────────
   try {
-    const questions = await generateInterviewQuestions(resumeText, jobDescription, targetRole);
-    return NextResponse.json({ success: true, data: questions });
+    const streamResult = await generateInterviewQuestionsStream(resumeText, jobDescription, targetRole);
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          for await (const chunk of streamResult.stream) {
+            const text = chunk.text();
+            controller.enqueue(encoder.encode(text));
+          }
+        } catch (streamErr) {
+          logger.error("Interview questions stream error:", streamErr);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(responseStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
+    });
   } catch (err: unknown) {
+    logger.error("Interview questions API error:", err);
     const message = err instanceof Error ? err.message : "Interview questions generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
