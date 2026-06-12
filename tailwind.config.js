@@ -14,22 +14,29 @@ module.exports = {
       },
       colors: {
         ink: {
-          DEFAULT: "#1a1a18",
-          muted: "#5a5a54",
-          faint: "#9a9a90",
+          DEFAULT: "var(--ink)",
+          muted: "var(--ink-muted)",
+          faint: "var(--ink-faint)",
         },
         paper: {
-          DEFAULT: "#faf9f6",
-          warm: "#f4f2ec",
-          card: "#ffffff",
+          DEFAULT: "var(--paper)",
+          warm: "var(--paper-warm)",
+          card: "var(--paper-card)",
         },
         accent: {
-          DEFAULT: "#c8562a",
-          bg: "#fdf0eb",
-          border: "#e8a080",
-          hover: "#b0461f",
+          DEFAULT: "var(--accent)",
+          bg: "var(--accent-bg)",
+          border: "var(--accent-border)",
+          hover: "var(--accent-hover)",
         },
+        brand: {
+          glow: "var(--brand-glow)",
+        }
       },
+      boxShadow: {
+        premium: "0 10px 30px -10px var(--shadow-color)",
+        glow: "0 0 20px 2px var(--brand-glow)",
+      }
     },
   },
   plugins: [],

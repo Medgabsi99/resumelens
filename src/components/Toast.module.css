@@ -1,0 +1,47 @@
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  background: rgba(17, 24, 39, 0.95);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.4);
+  z-index: 9999;
+  font-family:
+    Instrument Sans,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial;
+  font-size: 13px;
+}
+
+.message {
+  max-width: 420px;
+}
+
+.action {
+  background: transparent;
+  color: #60a5fa;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.close {
+  background: transparent;
+  color: #9ca3af;
+  border: none;
+  cursor: pointer;
+  padding: 0 6px;
+  font-size: 18px;
+  line-height: 1;
+}
