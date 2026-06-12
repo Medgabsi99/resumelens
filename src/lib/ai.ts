@@ -96,6 +96,75 @@ const chatModel = getSecureModel({
     "You are an expert career coach and technical recruiter. You are chatting with a candidate about their resume. Answer their questions clearly, concisely, and practically.",
 });
 
+const matchModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert technical recruiter and hiring manager. You evaluate how well a candidate's resume matches a specific job description with brutal honesty and precision. You respond ONLY with valid JSON — no markdown, no preamble.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const outreachModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert career coach and professional networking writer. You write highly-converting, extremely concise networking pitches. Respond with ONLY the message text — no preambles, no quotes, no markdown wrappers.",
+});
+
+const negotiationResponseModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are a professional HR Director and expert salary negotiator. You negotiate with candidates firmly, realistically, and in character. Respond with ONLY a valid JSON object matching the requested schema.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const negotiationEvaluationModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are a master executive coach and expert salary negotiator. You analyze negotiation transcripts and output a detailed, constructive scorecard. Respond with ONLY a valid JSON object matching the requested schema.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const pdfStructureModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert ATS parser validator and technical layout scanner. You inspect parsed resume text to verify formatting compliance against typical ATS parsing rules. Respond with ONLY a valid JSON object matching the requested schema.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const skillGapModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert technical product architect, senior developer, and engineering educator. You design custom portfolio projects and structured weekly learning paths to bridge specific technical skill gaps. Respond with ONLY a valid JSON object matching the requested schema.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const simulatorQuestionsModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert technical interviewer and executive talent partner. You respond ONLY with valid JSON — no preamble, no markdown fences.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+const finalScorecardModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert executive communication coach and veteran recruiter. You evaluate a candidate's full mock interview transcript and compile a comprehensive performance review. You respond ONLY with valid JSON — no preamble, no markdown fences.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
 export function buildAnalysisPrompt(
   resumeText: string,
   jobDescription?: string,
@@ -159,7 +228,7 @@ export async function analyzeResume(
 ): Promise<AnalysisResult> {
   const prompt = buildAnalysisPrompt(resumeText, jobDescription, targetRole);
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => negotiationResponseModel.generateContent(prompt));
   const raw = result.response.text();
 
   // Strip any accidental markdown fences
@@ -292,14 +361,7 @@ export async function matchJobToResume(
   jobTitle?: string,
   companyName?: string,
 ): Promise<JobMatchResult> {
-  const matchModel = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert technical recruiter and hiring manager. You evaluate how well a candidate's resume matches a specific job description with brutal honesty and precision. You respond ONLY with valid JSON — no markdown, no preamble.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const titleLine = jobTitle ? ` for the role of "${jobTitle}"` : "";
   const companyLine = companyName ? ` at ${companyName}` : "";
@@ -889,11 +951,7 @@ export async function generateOutreachMessage(
   recruiterName?: string,
   outreachType?: "recruiter" | "peer"
 ): Promise<string> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert career coach and professional networking writer. You write highly-converting, extremely concise networking pitches. Respond with ONLY the message text — no preambles, no quotes, no markdown wrappers.",
-  });
+
 
   const namePart = recruiterName ? `addressed to ${recruiterName}` : "without a specific name (use a professional greeting like 'Hi there' or 'Hello')";
   const typeExplanation = outreachType === "peer"
@@ -922,7 +980,7 @@ Rules for the message:
 5. Do NOT include placeholder fields like "[Date]" or "[Skills]" in the body — write a complete, ready-to-send message. Use placeholder "[Your Name]" only at the sign-off.
 6. Return ONLY the message body, no markdown fences, no email subject lines, and no preambles.`;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => outreachModel.generateContent(prompt));
   return result.response.text().trim();
 }
 
@@ -966,14 +1024,7 @@ export async function generateNegotiationResponse(
   messageHistory: { role: "user" | "recruiter"; content: string }[],
   userResponse: string
 ): Promise<NegotiationTurnResponse> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are a professional HR Director and expert salary negotiator. You negotiate with candidates firmly, realistically, and in character. Respond with ONLY a valid JSON object matching the requested schema.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const historyText = messageHistory
     .map((m) => `${m.role === "user" ? "Candidate" : "Recruiter"}: ${m.content}`)
@@ -1031,7 +1082,7 @@ Return ONLY a JSON object with this exact structure:
 }
 `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => negotiationResponseModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1052,14 +1103,7 @@ export async function evaluateNegotiationSession(
   messageHistory: { role: "user" | "recruiter"; content: string }[],
   verdict: string
 ): Promise<NegotiationScorecard> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are a master executive coach and expert salary negotiator. You analyze negotiation transcripts and output a detailed, constructive scorecard. Respond with ONLY a valid JSON object matching the requested schema.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const historyText = messageHistory
     .map((m) => `${m.role === "user" ? "Candidate" : "Recruiter"}: ${m.content}`)
@@ -1102,7 +1146,7 @@ Return ONLY a JSON object with this exact structure:
 }
 `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => negotiationEvaluationModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1142,14 +1186,7 @@ export interface AtsStructureResult {
 }
 
 export async function analyzePdfStructure(resumeText: string): Promise<AtsStructureResult> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert ATS parser validator and technical layout scanner. You inspect parsed resume text to verify formatting compliance against typical ATS parsing rules. Respond with ONLY a valid JSON object matching the requested schema.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const prompt = `Inspect the following parsed resume text for formatting, structure, and readability flags that affect ATS parser success.
 
@@ -1190,7 +1227,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
 }
 `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => pdfStructureModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1247,14 +1284,7 @@ export async function generateSkillGapPath(
   roleTitle: string,
   companyName: string
 ): Promise<SkillGapPathResult> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert technical product architect, senior developer, and engineering educator. You design custom portfolio projects and structured weekly learning paths to bridge specific technical skill gaps. Respond with ONLY a valid JSON object matching the requested schema.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const prompt = `Analyze this candidate's resume against the target job description to build a custom skill-gap project and learning path.
 
@@ -1318,7 +1348,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
 }
 `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => skillGapModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1366,14 +1396,7 @@ export async function generateSimulatorQuestions(
   interviewType: string = "behavioral",
   difficulty: string = "mid"
 ): Promise<string[]> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert technical interviewer and executive talent partner. You respond ONLY with valid JSON — no preamble, no markdown fences.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const prompt = `Generate exactly 5 customized interview questions for a candidate.
   
@@ -1402,7 +1425,7 @@ export async function generateSimulatorQuestions(
   ]
   `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => simulatorQuestionsModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
@@ -1434,14 +1457,7 @@ export async function compileFinalInterviewScorecard(
   companyName: string,
   transcripts: { question: string; answer: string; score: number }[]
 ): Promise<MockInterviewScorecard> {
-  const model = getSecureModel({
-    model: "gemini-2.5-flash",
-    systemInstruction:
-      "You are an expert executive communication coach and veteran recruiter. You evaluate a candidate's full mock interview transcript and compile a comprehensive performance review. You respond ONLY with valid JSON — no preamble, no markdown fences.",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+
 
   const prompt = `Evaluate the candidate's performance across this mock interview for the role of "${roleTitle}" at "${companyName}".
   
@@ -1471,7 +1487,7 @@ export async function compileFinalInterviewScorecard(
   }
   `;
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => finalScorecardModel.generateContent(prompt));
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
