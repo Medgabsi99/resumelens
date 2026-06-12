@@ -1,5 +1,5 @@
 import { AnalysisResult } from "@/types";
-import { withRetryAndTimeout, negotiationResponseModel } from "./client";
+import { withRetryAndTimeout, model } from "./client";
 
 export function buildAnalysisPrompt(
   resumeText: string,
@@ -64,7 +64,7 @@ export async function analyzeResume(
 ): Promise<AnalysisResult> {
   const prompt = buildAnalysisPrompt(resumeText, jobDescription, targetRole);
 
-  const result = await withRetryAndTimeout(() => negotiationResponseModel.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
   const raw = result.response.text();
 
   // Strip any accidental markdown fences
