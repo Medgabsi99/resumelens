@@ -13,8 +13,22 @@ export async function getServerSession() {
   return session;
 }
 
+interface CacheEntry {
+  profile: UserProfile | null;
+  expiresAt: number;
+}
+
+const profileCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5000; // 5 seconds cache lifetime is perfect for short-lived deduplication
+
 // Get user profile (plan, usage etc.) from Supabase
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const now = Date.now();
+  const cached = profileCache.get(userId);
+  if (cached && cached.expiresAt > now) {
+    return cached.profile;
+  }
+
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("profiles")
@@ -22,8 +36,14 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     .eq("id", userId)
     .single();
 
-  if (error || !data) return null;
-  return data as UserProfile;
+  if (error || !data) {
+    profileCache.set(userId, { profile: null, expiresAt: now + CACHE_TTL_MS });
+    return null;
+  }
+
+  const profile = data as UserProfile;
+  profileCache.set(userId, { profile, expiresAt: now + CACHE_TTL_MS });
+  return profile;
 }
 
 // Check if user can run another analysis
@@ -36,10 +56,15 @@ export function canAnalyze(profile: UserProfile): boolean {
 export async function incrementUsage(userId: string) {
   const admin = createAdminClient();
   await admin.rpc("increment_analyses_used", { user_id: userId });
+  // Invalidate cache immediately on update
+  profileCache.delete(userId);
 }
 
 // Create profile row on first sign-up (called from webhook or sign-up handler)
 export async function createProfile(userId: string, email: string) {
+  // Invalidate cache in case we check before insert
+  profileCache.delete(userId);
+
   const admin = createAdminClient();
   const { data: existing } = await admin
     .from("profiles")
