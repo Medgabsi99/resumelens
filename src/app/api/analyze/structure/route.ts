@@ -60,8 +60,9 @@ export async function POST(req: NextRequest) {
 
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
-    } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
     if (resumeText.trim().length < 100) {
@@ -79,10 +80,11 @@ export async function POST(req: NextRequest) {
       data: analysis,
       extractedText: resumeText,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Structure scan API error:", error);
+    const message = error instanceof Error ? error.message : "Failed to scan structure";
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to scan structure" },
+      { success: false, error: message },
       { status: 500 }
     );
   }

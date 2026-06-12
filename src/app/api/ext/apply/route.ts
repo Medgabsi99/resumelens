@@ -80,9 +80,9 @@ export async function POST(req: NextRequest) {
 
     const okRes = NextResponse.json({ success: true, message: "Application tracked successfully!" });
     return handleCors(req, okRes);
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Extension track application error:", err);
-    const errRes = NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
     return handleCors(req, errRes);
   }
 }

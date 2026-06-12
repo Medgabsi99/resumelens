@@ -55,14 +55,14 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (error) {
-        dbError = error.message;
+        dbError = (error instanceof Error ? error.message : String(error));
         logger.warn("Supabase save error (falling back to frontend storage):", error);
       } else {
         savedInDb = true;
         savedItem = data;
       }
-    } catch (err: any) {
-      dbError = err.message;
+    } catch (err: unknown) {
+      dbError = (err instanceof Error ? err.message : String(err));
       logger.warn("Graceful DB exception caught, falling back to local storage:", err);
     }
 
@@ -72,10 +72,10 @@ export async function POST(req: NextRequest) {
       dbError,
       data: savedItem,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Learning path save API error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to save learning path" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to save learning path" },
       { status: 500 }
     );
   }

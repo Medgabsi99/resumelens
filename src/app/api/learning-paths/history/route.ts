@@ -27,19 +27,19 @@ export async function GET() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        logger.warn("Table learning_paths not available or error:", error.message);
-        return NextResponse.json({ success: true, data: [], dbError: error.message, fallback: true });
+        logger.warn("Table learning_paths not available or error:", (error instanceof Error ? error.message : String(error)));
+        return NextResponse.json({ success: true, data: [], dbError: (error instanceof Error ? error.message : String(error)), fallback: true });
       }
 
       return NextResponse.json({ success: true, data });
-    } catch (dbErr: any) {
-      logger.warn("Graceful db catch for learning paths history GET:", dbErr.message);
-      return NextResponse.json({ success: true, data: [], dbError: dbErr.message, fallback: true });
+    } catch (dbErr: unknown) {
+      logger.warn("Graceful db catch for learning paths history GET:", (dbErr instanceof Error ? dbErr.message : String(dbErr)));
+      return NextResponse.json({ success: true, data: [], dbError: (dbErr instanceof Error ? dbErr.message : String(dbErr)), fallback: true });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Learning paths history GET API error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to load history" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to load history" },
       { status: 500 }
     );
   }
@@ -80,19 +80,19 @@ export async function DELETE(req: NextRequest) {
         .eq("user_id", session.user.id);
 
       if (error) {
-        logger.warn("Supabase delete failed on learning_paths:", error.message);
-        return NextResponse.json({ success: false, error: error.message });
+        logger.warn("Supabase delete failed on learning_paths:", (error instanceof Error ? error.message : String(error)));
+        return NextResponse.json({ success: false, error: (error instanceof Error ? error.message : String(error)) });
       }
 
       return NextResponse.json({ success: true });
-    } catch (dbErr: any) {
-      logger.warn("Supabase delete exception caught on learning_paths:", dbErr.message);
-      return NextResponse.json({ success: false, error: dbErr.message, fallback: true });
+    } catch (dbErr: unknown) {
+      logger.warn("Supabase delete exception caught on learning_paths:", (dbErr instanceof Error ? dbErr.message : String(dbErr)));
+      return NextResponse.json({ success: false, error: (dbErr instanceof Error ? dbErr.message : String(dbErr)), fallback: true });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Learning paths history DELETE API error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete item" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to delete item" },
       { status: 500 }
     );
   }

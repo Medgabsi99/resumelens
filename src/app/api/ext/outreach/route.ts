@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
       if (outreachType) {
         outreachType = validateAndSanitizeInput(outreachType, 100, "Outreach type");
       }
-    } catch (err: any) {
-      const errRes = NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 400 });
       return handleCors(req, errRes);
     }
 
@@ -81,9 +81,9 @@ export async function POST(req: NextRequest) {
       data: message
     });
     return handleCors(req, okRes);
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Outreach generation endpoint error:", err);
-    const errRes = NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
     return handleCors(req, errRes);
   }
 }

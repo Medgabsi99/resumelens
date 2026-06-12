@@ -22,12 +22,14 @@ export async function GET(
       .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }
 
@@ -62,12 +64,14 @@ export async function POST(
       .single();
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }
 
@@ -95,11 +99,13 @@ export async function DELETE(
       .eq("user_id", session.user.id);
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

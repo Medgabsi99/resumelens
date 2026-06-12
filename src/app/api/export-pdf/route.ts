@@ -82,10 +82,11 @@ export async function POST(req: NextRequest) {
       logger.error("Signed URL fallback failed:", e);
       throw e;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Upload PDF error:", err);
+    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { success: false, error: String(err?.message || err) },
+      { success: false, error: message },
       { status: 500 }
     );
   }

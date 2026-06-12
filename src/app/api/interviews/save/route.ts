@@ -86,14 +86,14 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (error) {
-        dbError = error.message;
+        dbError = (error instanceof Error ? error.message : String(error));
         logger.warn("Supabase interview save error (falling back to local storage):", error);
       } else {
         savedInDb = true;
         savedItem = data;
       }
-    } catch (err: any) {
-      dbError = err.message;
+    } catch (err: unknown) {
+      dbError = (err instanceof Error ? err.message : String(err));
       logger.warn("Graceful DB exception caught on save, falling back to local storage:", err);
     }
 
@@ -104,10 +104,10 @@ export async function POST(req: NextRequest) {
       scorecard,
       data: savedItem,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Scorecard compile & save route error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to compile scorecard" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to compile scorecard" },
       { status: 500 }
     );
   }

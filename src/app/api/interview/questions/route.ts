@@ -44,8 +44,9 @@ export async function POST(req: NextRequest) {
       if (targetRole) {
         targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
       }
-    } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
     // ── 4. Generate questions array ──────────────────────────

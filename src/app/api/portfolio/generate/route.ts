@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
 
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
-    } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
     const data = await generatePortfolio(resumeText);
@@ -32,10 +33,10 @@ export async function POST(req: NextRequest) {
       success: true,
       data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Generate portfolio error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to generate portfolio copy" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to generate portfolio copy" },
       { status: 500 }
     );
   }

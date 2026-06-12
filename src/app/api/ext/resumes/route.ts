@@ -27,14 +27,14 @@ export async function GET(req: NextRequest) {
       .limit(50);
 
     if (error) {
-      const errRes = NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const errRes = NextResponse.json({ success: false, error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
       return handleCors(req, errRes);
     }
 
     const okRes = NextResponse.json({ success: true, data });
     return handleCors(req, okRes);
-  } catch (err: any) {
-    const errRes = NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
     return handleCors(req, errRes);
   }
 }

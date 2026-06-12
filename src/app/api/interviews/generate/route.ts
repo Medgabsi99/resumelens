@@ -49,8 +49,9 @@ export async function POST(req: NextRequest) {
       if (difficulty) {
         difficulty = validateAndSanitizeInput(difficulty, 100, "Difficulty");
       }
-    } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
     // 4. Generate custom simulator questions

@@ -94,10 +94,8 @@ export async function PUT(
     .single();
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 
   if (!data) {
@@ -143,10 +141,8 @@ export async function DELETE(
     .eq("user_id", session.user.id);
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

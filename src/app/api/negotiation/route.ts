@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       scenario = validateAndSanitizeInput(scenario, 4000, "Scenario", true);
       userResponse = validateAndSanitizeInput(userResponse, 4000, "User response", true);
 
-      const validateOffer = (offer: any, name: string) => {
+      const validateOffer = (offer: Record<string, any>, name: string) => {
         if (!offer || typeof offer !== "object") {
           throw new Error(`${name} must be an object.`);
         }
@@ -72,8 +72,9 @@ export async function POST(req: NextRequest) {
           m.content = validateAndSanitizeInput(m.content, 4000, `Message history content at index ${i}`, true);
         }
       }
-    } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
     // ── 3. Call AI ───────────────────────────────────────────
@@ -89,10 +90,10 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, turn });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Salary negotiation API error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to negotiate" },
+      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to negotiate" },
       { status: 500 }
     );
   }
