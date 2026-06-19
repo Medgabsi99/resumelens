@@ -150,8 +150,37 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: "center", padding: "40px", color: "var(--ink-muted)" }}>
-        <p>Loading personal portfolio data...</p>
+      <div
+        style={{
+          background: "var(--paper-card)",
+          border: "1.5px solid var(--border)",
+          borderRadius: "16px",
+          overflow: "hidden",
+          marginTop: "16px",
+        }}
+      >
+        {/* Shimmer header */}
+        <div
+          className="skeleton"
+          style={{ height: 58, borderRadius: 0, borderBottom: "1px solid var(--border)" }}
+        />
+        {/* Shimmer body */}
+        <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", minHeight: 420 }}>
+          <div
+            style={{
+              borderRight: "1px solid var(--border)",
+              padding: "20px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+            }}
+          >
+            {[80, 100, 60, 90, 70].map((w, i) => (
+              <div key={i} className="skeleton" style={{ height: i === 1 ? 72 : 14, width: `${w}%`, borderRadius: 8 }} />
+            ))}
+          </div>
+          <div className="skeleton" style={{ margin: 16, borderRadius: 12 }} />
+        </div>
       </div>
     );
   }

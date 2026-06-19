@@ -243,11 +243,12 @@ Template recommendation guide:
     parsed.skills = [];
   }
 
-  // Validate template recommendation
-  const validTemplates = ["professional", "modern", "creative", "minimal", "executive"];
-  if (!validTemplates.includes(parsed.recommendedTemplate)) {
-    parsed.recommendedTemplate = "professional";
-  }
+  // Use codified template recommendation logic
+  parsed.recommendedTemplate = getRecommendedTemplate(
+    targetRole || "",
+    resumeText || "",
+    parsed.experience || []
+  );
 
   return parsed;
 }
@@ -349,11 +350,66 @@ Rules for tailoring:
     parsed.skills = [];
   }
 
-  // Validate template recommendation
-  const validTemplates = ["professional", "modern", "creative", "minimal", "executive"];
-  if (!validTemplates.includes(parsed.recommendedTemplate)) {
-    parsed.recommendedTemplate = "professional";
-  }
+  // Use codified template recommendation logic
+  parsed.recommendedTemplate = getRecommendedTemplate(
+    targetRole || "",
+    resumeText || "",
+    parsed.experience || []
+  );
 
   return parsed;
+}
+
+function getRecommendedTemplate(
+  targetRole: string = "",
+  resumeText: string = "",
+  experience: any[] = []
+): string {
+  const role = targetRole.toLowerCase();
+  
+  // 1. Executive Seniority check
+  const hasSenioritySignal = /\b(director|vp|vice president|chief|head of|partner|executive|president|c-suite|ceo|cto|cfo|coo|cmo|cro|cio)\b/i.test(role);
+  
+  // Calculate total years of experience roughly from dates if experience list is available
+  let totalYears = 0;
+  if (experience && experience.length > 0) {
+    let minYear = new Date().getFullYear();
+    let maxYear = 1970;
+    let foundDates = false;
+    for (const exp of experience) {
+      if (exp.dates) {
+        const years = exp.dates.match(/\b\d{4}\b/g);
+        if (years && years.length > 0) {
+          foundDates = true;
+          const numYears = years.map(Number);
+          const expMin = Math.min(...numYears);
+          const expMax = Math.max(...numYears);
+          if (expMin < minYear) minYear = expMin;
+          if (expMax > maxYear) maxYear = expMax;
+        }
+      }
+    }
+    if (foundDates && maxYear >= minYear) {
+      totalYears = maxYear - minYear;
+    }
+  }
+  
+  if (hasSenioritySignal || totalYears > 12) {
+    return "executive";
+  }
+  
+  // 2. Creative / Marketing check
+  const isCreative = /\b(design|designer|creative|marketing|brand|writer|copywriter|art|artist|content|product marketing|media|social media|growth)\b/i.test(role);
+  if (isCreative) {
+    return "creative";
+  }
+  
+  // 3. Tech / Engineering / Product check
+  const isTech = /\b(software|developer|engineer|tech|product|engineering|programmer|data|analytics|cloud|devops|qa|scrum|agile|system|architect|fullstack|frontend|backend)\b/i.test(role);
+  if (isTech) {
+    return "modern";
+  }
+  
+  // 4. Default -> professional
+  return "professional";
 }

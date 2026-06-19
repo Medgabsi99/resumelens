@@ -1,6 +1,6 @@
 import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
+import { createRouteHandlerClient, createAdminClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { analyzeResume, extractTextFromBuffer } from "@/lib/ai";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
@@ -115,8 +115,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   }
 
   // ── 6. Persist analysis + increment usage ─────────────────
-  await Promise.all([
-    supabase.from("analyses").insert({
+  // Use admin client (service role) for the insert — the route-handler
+  // client uses anon+session which hits RLS (no INSERT policy for users).
+  const adminClient = createAdminClient();
+  const [insertResult] = await Promise.all([
+    adminClient.from("analyses").insert({
       user_id: userId,
       score: result.score,
       result_json: JSON.stringify(result),
@@ -126,6 +129,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     }),
     incrementUsage(userId),
   ]);
+
+  if (insertResult.error) {
+    console.error("[analyze] DB insert failed:", insertResult.error.message);
+  }
 
   return NextResponse.json({ success: true, data: result, extractedText: resumeText });
 }

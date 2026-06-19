@@ -9,10 +9,10 @@ export function buildAnalysisPrompt(
   let prompt = `Analyze this resume`;
   if (targetRole) prompt += ` for a ${targetRole} position`;
   if (jobDescription) prompt += ` against the following job description`;
-  prompt += `.\n\n[RESUME START]\n${resumeText.slice(0, 6000)}\n[RESUME END]`;
+  prompt += `.\n\n[RESUME START]\n${resumeText.slice(0, 16000)}\n[RESUME END]`;
 
   if (jobDescription) {
-    prompt += `\n\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
+    prompt += `\n\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 4000)}\n[JOB DESCRIPTION END]`;
   }
 
   prompt += `

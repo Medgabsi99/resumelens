@@ -128,7 +128,7 @@
 .aside {
   background: #fbfdff;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 0px;
   border: 1px solid #eef2ff;
 }
 
@@ -178,7 +178,7 @@
 .creativeBadge {
   width: 72px;
   height: 72px;
-  border-radius: 10px;
+  border-radius: 0px;
   background: #ffedd5;
   display: flex;
   align-items: center;
@@ -197,5 +197,15 @@
 .creativeAside {
   background: #fff7ed;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 0px;
+}
+
+/* Executive Template */
+.executiveContainer {
+  width: 100%;
+  max-width: 800px;
+  padding: 40px;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  color: #111827;
+  background: white;
 }

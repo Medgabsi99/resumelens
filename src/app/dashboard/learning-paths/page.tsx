@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import LearningPathBoard from "@/components/LearningPathBoard";
+import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type SkillGapPathResult } from "@/lib/ai";
 
 interface ResumeItem {
@@ -387,9 +388,10 @@ export default function LearningPathsPage() {
                 </h3>
 
                 {loading ? (
-                  <div className="text-center text-xs text-ink-muted py-8 flex flex-col items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
-                    <span>Loading saved roadmaps...</span>
+                  <div className="space-y-3">
+                    <SkeletonHistoryCard />
+                    <SkeletonHistoryCard />
+                    <SkeletonHistoryCard />
                   </div>
                 ) : history.length === 0 ? (
                   <div className="text-center text-xs text-ink-muted py-8">

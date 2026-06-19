@@ -4,22 +4,29 @@ import { createAdminClient } from "./supabase";
 import { UserProfile } from "@/types";
 import { PLAN_LIMITS } from "./stripe";
 
-// Get current session user in server components
+// Get current authenticated user from Supabase Auth server (verifies JWT, not just cookies)
 export async function getServerSession() {
   const supabase = createServerComponentClient({ cookies });
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) return null;
+  // Return a session-shaped object for backward-compat with callers that read .user
+  return { user };
 }
 
 // Authenticates user and returns the user object, or throws Error if not authenticated
 export async function requireUser() {
-  const session = await getServerSession();
-  if (!session || !session.user) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
     throw new Error("Unauthorized");
   }
-  return session.user;
+  return user;
 }
 
 interface CacheEntry {

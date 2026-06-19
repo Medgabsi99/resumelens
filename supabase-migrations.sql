@@ -54,6 +54,16 @@ CREATE POLICY "Users can read own analyses"
   ON public.analyses FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own analyses" ON public.analyses;
+CREATE POLICY "Users can insert own analyses"
+  ON public.analyses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own analyses" ON public.analyses;
+CREATE POLICY "Users can delete own analyses"
+  ON public.analyses FOR DELETE
+  USING (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Service role full access on analyses" ON public.analyses;
 CREATE POLICY "Service role full access on analyses"
   ON public.analyses FOR ALL

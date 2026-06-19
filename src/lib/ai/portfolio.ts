@@ -14,44 +14,37 @@ export interface PortfolioData {
 }
 
 export async function generatePortfolio(resumeText: string): Promise<PortfolioData> {
-  const prompt = `Based on the following resume text, generate a premium personal portfolio website content structure.
-Enhance and rephrase the copy to be engaging, professional, and optimized for an online portfolio. Create compelling descriptions, list categorized skills, and format the experience and projects.
+  const prompt = `You are an expert personal branding strategist. Based on the resume below, generate a premium, conversion-optimized portfolio website content structure.
+
+IMPORTANT INSTRUCTIONS:
+- Write the "headline" as a SHORT, punchy action phrase (max 8 words) that immediately tells what the candidate BUILDS or DOES. Examples: "Building AI-Powered Developer Tools", "Designing World-Class Mobile Experiences", "Engineering Scalable Cloud Architectures".
+- Write the "aboutMe" as a 3–4 sentence first-person bio that is warm, confident, and specific. Mention real technologies, industries, or impact metrics from the resume.
+- For "skills", create 3–5 meaningful categories (e.g., Frontend, Backend, DevOps, Data & ML, Cloud, Design Tools, Soft Skills). Each category should have 4–8 specific skill items.
+- For "experience", include every role found in the resume. Write the "description" as 2 crisp, impactful sentences focusing on what they built, led, or delivered — not generic responsibilities.
+- For "projects", include every project found. If fewer than 2 projects are listed, infer 1–2 plausible side projects based on their tech stack. Descriptions should highlight the problem solved and the technical approach.
+- Make all copy professional, energetic, and specific — avoid vague filler words like "various", "leveraged", "utilized".
 
 [RESUME START]
-${resumeText.slice(0, 6000)}
+${resumeText.slice(0, 7000)}
 [RESUME END]
 
-Return ONLY a JSON object matching this exact structure (no preamble, no markdown fences):
+Return ONLY a valid JSON object with this exact structure (no preamble, no markdown fences, no trailing commas):
 {
   "fullName": "<candidate's full name>",
-  "headline": "<compelling headline, e.g., 'Building Scalable Full Stack Applications' or 'Designing Next-Gen User Experiences'>",
-  "subheading": "<1-sentence subheading expanding on their expertise>",
-  "aboutMe": "<creative, friendly professional bio in first-person (e.g. 'I am a software engineer passionate about...') that connects with the visitor>",
-  "email": "<email if found in resume, otherwise placeholder>",
-  "githubUrl": "<GitHub link if found in resume, otherwise placeholder or empty string>",
-  "linkedinUrl": "<LinkedIn link if found in resume, otherwise placeholder or empty string>",
+  "headline": "<punchy action phrase, max 8 words>",
+  "subheading": "<1 sentence expanding on specialization and value proposition>",
+  "aboutMe": "<3-4 sentence first-person bio, warm and specific>",
+  "email": "<email from resume, or 'hello@example.com'>",
+  "githubUrl": "<GitHub URL from resume, or empty string>",
+  "linkedinUrl": "<LinkedIn URL from resume, or empty string>",
   "skills": [
-    {
-      "category": "<e.g., Frontend, Backend, DevOps, Tools, Soft Skills>",
-      "items": ["<skill>", "<skill>"]
-    }
+    { "category": "<category name>", "items": ["<skill>", "<skill>", "<skill>", "<skill>"] }
   ],
   "experience": [
-    {
-      "role": "<job title>",
-      "company": "<company name>",
-      "dates": "<dates>",
-      "description": "<1-2 sentence high-level summary of responsibilities and achievements in this role>"
-    }
+    { "role": "<job title>", "company": "<company name>", "dates": "<start – end>", "description": "<2 impactful sentences>" }
   ],
   "projects": [
-    {
-      "title": "<project name>",
-      "description": "<compelling 1-2 sentence description of what the project does and its business/technical impact>",
-      "tags": ["<tech tag>", "<tech tag>"],
-      "githubUrl": "<mock or parsed github link>",
-      "liveUrl": "<mock or parsed demo link>"
-    }
+    { "title": "<project name>", "description": "<2 sentences: problem + approach>", "tags": ["<tech>", "<tech>", "<tech>"], "githubUrl": "<url or empty string>", "liveUrl": "<url or empty string>" }
   ]
 }
 `;

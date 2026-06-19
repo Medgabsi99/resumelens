@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { type MockInterviewTranscriptEntry, type MockInterviewScorecard } from "@/lib/ai";
+import ConfettiCannon from "@/components/ConfettiCannon";
 
 interface Props {
   questions: string[];
@@ -44,6 +45,7 @@ export default function MockInterviewSimulatorBoard({
   const [isSaving, setIsSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<{ savedInDb: boolean; dbError?: string | null } | null>(null);
   const [scorecard, setScorecard] = useState<MockInterviewScorecard | null>(null);
+  const [confettiKey, setConfettiKey] = useState(0);
 
   const recognitionRef = useRef<any>(null);
   const isFinished = currentIdx >= questions.length;
@@ -242,6 +244,10 @@ export default function MockInterviewSimulatorBoard({
       }
 
       setScorecard(data.scorecard);
+      // Fire confetti on milestone interview score
+      if (data.scorecard?.overallScore >= 80) {
+        setConfettiKey((k) => k + 1);
+      }
       setSaveResult({
         savedInDb: data.savedInDb,
         dbError: data.dbError,
@@ -567,7 +573,10 @@ export default function MockInterviewSimulatorBoard({
               </div>
             ) : scorecard ? (
               <div className="space-y-6 animate-fade-in">
-                
+                {confettiKey > 0 && (
+                  <ConfettiCannon score={scorecard.overallScore} trigger={confettiKey % 2 === 1} />
+                )}
+
                 {/* Scorecard banner */}
                 <div className="bg-gradient-to-r from-indigo-500/10 to-emerald-500/10 border border-indigo-500/20 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-lg">
                   <div>

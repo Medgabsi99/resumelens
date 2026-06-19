@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createBrowserClient } from "@/lib/supabase";
 
 const PLANS = [
   {
@@ -41,6 +42,14 @@ const PLANS = [
 
 export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null); // null = loading
+
+  useEffect(() => {
+    const supabase = createBrowserClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsSignedIn(!!session?.user);
+    });
+  }, []);
 
   async function checkout(plan: string) {
     setLoading(plan);
@@ -72,13 +81,26 @@ export default function PricingPage() {
         <a href="/" className="font-display text-2xl font-bold tracking-tight no-underline text-ink">
           Resume<span style={{ color: "var(--accent)" }}>Lens</span>
         </a>
-        <a
-          href="/login"
-          className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200"
-          style={{ background: "var(--paper-card)" }}
-        >
-          Sign in
-        </a>
+        {isSignedIn === null ? (
+          // Loading skeleton for nav action
+          <div className="skeleton w-24 h-8 rounded-xl" />
+        ) : isSignedIn ? (
+          <a
+            href="/dashboard"
+            className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200 flex items-center gap-1.5"
+            style={{ background: "var(--paper-card)" }}
+          >
+            Dashboard →
+          </a>
+        ) : (
+          <a
+            href="/login"
+            className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200"
+            style={{ background: "var(--paper-card)" }}
+          >
+            Sign in
+          </a>
+        )}
       </nav>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">

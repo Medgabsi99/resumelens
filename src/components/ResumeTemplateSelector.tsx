@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
-import { type ParsedResume } from "@/lib/parseResume";
+import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import ProfessionalTemplate from "./resume-templates/ProfessionalTemplate";
 import ModernTemplate from "./resume-templates/ModernTemplate";
 import CreativeTemplate from "./resume-templates/CreativeTemplate";
@@ -71,11 +70,22 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
   };
 
   const previewRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
-  const handlePrint = useReactToPrint({
-    contentRef: previewRef,
-    documentTitle: `Resume - ${targetRole || "Resume"}`,
-  });
+  const handleDownloadPdf = async () => {
+    if (!selectedTemplate) return;
+    setIsDownloading(true);
+    try {
+      const data = parsedData || parseResume(resumeText);
+      const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
+      await downloadResumePdf(selectedTemplate, data, targetRole);
+    } catch (err: any) {
+      console.error("PDF download error:", err);
+      alert("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const handleSmartGenerate = async () => {
     setIsGenerating(true);
@@ -270,10 +280,11 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
                 Close Preview
               </button>
               <button
-                onClick={handlePrint}
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
                 className="btn-gradient text-xs font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
               >
-                ↓ Download PDF
+                {isDownloading ? "Generating..." : "↓ Download PDF"}
               </button>
             </div>
           </div>

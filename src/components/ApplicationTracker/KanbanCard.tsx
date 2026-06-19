@@ -5,8 +5,10 @@ import { formatDate, daysUntil } from "./utils";
 interface KanbanCardProps {
   app: JobApplication;
   isDragging: boolean;
+  isInsertTarget?: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
+  onCardDragEnter?: (e: React.DragEvent) => void;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -14,8 +16,10 @@ interface KanbanCardProps {
 export default function KanbanCard({
   app,
   isDragging,
+  isInsertTarget = false,
   onDragStart,
   onDragEnd,
+  onCardDragEnter,
   onEdit,
   onDelete,
 }: KanbanCardProps) {
@@ -46,16 +50,37 @@ export default function KanbanCard({
 
   return (
     <div
-      draggable="true"
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      className={`group glass-card bg-paper-card border p-4 rounded-xl shadow-sm transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
-        isDragging ? "opacity-40 scale-95 border-accent/40" : "opacity-100"
-      }`}
-      style={{
-        borderLeft: `4px solid ${PRIORITY_COLORS[app.priority] || "var(--border)"}`,
-      }}
+      onDragEnter={onCardDragEnter}
+      style={{ position: "relative" }}
     >
+      {/* Insert-before drop indicator */}
+      {isInsertTarget && (
+        <div
+          style={{
+            position: "absolute",
+            top: -6,
+            left: 0,
+            right: 0,
+            height: 3,
+            borderRadius: 99,
+            background: "var(--accent)",
+            boxShadow: "0 0 8px var(--accent)",
+            zIndex: 10,
+            animation: "pulse 1s ease-in-out infinite",
+          }}
+        />
+      )}
+      <div
+        draggable="true"
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        className={`group glass-card bg-paper-card border p-4 rounded-xl shadow-sm transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
+          isDragging ? "opacity-40 scale-95 border-accent/40" : "opacity-100"
+        }`}
+        style={{
+          borderLeft: `4px solid ${PRIORITY_COLORS[app.priority] || "var(--border)"}`,
+        }}
+      >
       {/* Top row: Company & Action Buttons */}
       <div className="flex justify-between items-start gap-2 mb-1">
         <span className="text-[11px] font-semibold text-ink-muted truncate max-w-[160px]" title={app.company_name}>
@@ -202,6 +227,7 @@ export default function KanbanCard({
             Apply ↗
           </a>
         )}
+      </div>
       </div>
     </div>
   );

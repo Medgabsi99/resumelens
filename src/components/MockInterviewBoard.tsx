@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { type EvaluateResponse } from "@/lib/ai";
+import StreamingText from "@/components/StreamingText";
 
 interface Props {
   questions: string[];
@@ -539,9 +540,11 @@ export default function MockInterviewBoard({
                   <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6, fontWeight: 600 }}>
                     Coach Feedback
                   </div>
-                  <p style={{ fontSize: 13.5, color: "#d1d5db", lineHeight: 1.6, margin: 0 }}>
-                    {currentSession.evaluation.feedback}
-                  </p>
+                  <StreamingText
+                    text={currentSession.evaluation.feedback}
+                    isStreaming={false}
+                    style={{ fontSize: "13.5px", color: "#d1d5db", lineHeight: "1.6" }}
+                  />
                 </div>
 
                 {/* Sample Strong Answer */}
@@ -549,9 +552,13 @@ export default function MockInterviewBoard({
                   <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6, fontWeight: 600 }}>
                     How to say it (Optimized Answer)
                   </div>
-                  <p style={{ fontSize: 13, color: "#34d399", background: "rgba(52, 211, 153, 0.05)", border: "1px dashed rgba(52, 211, 153, 0.25)", borderRadius: 8, padding: 12, lineHeight: 1.55, margin: 0, fontStyle: "italic" }}>
-                    "{currentSession.evaluation.sampleAnswer}"
-                  </p>
+                  <div style={{ background: "rgba(52, 211, 153, 0.05)", border: "1px dashed rgba(52, 211, 153, 0.25)", borderRadius: 8, padding: 12 }}>
+                    <StreamingText
+                      text={`"${currentSession.evaluation.sampleAnswer}"`}
+                      isStreaming={false}
+                      style={{ fontSize: "13px", color: "#34d399", fontStyle: "italic", lineHeight: "1.55" }}
+                    />
+                  </div>
                 </div>
 
                 {/* Footer action */}

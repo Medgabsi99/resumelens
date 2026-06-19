@@ -11,17 +11,17 @@ export default async function PastAnalysisPage({
 }) {
   const supabase = createServerComponentClient({ cookies });
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) redirect("/login?next=/dashboard/" + params.id);
+  if (!user) redirect("/login?next=/dashboard/" + params.id);
 
   // Fetch the analysis
   const { data: analysis, error } = await supabase
     .from("analyses")
     .select("*")
     .eq("id", params.id)
-    .eq("user_id", session.user.id)
+    .eq("user_id", user.id)
     .single();
 
   if (error || !analysis) {

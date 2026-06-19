@@ -108,6 +108,12 @@ function LoginForm() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    document.getElementById("login-password")?.focus();
+                  }
+                }}
                 className="premium-input"
               />
             </div>
