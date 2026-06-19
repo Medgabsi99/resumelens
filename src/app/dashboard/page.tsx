@@ -4,6 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { JobApplication, APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from "@/types";
+import AnimatedNumber from "@/components/AnimatedNumber";
+import ResumeDiffViewer from "@/components/ResumeDiffViewer";
+import { SkeletonTable } from "@/components/Skeleton";
 
 interface AnalysisItem {
   id: string;
@@ -26,12 +29,21 @@ export default function DashboardPage() {
   const [reviewsSearch, setReviewsSearch] = useState("");
   const [appsSearch, setAppsSearch] = useState("");
 
+  // Pagination
+  const PAGE_SIZE = 8;
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [appsPage, setAppsPage] = useState(1);
+
   // Interactive Chart States
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  const [chartPeriod, setChartPeriod] = useState<5 | 10 | 0>(0); // 0 = all
 
   // Deletion Modal States
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Diff viewer
+  const [diffOpen, setDiffOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -86,22 +98,24 @@ export default function DashboardPage() {
   const confirmDeleteAnalysis = async () => {
     if (!deleteTargetId) return;
     setIsDeleting(true);
+    setError(null);
     try {
       const res = await fetch(`/api/analyses/${deleteTargetId}`, {
         method: "DELETE",
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        alert(data.error || "Failed to delete analysis");
+        setError(data.error || "Failed to delete analysis. Please try again.");
         return;
       }
       setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
+      setDeleteTargetId(null);
     } catch (e) {
       console.error(e);
-      alert("Network error: Failed to delete analysis");
+      setError("Network error: could not delete analysis.");
     } finally {
       setIsDeleting(false);
-      setDeleteTargetId(null);
+      if (!error) setDeleteTargetId(null);
     }
   };
 
@@ -149,58 +163,85 @@ export default function DashboardPage() {
     });
   }, [applications, appsSearch]);
 
+  // ─── Paged slices ───────────────────────────────────────
+  const reviewsTotalPages = Math.max(1, Math.ceil(filteredAnalyses.length / PAGE_SIZE));
+  const appsTotalPages    = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
+  const pagedAnalyses     = filteredAnalyses.slice((reviewsPage - 1) * PAGE_SIZE, reviewsPage * PAGE_SIZE);
+  const pagedApplications = filteredApplications.slice((appsPage - 1) * PAGE_SIZE, appsPage * PAGE_SIZE);
+
+  // Reset pages when search or tab changes
+  useEffect(() => { setReviewsPage(1); }, [reviewsSearch]);
+  useEffect(() => { setAppsPage(1); },    [appsSearch]);
+  useEffect(() => { setReviewsPage(1); setAppsPage(1); }, [activeTab]);
+
   // ─── SVG Score Progression Chart Data ───────────────────
   const scoreChartData = useMemo(() => {
-    // Chronological order (oldest first)
-    const sorted = [...analyses]
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-      .slice(-8); // Show last 8 reviews
+    const allSorted = [...analyses].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    const sorted = chartPeriod === 0 ? allSorted : allSorted.slice(-chartPeriod);
 
-    if (sorted.length === 0) return null;
+    if (sorted.length < 1) return null;
 
     const scores = sorted.map((d) => d.score);
-    const minScore = Math.max(0, Math.min(...scores) - 10);
-    const maxScore = Math.min(100, Math.max(...scores) + 10);
+    const minScore = Math.max(0, Math.min(...scores) - 12);
+    const maxScore = Math.min(100, Math.max(...scores) + 12);
     const scoreRange = maxScore - minScore || 20;
 
-    const svgW = 550;
-    const svgH = 200;
-    const padding = { top: 20, right: 25, bottom: 35, left: 35 };
+    const svgW = 560;
+    const svgH = 210;
+    const padding = { top: 24, right: 28, bottom: 38, left: 38 };
     const plotW = svgW - padding.left - padding.right;
     const plotH = svgH - padding.top - padding.bottom;
 
-    const points = sorted.map((item, i) => {
-      const x = padding.left + (i / Math.max(sorted.length - 1, 1)) * plotW;
-      const y = padding.top + plotH - ((item.score - minScore) / scoreRange) * plotH;
-      return { x, y, score: item.score, role: item.target_role || "General Review", date: formatDate(item.created_at) };
-    });
+    const xOf = (i: number) => padding.left + (i / Math.max(sorted.length - 1, 1)) * plotW;
+    const yOf = (v: number) => padding.top + plotH - ((v - minScore) / scoreRange) * plotH;
 
-    const linePath = points
-      .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-      .join(" ");
+    const points = sorted.map((item, i) => ({
+      x: xOf(i),
+      y: yOf(item.score),
+      score: item.score,
+      role: item.target_role || "General Review",
+      date: formatDate(item.created_at),
+    }));
+
+    // Smooth cubic bezier path
+    const smoothPath = points.reduce((d, p, i, arr) => {
+      if (i === 0) return `M${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+      const prev = arr[i - 1];
+      const cpx = (prev.x + p.x) / 2;
+      return `${d} C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${p.y.toFixed(1)} ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }, "");
 
     const areaPath = points.length > 0
-      ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
+      ? `${smoothPath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
       : "";
 
-    // Grid lines count
+    // Milestone bands (only include if within visible score range)
+    const milestones = [
+      { value: 60, label: "Fair",  color: "#f59e0b" },
+      { value: 80, label: "Good",  color: "#6366f1" },
+      { value: 90, label: "Elite", color: "#10b981" },
+    ].filter((m) => m.value >= minScore && m.value <= maxScore);
+
     const yGridValues = [20, 40, 60, 80, 100].filter((v) => v >= minScore && v <= maxScore);
 
+    // Best score index
+    const bestIdx = scores.indexOf(Math.max(...scores));
+
+    const firstScore = sorted[0].score;
+    const lastScore = sorted[sorted.length - 1].score;
+    const bestScore = Math.max(...scores);
+    const delta = lastScore - firstScore;
+
     return {
-      points,
-      linePath,
-      areaPath,
-      minScore,
-      maxScore,
-      yGridValues,
-      svgW,
-      svgH,
-      padding,
-      plotW,
-      plotH,
-      sorted,
+      points, smoothPath, areaPath, milestones,
+      minScore, maxScore, scoreRange, yGridValues,
+      svgW, svgH, padding, plotW, plotH,
+      sorted, bestIdx, firstScore, lastScore, bestScore, delta,
+      xOf, yOf,
     };
-  }, [analyses]);
+  }, [analyses, chartPeriod]);
 
   // ─── Funnel/Pipeline Chart Data ────────────────────────
   const funnelData = useMemo(() => {
@@ -305,10 +346,14 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
-                {loading ? "..." : stats.avgScore || "N/A"}
+                {loading
+                  ? <div className="skeleton h-10 w-16" />
+                  : <AnimatedNumber value={stats.avgScore} zeroLabel="N/A" duration={900} />}
               </div>
               <div className="text-xs text-ink-muted flex items-center gap-1.5">
-                {stats.avgScore > 0 ? (
+                {loading ? (
+                  <div className="skeleton h-3 w-28" />
+                ) : stats.avgScore > 0 ? (
                   <>
                     <span className={`inline-block w-2.5 h-2.5 rounded-full ${stats.avgScore >= 80 ? "bg-emerald-500" : stats.avgScore >= 60 ? "bg-amber-500" : "bg-rose-500"}`} />
                     <span>Rating: {stats.avgScore >= 80 ? "Excellent" : stats.avgScore >= 60 ? "Good" : "Needs Review"}</span>
@@ -328,10 +373,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
-                {loading ? "..." : stats.totalReviews}
+                {loading ? <div className="skeleton h-10 w-12" /> : <AnimatedNumber value={stats.totalReviews} duration={750} />}
               </div>
               <div className="text-xs text-ink-muted">
-                Resumes reviewed over time
+                {loading ? <div className="skeleton h-3 w-36 mt-1" /> : "Resumes reviewed over time"}
               </div>
             </div>
           </div>
@@ -344,10 +389,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
-                {loading ? "..." : stats.totalApps}
+                {loading ? <div className="skeleton h-10 w-12" /> : <AnimatedNumber value={stats.totalApps} duration={750} />}
               </div>
               <div className="text-xs text-ink-muted">
-                Applications in search tracker
+                {loading ? <div className="skeleton h-3 w-40 mt-1" /> : "Applications in search tracker"}
               </div>
             </div>
           </div>
@@ -360,10 +405,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-ink mb-1 font-display">
-                {loading ? "..." : `${stats.successRate}%`}
+                {loading ? <div className="skeleton h-10 w-16" /> : <AnimatedNumber value={stats.successRate} suffix="%" duration={1050} />}
               </div>
               <div className="text-xs text-ink-muted">
-                Active funnel conversion
+                {loading ? <div className="skeleton h-3 w-32 mt-1" /> : "Active funnel conversion"}
               </div>
             </div>
           </div>
@@ -373,15 +418,66 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
           {/* Chart 1: Score Progression */}
           <div className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px] relative overflow-hidden">
-            <div>
-              <h3 className="text-lg font-bold text-ink mb-1 font-display">Score Progression</h3>
-              <p className="text-xs text-ink-muted mb-4">ATS score improvement over your recent resume revisions</p>
+
+            {/* ── Header ── */}
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-ink mb-0.5 font-display">Score Progression</h3>
+                <p className="text-xs text-ink-muted">ATS score improvement over your resume revisions</p>
+              </div>
+              {/* Period selector */}
+              <div className="flex items-center gap-1 bg-paper-warm/40 border border-border rounded-lg p-0.5">
+                {([5, 10, 0] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => { setChartPeriod(p); setHoveredPoint(null); }}
+                    className="cursor-pointer transition-all duration-150"
+                    style={{
+                      padding: "3px 10px",
+                      borderRadius: 7,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "DM Mono, monospace",
+                      border: "none",
+                      background: chartPeriod === p ? "var(--accent)" : "transparent",
+                      color: chartPeriod === p ? "#fff" : "var(--ink-muted)",
+                    }}
+                  >
+                    {p === 0 ? "All" : `Last ${p}`}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* ── Stats row ── */}
+            {scoreChartData && (
+              <div className="flex gap-4 mb-3">
+                {[
+                  { label: "Latest", value: scoreChartData.lastScore, suffix: "/100" },
+                  { label: "Best",   value: scoreChartData.bestScore, suffix: "/100" },
+                  {
+                    label: "Trend",
+                    value: scoreChartData.delta,
+                    prefix: scoreChartData.delta > 0 ? "+" : "",
+                    suffix: " pts",
+                    color: scoreChartData.delta > 0 ? "#10b981" : scoreChartData.delta < 0 ? "#ef4444" : "var(--ink-muted)",
+                  },
+                ].map((s) => (
+                  <div key={s.label} style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: 9, fontFamily: "DM Mono, monospace", color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{s.label}</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: (s as { color?: string }).color ?? "var(--ink)", fontFamily: "DM Serif Display, serif", lineHeight: 1.2 }}>
+                      {(s as { prefix?: string }).prefix ?? ""}{s.value}{s.suffix}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex-1 flex items-center justify-center relative">
               {loading ? (
-                <div className="text-ink-muted text-sm font-mono flex items-center gap-2">
-                  <span className="animate-spin">🔄</span> Loading chart...
+                /* Skeleton */
+                <div className="w-full" style={{ padding: "8px 0" }}>
+                  <div className="skeleton" style={{ height: 160, borderRadius: 10 }} />
                 </div>
               ) : scoreChartData ? (
                 <div className="w-full relative">
@@ -393,14 +489,14 @@ export default function DashboardPage() {
                   >
                     <defs>
                       <linearGradient id="scoreAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.25" />
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
                         <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.00" />
                       </linearGradient>
                     </defs>
 
                     {/* Y-axis grid lines */}
                     {scoreChartData.yGridValues.map((val) => {
-                      const yVal = scoreChartData.svgH - scoreChartData.padding.bottom - ((val - scoreChartData.minScore) / (scoreChartData.maxScore - scoreChartData.minScore || 1)) * scoreChartData.plotH;
+                      const yVal = scoreChartData.yOf(val);
                       return (
                         <g key={val}>
                           <line
@@ -417,9 +513,40 @@ export default function DashboardPage() {
                             y={yVal + 3}
                             textAnchor="end"
                             fill="var(--ink-faint)"
-                            className="text-[10px] font-mono"
+                            fontSize={9}
+                            fontFamily="DM Mono, monospace"
                           >
                             {val}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Milestone reference bands */}
+                    {scoreChartData.milestones.map((m) => {
+                      const y = scoreChartData.yOf(m.value);
+                      return (
+                        <g key={m.value}>
+                          <line
+                            x1={scoreChartData.padding.left}
+                            y1={y}
+                            x2={scoreChartData.svgW - scoreChartData.padding.right}
+                            y2={y}
+                            stroke={m.color}
+                            strokeWidth={1}
+                            strokeOpacity={0.5}
+                            strokeDasharray="6,3"
+                          />
+                          <text
+                            x={scoreChartData.svgW - scoreChartData.padding.right + 4}
+                            y={y + 3}
+                            fill={m.color}
+                            fontSize={8}
+                            fontFamily="DM Mono, monospace"
+                            fontWeight={700}
+                            opacity={0.85}
+                          >
+                            {m.label}
                           </text>
                         </g>
                       );
@@ -430,10 +557,10 @@ export default function DashboardPage() {
                       <path d={scoreChartData.areaPath} fill="url(#scoreAreaGradient)" />
                     )}
 
-                    {/* Line path */}
-                    {scoreChartData.linePath && (
+                    {/* Smooth bezier line */}
+                    {scoreChartData.smoothPath && (
                       <path
-                        d={scoreChartData.linePath}
+                        d={scoreChartData.smoothPath}
                         fill="none"
                         stroke="var(--accent)"
                         strokeWidth={2.5}
@@ -457,33 +584,48 @@ export default function DashboardPage() {
                     )}
 
                     {/* Points */}
-                    {scoreChartData.points.map((pt, idx) => (
-                      <g key={idx}>
-                        <circle
-                          cx={pt.x}
-                          cy={pt.y}
-                          r={hoveredPoint === idx ? 6 : 4}
-                          fill={hoveredPoint === idx ? "var(--accent)" : "var(--paper-card)"}
-                          stroke="var(--accent)"
-                          strokeWidth={2}
-                          className="cursor-pointer transition-all duration-200"
-                          onMouseEnter={() => setHoveredPoint(idx)}
-                          onMouseLeave={() => setHoveredPoint(null)}
-                        />
-                        {hoveredPoint === idx && (
+                    {scoreChartData.points.map((pt, idx) => {
+                      const isBest = idx === scoreChartData.bestIdx;
+                      const isHovered = hoveredPoint === idx;
+                      return (
+                        <g key={idx}>
+                          {/* Pulse ring on best score */}
+                          {isBest && (
+                            <circle cx={pt.x} cy={pt.y} r={11} fill="#f59e0b" opacity={0.15} />
+                          )}
                           <circle
                             cx={pt.x}
                             cy={pt.y}
-                            r={10}
-                            fill="var(--accent)"
-                            fillOpacity={0.15}
-                            pointerEvents="none"
+                            r={isHovered ? 6 : isBest ? 5.5 : 4}
+                            fill={isHovered ? "var(--accent)" : isBest ? "#f59e0b" : "var(--paper-card)"}
+                            stroke={isBest ? "#f59e0b" : "var(--accent)"}
+                            strokeWidth={2}
+                            className="cursor-pointer transition-all duration-150"
+                            onMouseEnter={() => setHoveredPoint(idx)}
+                            onMouseLeave={() => setHoveredPoint(null)}
                           />
-                        )}
-                      </g>
-                    ))}
+                          {/* Gold star label on personal best */}
+                          {isBest && !isHovered && (
+                            <text
+                              x={pt.x}
+                              y={pt.y - 10}
+                              textAnchor="middle"
+                              fontSize={9}
+                              fill="#f59e0b"
+                              fontWeight={700}
+                              fontFamily="DM Mono, monospace"
+                            >
+                              ★ {pt.score}
+                            </text>
+                          )}
+                          {isHovered && (
+                            <circle cx={pt.x} cy={pt.y} r={10} fill="var(--accent)" fillOpacity={0.15} pointerEvents="none" />
+                          )}
+                        </g>
+                      );
+                    })}
 
-                    {/* X-axis labels (Start, End, Middle) */}
+                    {/* X-axis labels */}
                     {[0, Math.floor(scoreChartData.points.length / 2), scoreChartData.points.length - 1]
                       .filter((val, i, self) => self.indexOf(val) === i && scoreChartData.points[val])
                       .map((val) => {
@@ -492,10 +634,11 @@ export default function DashboardPage() {
                           <text
                             key={val}
                             x={pt.x}
-                            y={scoreChartData.svgH - 12}
+                            y={scoreChartData.svgH - 10}
                             textAnchor="middle"
                             fill="var(--ink-faint)"
-                            className="text-[10px] font-mono"
+                            fontSize={9}
+                            fontFamily="DM Mono, monospace"
                           >
                             {pt.date}
                           </text>
@@ -514,6 +657,9 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-xl font-bold text-ink mt-0.5">
                         Score: <span className="text-accent">{scoreChartData.points[hoveredPoint].score}</span>/100
+                        {hoveredPoint === scoreChartData.bestIdx && (
+                          <span className="ml-1.5 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md">★ Personal Best</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -607,6 +753,8 @@ export default function DashboardPage() {
                   color: activeTab === "reviews" ? "var(--accent)" : "var(--ink-muted)",
                   background: activeTab === "reviews" ? "var(--accent-bg)" : "transparent",
                   border: `1px solid ${activeTab === "reviews" ? "var(--accent-border)" : "transparent"}`,
+                  borderBottom: activeTab === "reviews" ? "2px solid var(--accent)" : "2px solid transparent",
+                  borderRadius: "10px 10px 0 0",
                 }}
               >
                 📄 Resume Reviews ({analyses.length})
@@ -618,146 +766,274 @@ export default function DashboardPage() {
                   color: activeTab === "applications" ? "var(--accent)" : "var(--ink-muted)",
                   background: activeTab === "applications" ? "var(--accent-bg)" : "transparent",
                   border: `1px solid ${activeTab === "applications" ? "var(--accent-border)" : "transparent"}`,
+                  borderBottom: activeTab === "applications" ? "2px solid var(--accent)" : "2px solid transparent",
+                  borderRadius: "10px 10px 0 0",
                 }}
               >
                 📋 Tracked Jobs ({applications.length})
               </button>
             </div>
 
-            {/* Tab Search Filter */}
-            <div className="w-full sm:w-64 relative">
-              {activeTab === "reviews" ? (
-                <input
-                  type="text"
-                  placeholder="Filter by target role..."
-                  value={reviewsSearch}
-                  onChange={(e) => setReviewsSearch(e.target.value)}
-                  className="premium-input py-1.5 text-xs rounded-xl"
-                />
-              ) : (
-                <input
-                  type="text"
-                  placeholder="Filter by title or company..."
-                  value={appsSearch}
-                  onChange={(e) => setAppsSearch(e.target.value)}
-                  className="premium-input py-1.5 text-xs rounded-xl"
-                />
+            {/* Tab right side: Compare button + Search */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {activeTab === "reviews" && analyses.length >= 2 && (
+                <button
+                  onClick={() => setDiffOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border border-border text-ink-muted hover:text-accent hover:border-accent-border bg-paper-card transition-all duration-200 flex-shrink-0"
+                  title="Compare two analyses side-by-side"
+                >
+                  <span style={{ fontSize: 13 }}>⟺</span>
+                  Compare
+                </button>
               )}
+              <div className="w-full sm:w-64 relative">
+                {activeTab === "reviews" ? (
+                  <input
+                    type="text"
+                    placeholder="Filter by target role..."
+                    value={reviewsSearch}
+                    onChange={(e) => setReviewsSearch(e.target.value)}
+                    className="premium-input py-1.5 text-xs rounded-xl"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Filter by title or company..."
+                    value={appsSearch}
+                    onChange={(e) => setAppsSearch(e.target.value)}
+                    className="premium-input py-1.5 text-xs rounded-xl"
+                  />
+                )}
+              </div>
             </div>
           </div>
 
           {/* Table Contents */}
           <div className="p-4 overflow-x-auto">
             {loading ? (
-              <div className="text-center py-12 text-ink-muted text-sm font-mono flex items-center justify-center gap-2">
-                <span className="animate-spin">🔄</span> Loading history...
+              <div className="px-4 py-6">
+                <SkeletonTable rows={4} cols={4} />
               </div>
             ) : activeTab === "reviews" ? (
               filteredAnalyses.length > 0 ? (
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
-                      <th className="pb-3 font-semibold">Target Role</th>
-                      <th className="pb-3 font-semibold text-center">Score</th>
-                      <th className="pb-3 font-semibold">Date Reviewed</th>
-                      <th className="pb-3 font-semibold text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAnalyses.map((item) => (
-                      <tr
+                <>
+                  <table className="hidden sm:table w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
+                        <th className="pb-3 font-semibold">Target Role</th>
+                        <th className="pb-3 font-semibold text-center">Score</th>
+                        <th className="pb-3 font-semibold">Date Reviewed</th>
+                        <th className="pb-3 font-semibold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedAnalyses.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                        >
+                          <td className="py-4 font-bold text-ink">
+                            {item.target_role || "General Resume Assessment"}
+                          </td>
+                          <td className="py-4 text-center">
+                            <span
+                              className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border ${getScoreBadgeStyles(
+                                item.score
+                              )}`}
+                            >
+                              {item.score} / 100
+                            </span>
+                          </td>
+                          <td className="py-4 text-ink-muted">{formatDate(item.created_at)}</td>
+                          <td className="py-4 text-right flex items-center justify-end gap-2">
+                            <Link
+                              href={`/dashboard/${item.id}`}
+                              className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
+                            >
+                              View Report →
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteAnalysis(item.id)}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-transparent text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all cursor-pointer"
+                              title="Delete Review"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Mobile list view for reviews */}
+                  <div className="space-y-4 sm:hidden">
+                    {pagedAnalyses.map((item) => (
+                      <div
                         key={item.id}
-                        className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                        className="glass-card bg-paper-card p-4 rounded-xl border border-border flex flex-col gap-3"
                       >
-                        <td className="py-4 font-bold text-ink">
-                          {item.target_role || "General Resume Assessment"}
-                        </td>
-                        <td className="py-4 text-center">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="font-bold text-ink leading-tight">
+                            {item.target_role || "General Resume Assessment"}
+                          </div>
                           <span
-                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border ${getScoreBadgeStyles(
+                            className={`inline-block px-2 py-0.5 rounded-lg text-xs font-bold border shrink-0 ${getScoreBadgeStyles(
                               item.score
                             )}`}
                           >
                             {item.score} / 100
                           </span>
-                        </td>
-                        <td className="py-4 text-ink-muted">{formatDate(item.created_at)}</td>
-                        <td className="py-4 text-right flex items-center justify-end gap-2">
-                          <Link
-                            href={`/dashboard/${item.id}`}
-                            className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
-                          >
-                            View Report →
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteAnalysis(item.id)}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-transparent text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all cursor-pointer"
-                            title="Delete Review"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-ink-muted">
+                          <span>{formatDate(item.created_at)}</span>
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/dashboard/${item.id}`}
+                              className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card hover:border-accent-border hover:text-accent transition-all no-underline"
+                            >
+                              View Report →
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteAnalysis(item.id)}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-transparent text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all cursor-pointer"
+                              title="Delete Review"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                  {reviewsTotalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-border/40 pt-4 mt-4 px-2">
+                      <div className="text-xs text-ink-muted">
+                        Showing <span className="font-semibold text-ink">{(reviewsPage - 1) * PAGE_SIZE + 1}</span> to{" "}
+                        <span className="font-semibold text-ink">
+                          {Math.min(reviewsPage * PAGE_SIZE, filteredAnalyses.length)}
+                        </span>{" "}
+                        of <span className="font-semibold text-ink">{filteredAnalyses.length}</span> reviews
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setReviewsPage((prev) => Math.max(1, prev - 1))}
+                          disabled={reviewsPage === 1}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          Previous
+                        </button>
+                        <div className="text-xs text-ink-muted font-medium px-2">
+                          Page <span className="text-ink font-semibold">{reviewsPage}</span> of{" "}
+                          <span className="text-ink font-semibold">{reviewsTotalPages}</span>
+                        </div>
+                        <button
+                          onClick={() => setReviewsPage((prev) => Math.min(reviewsTotalPages, prev + 1))}
+                          disabled={reviewsPage === reviewsTotalPages}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12 text-ink-muted text-sm">
                   {reviewsSearch ? "No reviews match your filter" : "No resume reviews found"}
                 </div>
               )
             ) : filteredApplications.length > 0 ? (
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
-                    <th className="pb-3 font-semibold">Company & Role</th>
-                    <th className="pb-3 font-semibold">Match Score</th>
-                    <th className="pb-3 font-semibold">Priority</th>
-                    <th className="pb-3 font-semibold">Applied Date</th>
-                    <th className="pb-3 font-semibold">Status</th>
-                    <th className="pb-3 font-semibold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredApplications.map((app) => {
-                    const statusColor = APPLICATION_STATUS_COLORS[app.status] || { bg: "#f1f5f9", text: "#475569" };
-                    return (
-                      <tr
-                        key={app.id}
-                        className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
-                      >
-                        <td className="py-4">
-                          <div className="font-bold text-ink leading-tight">{app.job_title}</div>
-                          <div className="text-xs text-ink-muted mt-0.5">{app.company_name}</div>
-                        </td>
-                        <td className="py-4">
-                          {app.match_score !== null && app.match_score !== undefined ? (
+              <>
+                <table className="hidden sm:table w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-ink-muted text-xs uppercase tracking-wider font-mono">
+                      <th className="pb-3 font-semibold">Company & Role</th>
+                      <th className="pb-3 font-semibold">Match Score</th>
+                      <th className="pb-3 font-semibold">Priority</th>
+                      <th className="pb-3 font-semibold">Applied Date</th>
+                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedApplications.map((app) => {
+                      const statusColor = APPLICATION_STATUS_COLORS[app.status] || { bg: "#f1f5f9", text: "#475569" };
+                      return (
+                        <tr
+                          key={app.id}
+                          className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                        >
+                          <td className="py-4">
+                            <div className="font-bold text-ink leading-tight">{app.job_title}</div>
+                            <div className="text-xs text-ink-muted mt-0.5">{app.company_name}</div>
+                          </td>
+                          <td className="py-4">
+                            {app.match_score !== null && app.match_score !== undefined ? (
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-md text-xs font-bold border ${getScoreBadgeStyles(
+                                  app.match_score
+                                )}`}
+                              >
+                                {app.match_score}%
+                              </span>
+                            ) : (
+                              <span className="text-ink-faint text-xs font-mono">—</span>
+                            )}
+                          </td>
+                          <td className="py-4">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded-md text-xs font-bold border ${getScoreBadgeStyles(
-                                app.match_score
+                              className={`inline-block px-2 py-0.5 rounded-md text-xs font-semibold border ${getPriorityBadgeStyles(
+                                app.priority
                               )}`}
                             >
-                              {app.match_score}%
+                              {app.priority}
                             </span>
-                          ) : (
-                            <span className="text-ink-faint text-xs font-mono">—</span>
-                          )}
-                        </td>
-                        <td className="py-4">
+                          </td>
+                          <td className="py-4 text-ink-muted">
+                            {app.applied_at ? formatDate(app.applied_at) : "Not applied yet"}
+                          </td>
+                          <td className="py-4">
+                            <span
+                              className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                              style={{
+                                backgroundColor: `${statusColor.bg}`,
+                                color: `${statusColor.text}`,
+                                borderColor: `${statusColor.text}1c`,
+                              }}
+                            >
+                               {APPLICATION_STATUS_LABELS[app.status]}
+                            </span>
+                          </td>
+                          <td className="py-4 text-right">
+                            <Link
+                              href="/dashboard/applications"
+                              className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
+                            >
+                              Manage →
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Mobile list view for applications */}
+                <div className="space-y-4 sm:hidden">
+                  {pagedApplications.map((app) => {
+                    const statusColor = APPLICATION_STATUS_COLORS[app.status] || { bg: "#f1f5f9", text: "#475569" };
+                    return (
+                      <div
+                        key={app.id}
+                        className="glass-card bg-paper-card p-4 rounded-xl border border-border flex flex-col gap-3"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <div className="font-bold text-ink leading-tight">{app.job_title}</div>
+                            <div className="text-xs text-ink-muted mt-0.5">{app.company_name}</div>
+                          </div>
                           <span
-                            className={`inline-block px-2 py-0.5 rounded-md text-xs font-semibold border ${getPriorityBadgeStyles(
-                              app.priority
-                            )}`}
-                          >
-                            {app.priority}
-                          </span>
-                        </td>
-                        <td className="py-4 text-ink-muted">
-                          {app.applied_at ? formatDate(app.applied_at) : "Not applied yet"}
-                        </td>
-                        <td className="py-4">
-                          <span
-                            className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                            className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border shrink-0"
                             style={{
                               backgroundColor: `${statusColor.bg}`,
                               color: `${statusColor.text}`,
@@ -766,20 +1042,76 @@ export default function DashboardPage() {
                           >
                             {APPLICATION_STATUS_LABELS[app.status]}
                           </span>
-                        </td>
-                        <td className="py-4 text-right">
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <div className="flex gap-2">
+                            {app.match_score !== null && app.match_score !== undefined ? (
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border ${getScoreBadgeStyles(
+                                  app.match_score
+                                )}`}
+                              >
+                                {app.match_score}% match
+                              </span>
+                            ) : (
+                              <span className="text-ink-faint font-mono">—</span>
+                            )}
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getPriorityBadgeStyles(
+                                app.priority
+                              )}`}
+                            >
+                              {app.priority}
+                            </span>
+                          </div>
+                          <span className="text-ink-muted">
+                            {app.applied_at ? formatDate(app.applied_at) : "Not applied yet"}
+                          </span>
+                        </div>
+                        <div className="flex justify-end border-t border-border/40 pt-2">
                           <Link
                             href="/dashboard/applications"
-                            className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card group-hover:border-accent-border group-hover:text-accent transition-all no-underline"
+                            className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-ink bg-paper-card hover:border-accent-border hover:text-accent transition-all no-underline"
                           >
                             Manage →
                           </Link>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+                {appsTotalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-border/40 pt-4 mt-4 px-2">
+                    <div className="text-xs text-ink-muted">
+                      Showing <span className="font-semibold text-ink">{(appsPage - 1) * PAGE_SIZE + 1}</span> to{" "}
+                      <span className="font-semibold text-ink">
+                        {Math.min(appsPage * PAGE_SIZE, filteredApplications.length)}
+                      </span>{" "}
+                      of <span className="font-semibold text-ink">{filteredApplications.length}</span> applications
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setAppsPage((prev) => Math.max(1, prev - 1))}
+                        disabled={appsPage === 1}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Previous
+                      </button>
+                      <div className="text-xs text-ink-muted font-medium px-2">
+                        Page <span className="text-ink font-semibold">{appsPage}</span> of{" "}
+                        <span className="text-ink font-semibold">{appsTotalPages}</span>
+                      </div>
+                      <button
+                        onClick={() => setAppsPage((prev) => Math.min(appsTotalPages, prev + 1))}
+                        disabled={appsPage === appsTotalPages}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-12 text-ink-muted text-sm">
                 {appsSearch ? "No applications match your filter" : "No tracked applications found"}
@@ -835,6 +1167,12 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Resume Diff Viewer */}
+      <ResumeDiffViewer
+        isOpen={diffOpen}
+        onClose={() => setDiffOpen(false)}
+      />
     </DashboardLayout>
   );
 }

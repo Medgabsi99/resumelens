@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { useReactToPrint } from "react-to-print";
 import { RewriteSuggestion } from "@/types";
-import { type ParsedResume } from "@/lib/parseResume";
+import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import ProfessionalTemplate from "../resume-templates/ProfessionalTemplate";
 import ModernTemplate from "../resume-templates/ModernTemplate";
 import CreativeTemplate from "../resume-templates/CreativeTemplate";
@@ -43,6 +42,7 @@ export default function ResumeEditor({
   const [appliedIndices, setAppliedIndices] = useState<Set<number>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("professional");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [parsedData, setParsedData] = useState<ParsedResume | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEnhanced, setIsEnhanced] = useState(false);
@@ -145,10 +145,21 @@ export default function ResumeEditor({
     };
   }, []);
 
-  const handlePrint = useReactToPrint({
-    contentRef: previewRef,
-    documentTitle: `Resume - ${targetRole || "Resume"}`,
-  });
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsDownloading(true);
+    try {
+      const data = parsedData || parseResume(text);
+      const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
+      await downloadResumePdf(selectedTemplate, data, targetRole);
+    } catch (err: any) {
+      console.error("PDF download error:", err);
+      alert("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const applySuggestion = useCallback(
     (index: number, before: string, after: string) => {
@@ -304,14 +315,40 @@ export default function ResumeEditor({
       {/* Side-by-Side Editor */}
       {editorOpen && (
         <div className="sbs-editor-grid animate-fadeIn" style={{ marginTop: 16 }}>
+          {/* Mobile Tab Switcher */}
+          <div className="lg:hidden flex border-b border-border bg-paper-card p-2 gap-2 w-full col-span-2">
+            <button
+              type="button"
+              onClick={() => setMobileTab("edit")}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+                mobileTab === "edit"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-ink-muted hover:text-ink hover:bg-paper-warm"
+              }`}
+            >
+              ✏️ Edit Draft
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("preview")}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+                mobileTab === "preview"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-ink-muted hover:text-ink hover:bg-paper-warm"
+              }`}
+            >
+              👁️ View Preview
+            </button>
+          </div>
+
           {/* ── Left Pane: Live Preview ── */}
           <div
             style={{
               borderRight: "1px solid var(--border)",
-              display: "flex",
               flexDirection: "column",
               background: "var(--paper-warm)",
             }}
+            className={`w-full flex-col ${mobileTab === "preview" ? "flex" : "hidden lg:flex"}`}
           >
             {/* Template Tabs + Download */}
             <div
@@ -356,7 +393,8 @@ export default function ResumeEditor({
               </div>
               <button
                 type="button"
-                onClick={() => handlePrint()}
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
                 style={{
                   background: "var(--accent)",
                   color: "white",
@@ -365,13 +403,14 @@ export default function ResumeEditor({
                   padding: "5px 14px",
                   fontSize: 11,
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: isDownloading ? "wait" : "pointer",
                   fontFamily: "Instrument Sans, sans-serif",
                   transition: "all 0.15s",
                   boxShadow: "0 2px 8px var(--brand-glow)",
                   display: "flex",
                   alignItems: "center",
                   gap: 5,
+                  opacity: isDownloading ? 0.7 : 1,
                 }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -379,7 +418,7 @@ export default function ResumeEditor({
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                PDF
+                {isDownloading ? "..." : "PDF"}
               </button>
             </div>
 
@@ -403,9 +442,9 @@ export default function ResumeEditor({
           {/* ── Right Pane: Editor ── */}
           <div
             style={{
-              display: "flex",
               flexDirection: "column",
             }}
+            className={`w-full flex-col ${mobileTab === "edit" ? "flex" : "hidden lg:flex"}`}
           >
             {/* Toolbar */}
             <div

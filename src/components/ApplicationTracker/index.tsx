@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ApplicationStatus,
   APPLICATION_STATUS_LABELS,
@@ -41,17 +41,27 @@ export default function ApplicationTracker() {
   // View state: default to board view
   const [viewMode, setViewMode] = useState<"list" | "board">("board");
 
+  const [activeBoardColumn, setActiveBoardColumn] = useState<ApplicationStatus>("applied");
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setViewMode("list");
+    }
+  }, []);
+
   // Drag and Drop Hook
   const {
     draggingId,
     dragOverColumn,
+    insertBeforeId,
     handleDragStart,
     handleDragEnd,
     handleDragOver,
     handleDragEnter,
     handleDragLeave,
+    handleCardDragEnter,
     handleDropColumn,
-  } = useDragAndDrop(applications, handleStatusChange);
+  } = useDragAndDrop(applications, handleStatusChange, setApplications);
 
   // Filtered applications
   const filteredApps = useMemo(() => {
@@ -213,26 +223,64 @@ export default function ApplicationTracker() {
               };
 
               return (
-                <div className="flex gap-4 overflow-x-auto pb-6 pt-2 select-none -mx-6 px-6 scrollbar-thin">
-                  {BOARD_COLUMNS.map((col) => {
-                    const colApps = getColumnApps(col.status);
-                    const isOver = dragOverColumn === col.status;
-                    return (
-                      <div
-                        key={col.status}
-                        onDragOver={handleDragOver}
-                        onDragEnter={(e) => handleDragEnter(e, col.status)}
-                        onDragLeave={() => handleDragLeave(col.status)}
-                        onDrop={(e) => handleDropColumn(e, col.status)}
-                        className={`flex-shrink-0 w-[290px] rounded-2xl p-4 transition-all duration-200 ${
-                          isOver 
-                            ? "bg-accent-bg/40 border-2 border-dashed border-accent animate-pulse" 
-                            : "bg-paper border border-border/60"
-                        }`}
-                        style={{
-                          minHeight: 480,
-                        }}
-                      >
+                <div className="flex flex-col gap-4 w-full">
+                  {/* Mobile column tabs */}
+                  <div className="md:hidden flex overflow-x-auto gap-2 mb-2 pb-2 -mx-6 px-6 scrollbar-none">
+                    {BOARD_COLUMNS.map((col) => {
+                      const count = getColumnApps(col.status).length;
+                      const isActive = activeBoardColumn === col.status;
+                      return (
+                        <button
+                          key={col.status}
+                          type="button"
+                          onClick={() => setActiveBoardColumn(col.status)}
+                          className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+                            isActive
+                              ? "bg-accent text-white border-accent shadow-sm"
+                              : "bg-paper-card text-ink-muted border-border hover:border-border-strong"
+                          }`}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: isActive ? "#fff" : col.color }}
+                          />
+                          <span>{col.label}</span>
+                          <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${
+                            isActive ? "bg-white/20 text-white" : "bg-border/60 text-ink-muted"
+                          }`}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex gap-4 overflow-x-auto pb-6 pt-2 select-none -mx-6 px-6 scrollbar-thin">
+                    {BOARD_COLUMNS.map((col) => {
+                      const colApps = getColumnApps(col.status);
+                      const isOver = dragOverColumn === col.status;
+                      const isHiddenOnMobile = activeBoardColumn !== col.status;
+                      return (
+                        <div
+                          key={col.status}
+                          onDragOver={handleDragOver}
+                          onDragEnter={(e) => handleDragEnter(e, col.status)}
+                          onDragLeave={() => handleDragLeave(col.status)}
+                          onDrop={(e) => handleDropColumn(e, col.status)}
+                          className={`flex-shrink-0 w-full md:w-[290px] rounded-2xl p-4 transition-all duration-200 ${
+                            isHiddenOnMobile ? "hidden md:block" : "block"
+                          }`}
+                          style={{
+                            minHeight: 480,
+                            background: isOver ? "var(--accent-bg)" : "var(--paper)",
+                            border: isOver
+                              ? "2px solid var(--accent)"
+                              : "1px solid rgba(var(--border-rgb, 99 102 241 / 0.12))",
+                            borderColor: isOver ? "var(--accent)" : "var(--border)",
+                            boxShadow: isOver ? "0 0 0 4px var(--brand-glow), inset 0 0 20px var(--accent-bg)" : "none",
+                            transform: isOver ? "scale(1.01)" : "scale(1)",
+                          }}
+                        >
                         {/* Column Header */}
                         <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
                           <div className="flex items-center gap-2">
@@ -251,7 +299,7 @@ export default function ApplicationTracker() {
                         <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-1">
                           {colApps.length === 0 ? (
                             <div className="text-center py-12 text-ink-faint text-xs font-mono border border-dashed border-border/40 rounded-xl bg-paper-card/30">
-                              Empty Zone
+                              {isOver && draggingId ? "Drop here →" : "Empty Zone"}
                             </div>
                           ) : (
                             colApps.map((app) => (
@@ -259,8 +307,10 @@ export default function ApplicationTracker() {
                                 key={app.id}
                                 app={app}
                                 isDragging={draggingId === app.id}
+                                isInsertTarget={insertBeforeId === app.id}
                                 onDragStart={(e) => handleDragStart(e, app.id)}
                                 onDragEnd={handleDragEnd}
+                                onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
                                 onEdit={() => setEditingApp(app)}
                                 onDelete={() => handleDelete(app)}
                               />
@@ -270,8 +320,10 @@ export default function ApplicationTracker() {
                       </div>
                     );
                   })}
+                  </div>
                 </div>
               );
+
             })()
           )}
         </>

@@ -7,6 +7,8 @@ import ResultsPanel from "@/components/ResultsPanel";
 import UpgradeModal from "@/components/UpgradeModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { createBrowserClient } from "@/lib/supabase";
+import AuroraBackground from "@/components/AuroraBackground";
+import ConfettiCannon from "@/components/ConfettiCannon";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -33,6 +35,9 @@ export default function HomePage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isSessionLoaded, setIsSessionLoaded] = useState(false);
   const [profile, setProfile] = useState<{ plan: string; analyses_used: number; analyses_limit: number } | null>(null);
+  // Increments each time a milestone score is achieved → triggers confetti
+  const [confettiKey, setConfettiKey] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ── Load session + handle ?rerun= ──────────────────────
   useEffect(() => {
@@ -159,6 +164,10 @@ export default function HomePage() {
         setShowUpgradeModal(true);
       } else {
         setResult(data.data);
+        // Fire confetti if score crosses a milestone
+        if (data.data?.score >= 80) {
+          setConfettiKey((k) => k + 1);
+        }
       }
     } catch (err) {
       setError("Network error. Please try again.");
@@ -172,23 +181,43 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
-      {/* Background glow blobs */}
-      <div className="glow-blob animate-blob-1 top-[-100px] right-[-50px] md:w-[500px] md:h-[500px]" />
-      <div className="glow-blob animate-blob-2 bottom-[-100px] left-[-50px] md:w-[400px] md:h-[400px]" style={{ animationDelay: "-2s" }} />
-      <div className="glow-blob animate-blob-1 top-[35%] left-[25%] md:w-[350px] md:h-[350px] opacity-40" style={{ animationDelay: "-5s", background: "radial-gradient(circle, var(--accent-border) 0%, transparent 70%)" }} />
+      {/* Aurora animated background */}
+      <AuroraBackground />
 
       {/* Nav */}
       <nav
-        className="sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
+        className="sticky top-0 z-50 backdrop-blur-md border-b flex flex-col md:flex-row md:items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
         style={{
           background: "var(--nav-bg)",
           borderColor: "var(--border)",
         }}
       >
-        <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>
-          Resume<span style={{ color: "var(--accent)" }}>Lens</span>
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>
+            Resume<span style={{ color: "var(--accent)" }}>Lens</span>
+          </div>
+          <div className="flex items-center gap-3 md:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-ink hover:text-accent transition-colors focus:outline-none p-1"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-6">
           <ThemeToggle />
           <a
             href="/pricing"
@@ -227,6 +256,48 @@ export default function HomePage() {
             <div className="w-16 h-8 bg-border/20 animate-pulse rounded-xl" />
           )}
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden flex flex-col gap-4 mt-4 pt-4 border-t border-border w-full animate-fadeIn">
+            <a
+              href="/pricing"
+              className="text-sm text-ink-muted hover:text-accent font-medium no-underline transition-colors duration-200 py-1"
+            >
+              Pricing
+            </a>
+            {isSessionLoaded && userEmail ? (
+              <>
+                <a
+                  href="/dashboard"
+                  className="text-sm text-ink-muted hover:text-accent font-medium no-underline flex items-center gap-2 transition-colors duration-200 py-1"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Dashboard
+                </a>
+                <a
+                  href="/api/auth/signout"
+                  className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200 text-center"
+                  style={{ background: "var(--paper-card)" }}
+                >
+                  Sign out
+                </a>
+              </>
+            ) : isSessionLoaded ? (
+              <a
+                href="/login"
+                className="text-sm font-semibold text-white bg-accent hover:bg-accent-hover px-4 py-2.5 rounded-xl no-underline transition-all duration-200 shadow-sm text-center"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+                }}
+              >
+                Sign in
+              </a>
+            ) : (
+              <div className="h-8 bg-border/20 animate-pulse rounded-xl" />
+            )}
+          </div>
+        )}
       </nav>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
@@ -322,6 +393,16 @@ export default function HomePage() {
               placeholder="Paste the raw text of your resume here..."
               className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed"
             />
+            <div className="flex justify-between items-center mt-1.5 px-0.5">
+              <span className="text-[10px] font-mono text-ink-faint">
+                {resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : ""}
+              </span>
+              {resumeText.length > 500 && (
+                <span className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}>
+                  {resumeText.length >= 4000 ? "✓ Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
+                </span>
+              )}
+            </div>
           </Panel>
 
           {/* Right — Job context */}
@@ -383,13 +464,18 @@ export default function HomePage() {
 
         {/* Results */}
         {result && (
-          <ResultsPanel
-            result={result}
-            hasJD={hasJD}
-            resumeText={extractedText}
-            jobDescription={jobDescription}
-            targetRole={targetRole}
-          />
+          <>
+            {confettiKey > 0 && (
+              <ConfettiCannon score={result.score} trigger={confettiKey % 2 === 1} />
+            )}
+            <ResultsPanel
+              result={result}
+              hasJD={hasJD}
+              resumeText={extractedText}
+              jobDescription={jobDescription}
+              targetRole={targetRole}
+            />
+          </>
         )}
 
         {/* Upgrade preview */}
