@@ -1,0 +1,40 @@
+import { requireUser } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase";
+import { getUserProfile } from "@/lib/auth";
+import { stripe } from "@/lib/stripe";
+
+export async function POST(req: NextRequest) {
+  try {
+    const user = await requireUser();
+    const profile = await getUserProfile(user.id);
+
+    // 1. Delete customer in Stripe (this cancels all active subscriptions automatically)
+    if (profile?.stripe_customer_id) {
+      try {
+        await stripe.customers.del(profile.stripe_customer_id);
+      } catch (stripeErr) {
+        console.error("Failed to delete Stripe customer:", stripeErr);
+        // Continue deleting the auth user even if Stripe deletion fails
+      }
+    }
+
+    // 2. Delete the user from Supabase Auth via the Admin client
+    // Due to ON DELETE CASCADE on profiles/resumes/analyses tables, this will cascade and wipe all DB tables clean.
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.deleteUser(user.id);
+
+    if (error) {
+      console.error("Supabase Admin deleteUser error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("Delete account API error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to delete account" },
+      { status: 500 }
+    );
+  }
+}

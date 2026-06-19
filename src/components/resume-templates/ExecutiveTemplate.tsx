@@ -20,58 +20,60 @@ export default function ExecutiveTemplate({ resumeText, targetRole, parsedData }
       padding: "56px 48px",
       background: "#ffffff",
       color: "#111827",
-      lineHeight: 1.6,
+      lineHeight: 1.45,
       fontSize: "11pt",
     }}>
-      {/* Header with double border */}
+      {/* Centered Name Block */}
       <div style={{ 
-        borderBottom: "3px double #111827",
-        paddingBottom: "20px",
-        marginBottom: "32px",
-        textAlign: "center"
+        textAlign: "center", 
+        marginBottom: "28px",
       }}>
         <h1 style={{ 
-          fontSize: "26px", 
+          fontSize: "24pt", 
           fontWeight: "bold",
           textTransform: "uppercase",
-          letterSpacing: "1px",
-          color: "#111827",
+          letterSpacing: "0.5px",
+          color: "#7a1c1c", // Oxblood accent for name only
           margin: "0 0 6px 0"
         }}>
           {data.contact.name || "Your Name"}
         </h1>
         {targetRole && (
           <div style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             color: "#4b5563", 
-            fontStyle: "italic",
-            marginBottom: "10px"
+            fontWeight: "bold",
+            letterSpacing: "1px",
+            textTransform: "uppercase",
+            marginBottom: "8px"
           }}>
             {targetRole}
           </div>
         )}
-        <div style={{ fontSize: "10.5pt", color: "#4b5563", marginTop: "6px" }}>
+        <div style={{ fontSize: "10pt", color: "#4b5563" }}>
           {data.contact.email && <span>{data.contact.email}</span>}
           {data.contact.phone && <span>{data.contact.email ? "  |  " : ""}{data.contact.phone}</span>}
+          {data.contact.location && <span>{(data.contact.email || data.contact.phone) ? "  |  " : ""}{data.contact.location}</span>}
         </div>
       </div>
 
       {/* Summary */}
       {data.summary && (
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <h2 style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             fontWeight: "bold",
             color: "#111827",
             textTransform: "uppercase",
+            fontVariant: "small-caps",
             letterSpacing: "1.5px",
-            marginBottom: "12px",
-            borderBottom: "1px solid #9ca3af",
-            paddingBottom: "4px",
+            marginBottom: "10px",
+            borderBottom: "1px solid #111827",
+            paddingBottom: "3px",
           }}>
-            Executive Profile
+            Executive Summary
           </h2>
-          <p style={{ margin: 0, fontSize: "11pt", color: "#1f2937", textAlign: "justify", lineHeight: 1.65 }}>
+          <p style={{ margin: 0, fontSize: "11pt", color: "#1f2937", textAlign: "justify" }}>
             {data.summary}
           </p>
         </div>
@@ -79,31 +81,32 @@ export default function ExecutiveTemplate({ resumeText, targetRole, parsedData }
 
       {/* Experience */}
       {data.experience.length > 0 && (
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <h2 style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             fontWeight: "bold",
             color: "#111827",
             textTransform: "uppercase",
+            fontVariant: "small-caps",
             letterSpacing: "1.5px",
-            marginBottom: "14px",
-            borderBottom: "1px solid #9ca3af",
-            paddingBottom: "4px",
+            marginBottom: "12px",
+            borderBottom: "1px solid #111827",
+            paddingBottom: "3px",
           }}>
-            Professional Credentials
+            Professional History
           </h2>
           {data.experience.map((exp, idx) => (
-            <div key={idx} style={{ marginBottom: "22px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "11pt", color: "#111827", marginBottom: "4px" }}>
+            <div key={idx} style={{ marginBottom: "18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "11pt", color: "#111827", marginBottom: "3px" }}>
                 <span>
-                  {exp.title}{exp.company ? `  —  ${exp.company}` : ""}
+                  {exp.title}{exp.company ? `, ${exp.company}` : ""}
                 </span>
                 {exp.dates && <span style={{ fontWeight: "normal", fontStyle: "italic", color: "#4b5563", fontSize: "10pt" }}>{exp.dates}</span>}
               </div>
               {exp.bullets.length > 0 && (
-                <ul style={{ margin: "6px 0 0 0", paddingLeft: "20px", fontSize: "10.5pt", color: "#1f2937", textAlign: "justify", lineHeight: 1.6 }}>
+                <ul style={{ margin: "4px 0 0 0", paddingLeft: "18px", fontSize: "10.5pt", color: "#1f2937", lineHeight: 1.45 }}>
                   {exp.bullets.map((bullet, bIdx) => (
-                    <li key={bIdx} style={{ marginBottom: "6px" }}>
+                    <li key={bIdx} style={{ marginBottom: "4px" }}>
                       {bullet}
                     </li>
                   ))}
@@ -116,24 +119,25 @@ export default function ExecutiveTemplate({ resumeText, targetRole, parsedData }
 
       {/* Education */}
       {data.education.length > 0 && (
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <h2 style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             fontWeight: "bold",
             color: "#111827",
             textTransform: "uppercase",
+            fontVariant: "small-caps",
             letterSpacing: "1.5px",
-            marginBottom: "14px",
-            borderBottom: "1px solid #9ca3af",
-            paddingBottom: "4px",
+            marginBottom: "12px",
+            borderBottom: "1px solid #111827",
+            paddingBottom: "3px",
           }}>
-            Academic Background
+            Education & Academic Credentials
           </h2>
           {data.education.map((edu, idx) => (
-            <div key={idx} style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", fontSize: "11pt" }}>
+            <div key={idx} style={{ marginBottom: "14px", display: "flex", justifyContent: "space-between", fontSize: "11pt" }}>
               <div>
                 <div style={{ fontWeight: "bold", color: "#111827" }}>{edu.degree}</div>
-                <div style={{ fontStyle: "italic", color: "#4b5563", fontSize: "10.5pt", marginTop: "2px" }}>{edu.school}</div>
+                <div style={{ fontStyle: "italic", color: "#4b5563", fontSize: "10.5pt", marginTop: "1px" }}>{edu.school}</div>
               </div>
               {edu.dates && <span style={{ color: "#4b5563", fontSize: "10pt", fontStyle: "italic" }}>{edu.dates}</span>}
             </div>
@@ -143,44 +147,46 @@ export default function ExecutiveTemplate({ resumeText, targetRole, parsedData }
 
       {/* Skills */}
       {data.skills.length > 0 && (
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <h2 style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             fontWeight: "bold",
             color: "#111827",
             textTransform: "uppercase",
+            fontVariant: "small-caps",
             letterSpacing: "1.5px",
-            marginBottom: "10px",
-            borderBottom: "1px solid #9ca3af",
-            paddingBottom: "4px",
+            marginBottom: "8px",
+            borderBottom: "1px solid #111827",
+            paddingBottom: "3px",
           }}>
             Areas of Expertise
           </h2>
-          <div style={{ fontSize: "10.5pt", color: "#1f2937", lineHeight: 1.6, textAlign: "justify" }}>
-            {data.skills.join("  |  ")}
+          <div style={{ fontSize: "10.5pt", color: "#1f2937", lineHeight: 1.45 }}>
+            {data.skills.join(", ")}
           </div>
         </div>
       )}
 
       {/* Projects */}
       {data.projects && data.projects.length > 0 && (
-        <div style={{ marginBottom: "28px" }}>
+        <div style={{ marginBottom: "24px" }}>
           <h2 style={{ 
-            fontSize: "13px", 
+            fontSize: "11pt", 
             fontWeight: "bold",
             color: "#111827",
             textTransform: "uppercase",
+            fontVariant: "small-caps",
             letterSpacing: "1.5px",
-            marginBottom: "14px",
-            borderBottom: "1px solid #9ca3af",
-            paddingBottom: "4px",
+            marginBottom: "12px",
+            borderBottom: "1px solid #111827",
+            paddingBottom: "3px",
           }}>
-            Selected Projects
+            Key Projects
           </h2>
           {data.projects.map((proj, idx) => (
-            <div key={idx} style={{ marginBottom: "16px" }}>
+            <div key={idx} style={{ marginBottom: "14px" }}>
               <div style={{ fontWeight: "bold", fontSize: "11pt", color: "#111827" }}>{proj.name}</div>
-              <p style={{ margin: "4px 0 0 0", fontSize: "10.5pt", color: "#1f2937", lineHeight: 1.6 }}>{proj.description}</p>
+              <p style={{ margin: "3px 0 0 0", fontSize: "10.5pt", color: "#1f2937", lineHeight: 1.45 }}>{proj.description}</p>
             </div>
           ))}
         </div>

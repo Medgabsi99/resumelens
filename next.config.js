@@ -8,7 +8,7 @@ const cspHeader = `
   base-uri 'self';
   form-action 'self';
   frame-src 'self' https://js.stripe.com;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com ws: wss:;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com ws: wss: https://fonts.gstatic.com data:;
   upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
 

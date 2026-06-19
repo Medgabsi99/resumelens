@@ -10,19 +10,17 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.43.0",
     "clsx": "^2.1.1",
     "diff": "^9.0.0",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.1",
     "mammoth": "^1.7.1",
     "next": "^14.2.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-dropzone": "^14.2.3",
-    "react-to-print": "^3.3.0",
     "stripe": "^15.7.0"
   },
   "devDependencies": {
