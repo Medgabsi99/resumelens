@@ -29,6 +29,7 @@ export interface NegotiationScorecard {
   weaknesses: string[];
   financialGain: number;
   coachesNote: string;
+  transcript?: { role: "user" | "recruiter"; content: string }[];
 }
 
 export interface RecruiterProfile {

@@ -581,6 +581,41 @@ export default function NegotiatorPage() {
                 </p>
               </div>
 
+              {/* Collapsible Transcript Viewer */}
+              {selectedHistoryItem.feedback?.transcript && selectedHistoryItem.feedback.transcript.length > 0 && (
+                <div className="border-t border-border pt-4 mt-2">
+                  <details className="group">
+                    <summary className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center justify-between cursor-pointer select-none">
+                      <span>💬 View Negotiation Conversation Logs</span>
+                      <span className="text-accent group-open:rotate-180 transition-transform duration-200">
+                        ▼
+                      </span>
+                    </summary>
+                    <div className="mt-4 space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                      {selectedHistoryItem.feedback.transcript.map((msg: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} text-xs`}
+                        >
+                          <div
+                            className={`max-w-[85%] rounded-xl px-3.5 py-2 leading-relaxed shadow-sm ${
+                              msg.role === "user"
+                                ? "bg-accent text-white rounded-br-none"
+                                : "bg-paper-card border border-border text-ink rounded-bl-none"
+                            }`}
+                          >
+                            <div className="font-semibold text-[10px] opacity-60 mb-0.5">
+                              {msg.role === "user" ? "You" : "Recruiter"}
+                            </div>
+                            <p className="whitespace-pre-line">{msg.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              )}
+
             </div>
           </div>
         )}

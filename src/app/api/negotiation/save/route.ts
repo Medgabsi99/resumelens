@@ -72,7 +72,10 @@ export async function POST(req: NextRequest) {
           final_offer: finalOffer,
           score: scorecard.score,
           verdict,
-          feedback: scorecard,
+          feedback: {
+            ...scorecard,
+            transcript: messageHistory,
+          },
         })
         .select()
         .single();

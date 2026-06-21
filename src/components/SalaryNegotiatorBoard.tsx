@@ -236,7 +236,10 @@ export default function SalaryNegotiatorBoard({
         final_offer: pkg,
         score: card.score,
         verdict: finalVerdict,
-        feedback: card,
+        feedback: {
+          ...card,
+          transcript: messageHistory,
+        },
         created_at: new Date().toISOString(),
       };
       localStorage.setItem("salary_negotiations_local", JSON.stringify([newItem, ...localHistory]));
