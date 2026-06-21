@@ -5,10 +5,24 @@
   "description": "Instantly match job listings against your ResumeLens resume library and track applications.",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.linkedin.com/*",
+        "*://*.indeed.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
   ],
   "action": {
     "default_popup": "popup.html",

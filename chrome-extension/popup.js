@@ -1,5 +1,3 @@
-const BACKEND_URL = "http://localhost:3000";
-
 // DOM Elements
 const connectionBadge = document.getElementById("connectionBadge");
 const resumeSelector = document.getElementById("resumeSelector");
@@ -40,6 +38,26 @@ let activeTabUrl = "";
 let latestMatchData = null;
 let savedResumes = [];
 
+// Helper to delegate fetch requests to background script (avoids CSP issues)
+async function callApi(endpoint, method = "GET", body = null) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { action: "apiCall", data: { endpoint, method, body } },
+      (response) => {
+        if (!response) {
+          reject(new Error("No response from service worker"));
+          return;
+        }
+        if (!response.success) {
+          reject(new Error(response.error || `HTTP error (${response.status || 500})`));
+          return;
+        }
+        resolve(response.data);
+      }
+    );
+  });
+}
+
 // Initialize
 document.addEventListener("DOMContentLoaded", async () => {
   // 1. Scrape details from active tab
@@ -48,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tab = tabs[0];
     activeTabUrl = tab.url;
 
-    // Inject and run scraping content script dynamically
+    // Inject and run scraping content script dynamically if not already running
     chrome.scripting.executeScript(
       {
         target: { tabId: tab.id },
@@ -72,19 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 2. Test Backend connection & Load saved Resumes list
   try {
-    const res = await fetch(`${BACKEND_URL}/api/ext/resumes`, {
-      credentials: "include", // auto-sends session cookies
-    });
-    
-    if (res.status === 401) {
-      connectionBadge.innerText = "Log in to Web App";
-      connectionBadge.classList.remove("connected");
-      setupError.innerText = "Please log in to ResumeLens in your browser first.";
-      setupError.style.display = "block";
-      return;
-    }
-
-    const data = await res.json();
+    const data = await callApi("/api/ext/resumes", "GET");
     if (data.success) {
       savedResumes = data.data || [];
       connectionBadge.innerText = "Connected";
@@ -100,18 +106,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         resumeSelector.appendChild(option);
       });
 
-      // Enable match button if resume is selected
+      // Restore activeResumeId from chrome.storage.local
+      chrome.storage.local.get(["activeResumeId"], (result) => {
+        if (result.activeResumeId) {
+          const exists = savedResumes.some(r => r.id === result.activeResumeId);
+          if (exists) {
+            resumeSelector.value = result.activeResumeId;
+            matchBtn.disabled = false;
+          }
+        }
+      });
+
+      // Enable match button and save activeResumeId on change
       resumeSelector.addEventListener("change", () => {
-        matchBtn.disabled = !resumeSelector.value;
+        const val = resumeSelector.value;
+        matchBtn.disabled = !val;
+        if (val) {
+          chrome.storage.local.set({ activeResumeId: val });
+        }
       });
     } else {
       throw new Error(data.error || "Failed to fetch resumes");
     }
   } catch (err) {
     console.error("Connection error:", err);
-    connectionBadge.innerText = "Disconnected";
-    connectionBadge.classList.remove("connected");
-    setupError.innerText = "Connection failed. Make sure Next.js is running at localhost:3000";
+    if (err.message.includes("401") || err.message.toLowerCase().includes("unauthorized")) {
+      connectionBadge.innerText = "Log in to Web App";
+      connectionBadge.classList.remove("connected");
+      setupError.innerText = "Please log in to ResumeLens in your browser first.";
+    } else {
+      connectionBadge.innerText = "Disconnected";
+      connectionBadge.classList.remove("connected");
+      setupError.innerText = "Connection failed. Make sure Next.js is running at localhost:3000";
+    }
     setupError.style.display = "block";
   }
 });
@@ -130,22 +157,12 @@ matchBtn.addEventListener("click", async () => {
   resultError.style.display = "none";
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/ext/match`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        resumeId,
-        jobTitle,
-        companyName,
-        jobDescription,
-      }),
-      credentials: "include",
+    const data = await callApi("/api/ext/match", "POST", {
+      resumeId,
+      jobTitle,
+      companyName,
+      jobDescription,
     });
-
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Failed to run match scoring");
-    }
 
     latestMatchData = data.data;
     renderResults(companyName, jobTitle);
@@ -246,26 +263,16 @@ trackBtn.addEventListener("click", async () => {
   resultError.style.display = "none";
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/ext/apply`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        resumeId,
-        jobTitle,
-        companyName,
-        jobUrl: activeTabUrl,
-        jobDescription,
-        overallScore: latestMatchData.overallScore,
-        fitVerdict: latestMatchData.fitVerdict,
-        resultJson: latestMatchData,
-      }),
-      credentials: "include",
+    await callApi("/api/ext/apply", "POST", {
+      resumeId,
+      jobTitle,
+      companyName,
+      jobUrl: activeTabUrl,
+      jobDescription,
+      overallScore: latestMatchData.overallScore,
+      fitVerdict: latestMatchData.fitVerdict,
+      resultJson: latestMatchData,
     });
-
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Failed to log application details");
-    }
 
     trackBtn.innerText = "Tracked ✓";
     successAlert.innerText = "✓ Scored listing logged directly to web dashboard tracker!";
@@ -308,24 +315,14 @@ outreachBtn.addEventListener("click", async () => {
   outreachError.innerText = "";
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/ext/outreach`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        resumeId,
-        jobTitle,
-        companyName,
-        jobDescription,
-        recruiterName: recruiterName || undefined,
-        outreachType,
-      }),
-      credentials: "include",
+    const data = await callApi("/api/ext/outreach", "POST", {
+      resumeId,
+      jobTitle,
+      companyName,
+      jobDescription,
+      recruiterName: recruiterName || undefined,
+      outreachType,
     });
-
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Failed to generate outreach pitch");
-    }
 
     outreachText.value = data.data;
     outreachResultBox.style.display = "block";
