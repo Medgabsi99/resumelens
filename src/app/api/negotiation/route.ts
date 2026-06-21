@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       currentOffer,
       messageHistory,
       userResponse,
+      recruiterProfile,
     } = body;
 
     try {
@@ -65,6 +66,21 @@ export async function POST(req: NextRequest) {
           m.content = validateAndSanitizeInput(m.content, 4000, `Message history content at index ${i}`, true);
         }
       }
+
+      if (!recruiterProfile || typeof recruiterProfile !== "object") {
+        throw new Error("Recruiter profile is required and must be an object.");
+      }
+      if (
+        typeof recruiterProfile.name !== "string" ||
+        typeof recruiterProfile.avatar !== "string" ||
+        !["Stubborn", "Friendly", "Highly Analytical", "Tough"].includes(recruiterProfile.personality) ||
+        typeof recruiterProfile.description !== "string" ||
+        typeof recruiterProfile.hiddenCeilingBudget !== "number" ||
+        typeof recruiterProfile.concessionLimit !== "number" ||
+        typeof recruiterProfile.flexibility !== "number"
+      ) {
+        throw new Error("Recruiter profile contains invalid or missing properties.");
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
@@ -79,7 +95,8 @@ export async function POST(req: NextRequest) {
       initialOffer,
       currentOffer,
       messageHistory || [],
-      userResponse
+      userResponse,
+      recruiterProfile
     );
 
     return NextResponse.json({ success: true, turn });

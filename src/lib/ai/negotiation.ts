@@ -31,6 +31,16 @@ export interface NegotiationScorecard {
   coachesNote: string;
 }
 
+export interface RecruiterProfile {
+  name: string;
+  avatar: string;
+  personality: "Stubborn" | "Friendly" | "Highly Analytical" | "Tough";
+  description: string;
+  hiddenCeilingBudget: number;
+  concessionLimit: number;
+  flexibility: number;
+}
+
 export async function generateNegotiationResponse(
   resumeText: string,
   roleTitle: string,
@@ -39,13 +49,19 @@ export async function generateNegotiationResponse(
   initialOffer: NegotiationOffer,
   currentOffer: NegotiationOffer,
   messageHistory: { role: "user" | "recruiter"; content: string }[],
-  userResponse: string
+  userResponse: string,
+  recruiterProfile: RecruiterProfile
 ): Promise<NegotiationTurnResponse> {
   const historyText = messageHistory
     .map((m) => `${m.role === "user" ? "Candidate" : "Recruiter"}: ${m.content}`)
     .join("\n");
 
-  const prompt = `You are playing the role of the Recruiter/Hiring Manager at ${companyName} negotiating with a candidate for the role of "${roleTitle}".
+  const prompt = `You are playing the role of ${recruiterProfile.name}, the Hiring Manager / Recruiter at ${companyName}.
+Recruiter Profile:
+- Personality: ${recruiterProfile.personality} (Characteristics: ${recruiterProfile.description})
+- Hidden Base Salary Ceiling Budget: $${recruiterProfile.hiddenCeilingBudget.toLocaleString()} (NEVER exceed this base salary under any circumstances. If the candidate requests more than this, firmly state that you cannot go higher than this base salary ceiling or offer alternative perks like sign-on or equity if appropriate, depending on your personality. If they refuse to budge, you must hold the line or even withdraw/conclude the negotiation.)
+- Flexibility: ${recruiterProfile.flexibility * 100}%
+- Concession Limit: Max base salary increase of $${recruiterProfile.concessionLimit.toLocaleString()} per turn.
 
 Negotiation Scenario: ${scenario}
 Initial Offer: Base $${initialOffer.base}, Bonus $${initialOffer.bonus}, Equity $${initialOffer.equity}, Sign-on $${initialOffer.signOn}, Other: "${initialOffer.other}"
@@ -64,18 +80,19 @@ ${userResponse}
 [MESSAGE END]
 
 Perform these tasks:
-1. Formulate the Recruiter's in-character response to the candidate. Keep it concise (2-3 sentences), realistic, and professional.
+1. Formulate the Recruiter's in-character response to the candidate. Keep it concise (2-3 sentences), realistic, and professional, strictly matching the personality trait of "${recruiterProfile.personality}".
    - If the candidate accepts the offer, finalize the negotiation.
-   - If the candidate asks for unreasonable numbers (e.g. +50% base salary) without strong justifications or behaves rudely, the recruiter sentiment should drop, and they should negotiate firmly or walk away.
-   - If the candidate references specific projects/skills from their resume that justify a higher salary, make a small concession (e.g., increase base by $5k-$10k, or add a $5k sign-on bonus).
+   - If the candidate asks for base salary numbers exceeding the Hidden Base Salary Ceiling Budget ($${recruiterProfile.hiddenCeilingBudget}), the recruiter must warn the candidate that they are at/exceeding corporate limits, and decline further base increases.
+   - Concessions should be hard-won, depending on recruiter personality.
+   - If the candidate references specific projects/skills from their resume that justify a higher salary, make a concession within your concession limit ($${recruiterProfile.concessionLimit}), provided the base salary does not exceed the ceiling ($${recruiterProfile.hiddenCeilingBudget}).
 2. Evaluate the user's latest message:
    - Provide a brief coach tip (constructive feedback) on how they handled the communication.
-   - Update the current offer based on this turn. Concessions should be hard-won. Base salary increases should rarely exceed $15,000 total from initial offer.
+   - Update the current offer based on this turn. Concessions must never breach the Hidden Base Salary Ceiling Budget ($${recruiterProfile.hiddenCeilingBudget}). Base salary increases should be incremental (max $${recruiterProfile.concessionLimit} per turn).
    - Set sentiment ("open", "impressed", "resistant", "offended").
    - Adjust leverage (0-100%).
 3. Determine if the negotiation is concluded:
    - "accepted": if the user explicitly agrees to the offer.
-   - "rejected" / "walk_away": if the user walks away, or if recruiter sentiment drops to offended repeatedly and they decide to rescind the offer.
+   - "rejected" / "walk_away": if the user walks away, or if recruiter sentiment drops to offended repeatedly and they decide to rescind/walk away (especially Stubborn or Tough recruiters when pushed too hard past the ceiling).
    - "ongoing": if negotiation continues.
    - Maximum turns limit: if the history has 6 or more turns, the recruiter must present their final best offer and set isConcluded = true on the next candidate refusal.
 
@@ -116,7 +133,8 @@ export async function evaluateNegotiationSession(
   initialOffer: NegotiationOffer,
   finalOffer: NegotiationOffer,
   messageHistory: { role: "user" | "recruiter"; content: string }[],
-  verdict: string
+  verdict: string,
+  recruiterProfile: RecruiterProfile
 ): Promise<NegotiationScorecard> {
   const historyText = messageHistory
     .map((m) => `${m.role === "user" ? "Candidate" : "Recruiter"}: ${m.content}`)
@@ -127,6 +145,8 @@ export async function evaluateNegotiationSession(
   const financialGain = Math.max(0, finalTotal - initialTotal);
 
   const prompt = `Analyze this salary negotiation transcript for the role of "${roleTitle}" at ${companyName}.
+The negotiation was conducted with recruiter ${recruiterProfile.name} (Personality: ${recruiterProfile.personality}).
+- Hidden Base Salary Ceiling Budget: $${recruiterProfile.hiddenCeilingBudget.toLocaleString()}
 
 Scenario: ${scenario}
 Initial Offer: Base $${initialOffer.base}, Bonus $${initialOffer.bonus}, Equity $${initialOffer.equity}, Sign-on $${initialOffer.signOn}, Other: "${initialOffer.other}"
@@ -147,6 +167,7 @@ Evaluate the candidate's negotiation performance. Determine:
 3. Specific Strengths in their messages.
 4. Specific Weaknesses or missed opportunities.
 5. A detailed, encouraging coach's note providing high-value salary advice.
+   - If the candidate accepted the offer, analyze if they "left money on the table". Compare their final base salary $${finalOffer.base} with the Recruiter's hidden base ceiling budget of $${recruiterProfile.hiddenCeilingBudget}. If the final base is $10k+ below the ceiling budget, explicitly coach the candidate on how they could have negotiated closer to the budget limit of $${recruiterProfile.hiddenCeilingBudget.toLocaleString()} without risking the offer, or what they did right if they maxed it out.
 
 Return ONLY a JSON object with this exact structure:
 {

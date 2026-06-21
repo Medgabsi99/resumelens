@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       finalOffer,
       messageHistory,
       verdict,
+      recruiterProfile,
     } = body;
 
     if (!resumeText) {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!roleTitle || !companyName || !scenario || !initialOffer || !finalOffer || !messageHistory || !verdict) {
+    if (!roleTitle || !companyName || !scenario || !initialOffer || !finalOffer || !messageHistory || !verdict || !recruiterProfile) {
       return NextResponse.json(
         { success: false, error: "Missing required details to compile scorecard" },
         { status: 400 }
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
       initialOffer,
       finalOffer,
       messageHistory,
-      verdict
+      verdict,
+      recruiterProfile
     );
 
     // ── 4. Resiliently attempt to save to database ────────────
