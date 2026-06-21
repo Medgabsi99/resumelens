@@ -36,10 +36,14 @@ export default async function PastAnalysisPage({
   }
 
   // result_json might be a string or already parsed depending on DB driver
-  const resultData: AnalysisResult =
+  const resultData: any =
     typeof analysis.result_json === "string"
       ? JSON.parse(analysis.result_json)
       : analysis.result_json;
+
+  if (resultData && resultData.isCommittee === true) {
+    redirect(`/dashboard/committee?analysisId=${analysis.id}`);
+  }
 
   // Handle null safety for older analyses without resume_text/job_description
   const hasJD = !!analysis.job_description;

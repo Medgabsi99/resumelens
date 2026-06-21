@@ -235,3 +235,22 @@ export interface SmartResumeResponse {
   enhancedText?: string;
   error?: string;
 }
+
+// ─── Hiring Committee Debrief ────────────────────────────────
+
+export interface DebriefMessage {
+  speaker: "HR Recruiter" | "Engineering Manager" | "Product Manager";
+  message: string;
+}
+
+export interface CommitteeDebriefResult {
+  overallRecommendation: "Hire" | "No Hire" | "Strong Hire" | "Leaning No Hire";
+  hrScore: number;
+  techScore: number;
+  productScore: number;
+  debriefTranscript: DebriefMessage[];
+  strengthsDebated: string[];
+  weaknessesDebated: string[];
+  recommendedRemedies: string[];
+  isCommittee: true;
+}

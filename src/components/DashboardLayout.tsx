@@ -89,6 +89,13 @@ function IconSparkles() {
     </svg>
   );
 }
+function IconUsers() {
+  return (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  );
+}
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: <IconHome />, matchPaths: ["/dashboard"] },
@@ -98,6 +105,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/scanner", label: "ATS Scanner", icon: <IconSearch />, matchPaths: ["/dashboard/scanner"] },
   { href: "/dashboard/learning-paths", label: "Learning Paths", icon: <IconGradCap />, matchPaths: ["/dashboard/learning-paths"] },
   { href: "/dashboard/tailor", label: "Tailor Sandbox", icon: <IconSparkles />, matchPaths: ["/dashboard/tailor"] },
+  { href: "/dashboard/committee", label: "Recruiter Sandbox", icon: <IconUsers />, matchPaths: ["/dashboard/committee"] },
   { href: "/dashboard/settings", label: "Settings", icon: <IconSettings />, matchPaths: ["/dashboard/settings"] },
 ];
 
@@ -158,6 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           s: "/dashboard/scanner",
           l: "/dashboard/learning-paths",
           t: "/dashboard/tailor",
+          c: "/dashboard/committee",
           e: "/dashboard/settings",
           h: "/",
         };
