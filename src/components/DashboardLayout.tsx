@@ -117,6 +117,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  
+  // Collapsible Sidebar States
+  const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const gPendingRef = useRef(false);         // tracks "G" prefix for go-to shortcuts
   const gTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -129,10 +134,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   }, []);
 
+  // Initialize preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar_collapsed");
+    if (saved === "true") setCollapsed(true);
+    setMounted(true);
+  }, []);
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  const toggleSidebar = () => {
+    setCollapsed((v) => {
+      const nextVal = !v;
+      localStorage.setItem("sidebar_collapsed", String(nextVal));
+      return nextVal;
+    });
+  };
 
   // ── Unified global keyboard handler ──────────────────────
   const handleKeyDown = useCallback(
@@ -250,6 +270,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       p === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(p)
     );
 
+  const isCollapsed = mounted && collapsed;
+
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
       {/* Aurora animated background */}
@@ -258,26 +280,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen relative z-10">
         {/* Left Pane: Desktop Sticky Sidebar */}
         <aside
-          className="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-border backdrop-blur-md z-40 select-none flex-shrink-0"
+          className={`hidden lg:flex flex-col h-screen sticky top-0 border-r border-border backdrop-blur-md z-40 select-none flex-shrink-0 transition-all duration-300 ease-in-out relative ${
+            isCollapsed ? "w-20" : "w-64"
+          }`}
           style={{ background: "var(--nav-bg)" }}
         >
-          {/* Brand branding */}
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <Link
-              href="/"
-              className="font-display text-xl font-bold tracking-tight no-underline text-ink hover:text-accent transition-colors"
+          {/* Collapse Toggle Button */}
+          <button
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="absolute -right-3 top-6 z-50 w-6 h-6 bg-paper border border-border hover:border-accent hover:text-accent rounded-full flex items-center justify-center cursor-pointer transition shadow-md focus:outline-none"
+          >
+            <svg
+              className={`w-3 h-3 text-ink-muted transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              viewBox="0 0 24 24"
             >
-              ResumeLens
-            </Link>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Brand branding */}
+          <div className="p-6 border-b border-border flex items-center justify-center h-[73px]">
+            {isCollapsed ? (
+              <span className="bg-accent/15 text-accent border border-accent/20 w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-sm select-none">
+                RL
+              </span>
+            ) : (
+              <Link
+                href="/"
+                className="font-display text-xl font-bold tracking-tight no-underline text-ink hover:text-accent transition-colors block w-full truncate"
+              >
+                ResumeLens
+              </Link>
+            )}
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-1">
+          <nav className="flex-1 px-3 py-6 overflow-y-auto space-y-1">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center gap-3 transition-all duration-200"
+                title={isCollapsed ? item.label : undefined}
+                className={`px-3 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center transition-all duration-200 ${
+                  isCollapsed ? "justify-center" : "gap-3"
+                }`}
                 style={{
                   color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
                   background: isActive(item) ? "var(--accent-bg)" : "transparent",
@@ -285,40 +335,87 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }}
               >
                 <span className="flex-shrink-0 opacity-80">{item.icon}</span>
-                <span>{item.label}</span>
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
               </Link>
             ))}
           </nav>
 
           {/* Profile & Controls Area */}
           <div className="p-4 border-t border-border space-y-3 bg-paper/20 backdrop-blur-sm">
-            {userEmail && (
-              <div className="font-mono text-[11px] text-ink-faint px-2.5 py-1.5 rounded-lg bg-paper border border-border/40 truncate select-all" title={userEmail}>
-                👤 {userEmail}
+            {isCollapsed ? (
+              <div className="flex flex-col items-center gap-3">
+                {/* Collapsed User Avatar with popup tooltip */}
+                <div
+                  className="w-9 h-9 rounded-xl bg-paper border border-border/40 flex items-center justify-center text-sm cursor-help relative group"
+                  title={userEmail || "User Session"}
+                >
+                  👤
+                  {userEmail && (
+                    <div className="absolute left-12 scale-0 group-hover:scale-100 transition-all duration-150 z-[9999] bg-slate-900 text-slate-100 text-[10px] px-2.5 py-1.5 rounded-md border border-slate-800 shadow-xl whitespace-nowrap font-mono">
+                      {userEmail}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Theme Toggle */}
+                <div className="flex items-center justify-center w-8 h-8">
+                  <ThemeToggle />
+                </div>
+
+                {/* Keyboard Shortcuts Trigger */}
+                <button
+                  onClick={() => setShortcutsOpen(true)}
+                  aria-label="Show keyboard shortcuts"
+                  title="Keyboard shortcuts (?)"
+                  className="flex items-center justify-center w-8 h-8 text-xs font-bold text-ink-muted hover:text-ink border border-border rounded-xl transition-all duration-200 bg-paper-card"
+                  style={{ fontFamily: "DM Mono, monospace" }}
+                >
+                  ?
+                </button>
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="flex items-center justify-center w-8 h-8 text-ink-muted hover:text-accent border border-border hover:border-accent-border rounded-xl transition-all duration-200 bg-paper-card cursor-pointer"
+                >
+                  {signingOut ? "..." : "→"}
+                </button>
               </div>
+            ) : (
+              // Expanded Area
+              <>
+                {userEmail && (
+                  <div className="font-mono text-[11px] text-ink-faint px-2.5 py-1.5 rounded-lg bg-paper border border-border/40 truncate select-all" title={userEmail}>
+                    👤 {userEmail}
+                  </div>
+                )}
+                <div className="flex items-center justify-between px-1">
+                  <ThemeToggle />
+                  
+                  <button
+                    onClick={() => setShortcutsOpen(true)}
+                    aria-label="Show keyboard shortcuts"
+                    title="Keyboard shortcuts (?)"
+                    className="flex items-center justify-center w-8 h-8 text-xs font-bold text-ink-muted hover:text-ink border border-border rounded-xl transition-all duration-200 bg-paper-card"
+                    style={{ fontFamily: "DM Mono, monospace" }}
+                  >
+                    ?
+                  </button>
+                </div>
+                
+                <button
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  aria-label="Sign out"
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border rounded-xl transition-all duration-200 bg-paper-card cursor-pointer"
+                >
+                  {signingOut ? "Signing out..." : "Sign out →"}
+                </button>
+              </>
             )}
-            <div className="flex items-center justify-between px-1">
-              <ThemeToggle />
-              
-              <button
-                onClick={() => setShortcutsOpen(true)}
-                aria-label="Show keyboard shortcuts"
-                title="Keyboard shortcuts (?)"
-                className="flex items-center justify-center w-8 h-8 text-xs font-bold text-ink-muted hover:text-ink border border-border rounded-xl transition-all duration-200 bg-paper-card"
-                style={{ fontFamily: "DM Mono, monospace" }}
-              >
-                ?
-              </button>
-            </div>
-            
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              aria-label="Sign out"
-              className="w-full text-left px-3 py-2 text-xs font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border rounded-xl transition-all duration-200 bg-paper-card cursor-pointer"
-            >
-              {signingOut ? "Signing out..." : "Sign out →"}
-            </button>
           </div>
         </aside>
 
