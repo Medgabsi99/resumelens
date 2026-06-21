@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import SalaryNegotiatorBoard from "@/components/SalaryNegotiatorBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";
+import { useToast } from "@/components/ToastProvider";
 
 interface ResumeItem {
   id: string;
@@ -29,6 +30,7 @@ interface ScorecardItem {
 }
 
 export default function NegotiatorPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [mounted, setMounted] = useState(false);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [history, setHistory] = useState<ScorecardItem[]>([]);
@@ -173,9 +175,11 @@ export default function NegotiatorPage() {
           const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
           localStorage.setItem("salary_negotiations_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+          toastSuccess("Scorecard deleted successfully.", "Deleted");
         }
       } catch (err) {
         console.error("Local delete error:", err);
+        toastError("Failed to delete local scorecard.");
       }
     } else {
       // Delete from DB
@@ -188,8 +192,9 @@ export default function NegotiatorPage() {
           throw new Error(data.error || "Failed to delete item");
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+        toastSuccess("Scorecard deleted successfully.", "Deleted");
       } catch (err: any) {
-        alert(err.message || "Failed to delete entry from database.");
+        toastError(err.message || "Failed to delete entry from database.", "Delete Failed");
       }
     }
   };

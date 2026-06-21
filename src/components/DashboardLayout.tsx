@@ -82,6 +82,13 @@ function IconX() {
     </svg>
   );
 }
+function IconSparkles() {
+  return (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" />
+    </svg>
+  );
+}
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: <IconHome />, matchPaths: ["/dashboard"] },
@@ -90,6 +97,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard/interviews", label: "Mock Interviews", icon: <IconMic />, matchPaths: ["/dashboard/interviews"] },
   { href: "/dashboard/scanner", label: "ATS Scanner", icon: <IconSearch />, matchPaths: ["/dashboard/scanner"] },
   { href: "/dashboard/learning-paths", label: "Learning Paths", icon: <IconGradCap />, matchPaths: ["/dashboard/learning-paths"] },
+  { href: "/dashboard/tailor", label: "Tailor Sandbox", icon: <IconSparkles />, matchPaths: ["/dashboard/tailor"] },
   { href: "/dashboard/settings", label: "Settings", icon: <IconSettings />, matchPaths: ["/dashboard/settings"] },
 ];
 
@@ -149,6 +157,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           i: "/dashboard/interviews",
           s: "/dashboard/scanner",
           l: "/dashboard/learning-paths",
+          t: "/dashboard/tailor",
           e: "/dashboard/settings",
           h: "/",
         };
@@ -373,7 +382,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Main content */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10">
+      <main
+        key={pathname}
+        className="relative z-10 max-w-6xl mx-auto px-6 py-10 fade-up"
+      >
         {children}
       </main>
 

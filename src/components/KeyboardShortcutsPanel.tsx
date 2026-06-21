@@ -25,6 +25,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { description: "Go to ATS Scanner",    keys: [["G", "S"]] },
       { description: "Go to Salary Negotiator", keys: [["G", "N"]] },
       { description: "Go to Learning Paths", keys: [["G", "L"]] },
+      { description: "Go to Tailor Sandbox", keys: [["G", "T"]] },
       { description: "Go to Settings",       keys: [["G", "E"]] },
       { description: "New Resume Analysis",  keys: [["G", "H"]] },
     ],

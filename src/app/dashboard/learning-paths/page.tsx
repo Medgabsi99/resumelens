@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import LearningPathBoard from "@/components/LearningPathBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type SkillGapPathResult } from "@/lib/ai";
+import { useToast } from "@/components/ToastProvider";
 
 interface ResumeItem {
   id: string;
@@ -36,6 +37,7 @@ const GENERATING_STEPS = [
 ];
 
 export default function LearningPathsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [mounted, setMounted] = useState(false);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [history, setHistory] = useState<SavedPathItem[]>([]);
@@ -217,9 +219,11 @@ export default function LearningPathsPage() {
           const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
           localStorage.setItem("learning_paths_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+          toastSuccess("Learning path deleted successfully.", "Deleted");
         }
       } catch (err) {
         console.error("Local delete error:", err);
+        toastError("Failed to delete local learning path.");
       }
     } else {
       try {
@@ -231,8 +235,9 @@ export default function LearningPathsPage() {
           throw new Error(data.error || "Failed to delete item");
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+        toastSuccess("Learning path deleted successfully.", "Deleted");
       } catch (err: any) {
-        alert(err.message || "Failed to delete entry from database.");
+        toastError(err.message || "Failed to delete entry from database.", "Delete Failed");
       }
     }
   };

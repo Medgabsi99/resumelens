@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import MockInterviewSimulatorBoard from "@/components/MockInterviewSimulatorBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
+import { useToast } from "@/components/ToastProvider";
 
 interface ResumeItem {
   id: string;
@@ -39,6 +40,7 @@ const GENERATING_STEPS = [
 ];
 
 export default function InterviewsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [mounted, setMounted] = useState(false);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [history, setHistory] = useState<SavedInterviewItem[]>([]);
@@ -182,9 +184,11 @@ export default function InterviewsPage() {
           const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
           localStorage.setItem("mock_interviews_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+          toastSuccess("Mock interview deleted successfully.", "Deleted");
         }
       } catch (err) {
         console.error("Local delete error:", err);
+        toastError("Failed to delete local mock interview.");
       }
     } else {
       try {
@@ -196,8 +200,9 @@ export default function InterviewsPage() {
           throw new Error(data.error || "Failed to delete item");
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
+        toastSuccess("Mock interview deleted successfully.", "Deleted");
       } catch (err: any) {
-        alert(err.message || "Failed to delete log from database.");
+        toastError(err.message || "Failed to delete log from database.", "Delete Failed");
       }
     }
   };

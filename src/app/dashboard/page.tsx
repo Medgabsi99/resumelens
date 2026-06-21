@@ -648,7 +648,13 @@ export default function DashboardPage() {
 
                   {/* Active Tooltip overlay */}
                   {hoveredPoint !== null && scoreChartData.points[hoveredPoint] && (
-                    <div className="absolute top-2 right-2 glass-card bg-paper-card border border-accent-border px-3 py-2 rounded-xl text-left pointer-events-none shadow-md z-20 transition-all duration-200">
+                    <div
+                      className="absolute top-2 glass-card bg-paper-card border border-accent-border px-3 py-2 rounded-xl text-left pointer-events-none shadow-md z-20 transition-all duration-200"
+                      style={{
+                        right: scoreChartData.points[hoveredPoint].x < scoreChartData.svgW / 2 ? "8px" : "auto",
+                        left: scoreChartData.points[hoveredPoint].x < scoreChartData.svgW / 2 ? "auto" : "8px",
+                      }}
+                    >
                       <div className="text-[10px] font-mono text-accent uppercase tracking-wider font-semibold">
                         {scoreChartData.points[hoveredPoint].date}
                       </div>

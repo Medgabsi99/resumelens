@@ -9,8 +9,18 @@ const PLANS = [
     name: "Free",
     price: "$0",
     period: "",
-    desc: "Try it out",
-    features: ["2 resume analyses", "Score + summary", "Strengths & weaknesses", "—"],
+    desc: "Test-drive the core features",
+    features: [
+      { name: "2 resume reviews included", included: true },
+      { name: "Core ATS scoring & summary", included: true },
+      { name: "Top strengths & weaknesses", included: true },
+      { name: "Cover letter generator", included: false },
+      { name: "Professional outreach generator", included: false },
+      { name: "Interactive Mock Interview room", included: false },
+      { name: "Skill-gap custom learning paths", included: false },
+      { name: "Salary negotiation sandbox", included: false },
+      { name: "Personal portfolio website generator", included: false },
+    ],
     cta: "Get started",
     href: "/login",
     stripe: false,
@@ -21,8 +31,18 @@ const PLANS = [
     name: "Lifetime",
     price: "$9",
     period: "one-time",
-    desc: "Pay once, use forever",
-    features: ["Unlimited analyses", "Full rewrite suggestions", "Keyword gap analysis", "All future features"],
+    desc: "Pay once, review resumes forever",
+    features: [
+      { name: "Unlimited resume reviews", included: true },
+      { name: "Full AI rewrite suggestions", included: true },
+      { name: "ATS keyword gap analysis", included: true },
+      { name: "Cover letter generator (Basic)", included: true },
+      { name: "Outreach generator (Basic)", included: true },
+      { name: "Interactive Mock Interview room", included: false },
+      { name: "Skill-gap custom learning paths", included: false },
+      { name: "Salary negotiation sandbox", included: false },
+      { name: "Personal portfolio website generator", included: false },
+    ],
     cta: "Buy Lifetime Access",
     stripe: true,
     featured: false,
@@ -32,8 +52,18 @@ const PLANS = [
     name: "Pro",
     price: "$19",
     period: "/ month",
-    desc: "For active job seekers",
-    features: ["Unlimited analyses", "Full rewrite suggestions", "Keyword gap analysis", "Priority support"],
+    desc: "For active, aggressive job seekers",
+    features: [
+      { name: "Unlimited resume reviews", included: true },
+      { name: "Full AI rewrite suggestions", included: true },
+      { name: "ATS keyword gap analysis", included: true },
+      { name: "Cover letter generator (Premium)", included: true },
+      { name: "Professional outreach generator", included: true },
+      { name: "Interactive Mock Interview simulator", included: true },
+      { name: "Skill-gap custom learning paths", included: true },
+      { name: "Salary negotiation sandbox", included: true },
+      { name: "Personal portfolio website generator", included: true },
+    ],
     cta: "Start Pro",
     stripe: true,
     featured: true,
@@ -155,21 +185,21 @@ export default function PricingPage() {
 
                 <div className="h-px w-full my-6" style={{ background: "var(--border)" }} />
 
-                <ul className="list-none p-0 m-0 flex flex-col gap-4 mb-8">
+                <ul className="list-none p-0 m-0 flex flex-col gap-3.5 mb-8">
                   {plan.features.map((f, i) => (
                     <li
                       key={i}
-                      className="text-sm flex items-start gap-3"
-                      style={{ color: f === "—" ? "var(--ink-faint)" : "var(--ink)" }}
+                      className="text-xs md:text-sm flex items-start gap-3"
+                      style={{ color: f.included ? "var(--ink)" : "var(--ink-faint)" }}
                     >
                       <span
-                        className="text-base flex-shrink-0"
-                        style={{ color: f === "—" ? "var(--ink-faint)" : "#10b981" }}
+                        className="text-base flex-shrink-0 leading-none"
+                        style={{ color: f.included ? "#10b981" : "var(--ink-faint)" }}
                       >
-                        {f === "—" ? "—" : "✓"}
+                        {f.included ? "✓" : "—"}
                       </span>
-                      <span>
-                        {f === "—" ? "Priority support" : f}
+                      <span style={{ textDecoration: f.included ? "none" : "line-through", opacity: f.included ? 1 : 0.6 }}>
+                        {f.name}
                       </span>
                     </li>
                   ))}
