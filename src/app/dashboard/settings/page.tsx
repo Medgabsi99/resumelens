@@ -470,6 +470,82 @@ export default function SettingsPage() {
               )}
             </div>
 
+            {/* CHROME EXTENSION INTEGRATION */}
+            <div style={{
+              background: "var(--paper-card)",
+              border: "1px solid var(--border)",
+              borderRadius: 18,
+              padding: 28,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                    🔌 Chrome Extension Integration
+                  </h2>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
+                    Analyze compatibility and track applications directly from LinkedIn, Indeed, Greenhouse, and Lever.
+                  </p>
+                </div>
+                <span style={{
+                  background: "rgba(139, 92, 246, 0.1)",
+                  color: "#a78bfa",
+                  border: "1px solid rgba(139, 92, 246, 0.2)",
+                  padding: "3px 8px",
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: "uppercase"
+                }}>
+                  Developer Tool
+                </span>
+              </div>
+
+              {/* Steps Layout */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, fontSize: 13 }} className="grid grid-cols-1 md:grid-cols-2">
+                {/* Left col: value props */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>Key Capabilities:</h3>
+                  <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 8, color: "var(--ink-muted)" }}>
+                    <li>
+                      🎯 <strong>Live Scraping</strong>: Instantly captures job roles, companies, and requirements from active tabs.
+                    </li>
+                    <li>
+                      ⚖️ <strong>Direct Match Scoring</strong>: Compares candidate resume with listings using Gemini algorithms.
+                    </li>
+                    <li>
+                      📬 <strong>Outreach Pitcher</strong>: Drafts customized recruiter cold-outreach templates on the fly.
+                    </li>
+                    <li>
+                      📍 <strong>Board sync</strong>: Creates application tracker cards automatically.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Right col: Installation steps */}
+                <div style={{
+                  padding: 16,
+                  background: "var(--paper-warm)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10
+                }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>How to Install & Load:</h3>
+                  <ol style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 6, color: "var(--ink-muted)", fontSize: 12, lineHeight: 1.4 }}>
+                    <li>Open Chrome and navigate to <strong style={{ color: "var(--ink)", fontFamily: "monospace" }}>chrome://extensions/</strong></li>
+                    <li>Toggle <strong>Developer mode</strong> in the top-right corner.</li>
+                    <li>Click <strong>Load unpacked</strong> in the top-left menu.</li>
+                    <li>Select the <code style={{ color: "var(--accent)", fontStyle: "italic" }}>chrome-extension</code> folder inside your local codebase directory.</li>
+                    <li>Pin the extension, sign in to this web dashboard, and click the icon on any job posting page!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
             {/* DANGER ZONE */}
             <div style={{
               background: "var(--paper-card)",
