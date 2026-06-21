@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Parse request ──────────────────────────────────────
     let resumeText = "";
+    let pdfBuffer: Buffer | undefined = undefined;
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("multipart/form-data")) {
@@ -38,6 +39,10 @@ export async function POST(req: NextRequest) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
+      if (file.type === "application/pdf") {
+        pdfBuffer = buffer;
+      }
+
       try {
         resumeText = await extractTextFromBuffer(buffer, file.type);
       } catch (err) {
@@ -66,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 3. Call AI Layout Scanner ─────────────────────────────
-    const analysis = await analyzePdfStructure(resumeText);
+    const analysis = await analyzePdfStructure(resumeText, pdfBuffer);
 
     return NextResponse.json({
       success: true,
