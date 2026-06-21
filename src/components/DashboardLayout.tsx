@@ -255,148 +255,181 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Aurora animated background */}
       <AuroraBackground />
 
-      {/* Top nav */}
-      <nav
-        className="sticky top-0 z-50 backdrop-blur-md border-b transition-all duration-300"
-        style={{ background: "var(--nav-bg)", borderColor: "var(--border)" }}
-        ref={mobileMenuRef}
-      >
-        <div className="flex items-center justify-between py-3.5 px-6 md:px-10">
-          {/* Brand */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="font-display text-xl font-bold tracking-tight no-underline text-ink flex-shrink-0">
+      <div className="flex min-h-screen relative z-10">
+        {/* Left Pane: Desktop Sticky Sidebar */}
+        <aside
+          className="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-border backdrop-blur-md z-40 select-none flex-shrink-0"
+          style={{ background: "var(--nav-bg)" }}
+        >
+          {/* Brand branding */}
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <Link
+              href="/"
+              className="font-display text-xl font-bold tracking-tight no-underline text-ink hover:text-accent transition-colors"
+            >
               ResumeLens
             </Link>
-
-            {/* Desktop nav — hidden below lg */}
-            <div className="hidden lg:flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="px-3 py-2 rounded-xl text-sm font-semibold no-underline flex items-center gap-2 transition-all duration-200"
-                  style={{
-                    color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
-                    background: isActive(item) ? "var(--accent-bg)" : "transparent",
-                    border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
-                  }}
-                >
-                  <span className="flex-shrink-0 opacity-80">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-3">
-            {/* ⌘K trigger button */}
-            <button
-              onClick={() => setPaletteOpen(true)}
-              aria-label="Open command palette"
-              title="Search commands (Ctrl+K)"
-              className="hidden md:flex items-center gap-2 text-xs font-semibold text-ink-muted hover:text-ink border border-border hover:border-accent-border px-3 py-1.5 rounded-xl transition-all duration-200"
-              style={{ background: "var(--paper-card)" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <span>Search</span>
-              <span className="flex items-center gap-0.5">
-                <kbd className="font-mono text-[10px] bg-paper border border-border rounded px-1">⌘</kbd>
-                <kbd className="font-mono text-[10px] bg-paper border border-border rounded px-1">K</kbd>
-              </span>
-            </button>
-
-            {/* ? shortcuts trigger */}
-            <button
-              onClick={() => setShortcutsOpen(true)}
-              aria-label="Show keyboard shortcuts"
-              title="Keyboard shortcuts (?)"
-              className="hidden md:flex items-center justify-center w-8 h-8 text-sm font-bold text-ink-muted hover:text-ink border border-border hover:border-accent-border rounded-xl transition-all duration-200"
-              style={{ background: "var(--paper-card)", fontFamily: "DM Mono, monospace" }}
-            >
-              ?
-            </button>
-
-            <ThemeToggle />
-            {userEmail && (
-              <span className="hidden md:inline-block font-mono text-xs text-ink-faint max-w-[150px] truncate">
-                {userEmail}
-              </span>
-            )}
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              aria-label="Sign out"
-              className="hidden sm:block text-xs font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
-              style={{ background: "var(--paper-card)" }}
-            >
-              {signingOut ? "Signing out..." : "Sign out"}
-            </button>
-
-            {/* Hamburger — visible below lg */}
-            <button
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileOpen}
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl border border-border text-ink-muted hover:text-ink hover:bg-paper-warm transition-all duration-200"
-              style={{ background: "var(--paper-card)" }}
-            >
-              {mobileOpen ? <IconX /> : <IconMenu />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile dropdown menu */}
-        {mobileOpen && (
-          <div
-            className="lg:hidden border-t px-4 py-3 flex flex-col gap-1 animate-fadeIn"
-            style={{
-              background: "var(--nav-bg)",
-              borderColor: "var(--border)",
-            }}
-          >
+          {/* Navigation Links */}
+          <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-1">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold no-underline transition-all duration-200"
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center gap-3 transition-all duration-200"
                 style={{
                   color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
                   background: isActive(item) ? "var(--accent-bg)" : "transparent",
                   border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
                 }}
               >
-                <span className="flex-shrink-0">{item.icon}</span>
-                {item.label}
+                <span className="flex-shrink-0 opacity-80">{item.icon}</span>
+                <span>{item.label}</span>
               </Link>
             ))}
-            <div className="border-t pt-3 mt-1 flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
-              {userEmail && (
-                <span className="font-mono text-xs text-ink-faint truncate max-w-[180px]">{userEmail}</span>
-              )}
+          </nav>
+
+          {/* Profile & Controls Area */}
+          <div className="p-4 border-t border-border space-y-3 bg-paper/20 backdrop-blur-sm">
+            {userEmail && (
+              <div className="font-mono text-[11px] text-ink-faint px-2.5 py-1.5 rounded-lg bg-paper border border-border/40 truncate select-all" title={userEmail}>
+                👤 {userEmail}
+              </div>
+            )}
+            <div className="flex items-center justify-between px-1">
+              <ThemeToggle />
+              
               <button
-                onClick={handleSignOut}
-                disabled={signingOut}
-                className="text-xs font-semibold text-ink-muted hover:text-accent transition-colors"
+                onClick={() => setShortcutsOpen(true)}
+                aria-label="Show keyboard shortcuts"
+                title="Keyboard shortcuts (?)"
+                className="flex items-center justify-center w-8 h-8 text-xs font-bold text-ink-muted hover:text-ink border border-border rounded-xl transition-all duration-200 bg-paper-card"
+                style={{ fontFamily: "DM Mono, monospace" }}
               >
-                {signingOut ? "Signing out..." : "Sign out →"}
+                ?
               </button>
             </div>
+            
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              aria-label="Sign out"
+              className="w-full text-left px-3 py-2 text-xs font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border rounded-xl transition-all duration-200 bg-paper-card cursor-pointer"
+            >
+              {signingOut ? "Signing out..." : "Sign out →"}
+            </button>
           </div>
-        )}
-      </nav>
+        </aside>
 
-      {/* Main content */}
-      <main
-        key={pathname}
-        className="relative z-10 max-w-6xl mx-auto px-6 py-10 fade-up"
-      >
-        {children}
-      </main>
+        {/* Right Pane: Content Panel & Top Headers */}
+        <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+          {/* Desktop header (visible on lg and above) */}
+          <header
+            className="hidden lg:flex items-center justify-between py-3.5 px-8 border-b border-border backdrop-blur-md sticky top-0 z-30 flex-shrink-0"
+            style={{ background: "var(--nav-bg)" }}
+          >
+            <div>
+              {/* Command Palette Trigger */}
+              <button
+                onClick={() => setPaletteOpen(true)}
+                aria-label="Open command palette"
+                title="Search commands (Ctrl+K)"
+                className="flex items-center gap-2.5 text-xs font-semibold text-ink-muted hover:text-ink border border-border hover:border-accent-border px-4 py-2 rounded-xl transition-all duration-200 bg-paper-card"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>Search commands...</span>
+                <span className="flex items-center gap-0.5 ml-4">
+                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1">⌘</kbd>
+                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1">K</kbd>
+                </span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider bg-paper border border-border px-3 py-1 rounded-lg">
+                🚀 AI Career Suite
+              </span>
+            </div>
+          </header>
+
+          {/* Mobile navigation header (visible below lg) */}
+          <nav
+            className="sticky top-0 lg:hidden z-50 backdrop-blur-md border-b transition-all duration-300 flex-shrink-0"
+            style={{ background: "var(--nav-bg)", borderColor: "var(--border)" }}
+            ref={mobileMenuRef}
+          >
+            <div className="flex items-center justify-between py-3.5 px-6">
+              <Link href="/" className="font-display text-xl font-bold tracking-tight no-underline text-ink">
+                ResumeLens
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <button
+                  onClick={() => setMobileOpen((v) => !v)}
+                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={mobileOpen}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-border text-ink-muted hover:text-ink hover:bg-paper-warm transition-all duration-200 bg-paper-card"
+                >
+                  {mobileOpen ? <IconX /> : <IconMenu />}
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Dropdown menu list */}
+            {mobileOpen && (
+              <div
+                className="border-t px-4 py-3 flex flex-col gap-1 animate-fadeIn"
+                style={{
+                  background: "var(--nav-bg)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                {NAV_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold no-underline transition-all duration-200"
+                    style={{
+                      color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
+                      background: isActive(item) ? "var(--accent-bg)" : "transparent",
+                      border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
+                    }}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+                <div className="border-t pt-3 mt-1 flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+                  {userEmail && (
+                    <span className="font-mono text-xs text-ink-faint truncate max-w-[180px]">{userEmail}</span>
+                  )}
+                  <button
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className="text-xs font-semibold text-ink-muted hover:text-accent transition-colors"
+                  >
+                    {signingOut ? "Signing out..." : "Sign out →"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </nav>
+
+          {/* Main content area */}
+          <main
+            key={pathname}
+            className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-8 py-10 fade-up flex-1"
+          >
+            {children}
+          </main>
+        </div>
+      </div>
 
       {/* Command Palette */}
       <CommandPalette isOpen={paletteOpen} onClose={() => setPaletteOpen(false)} />
