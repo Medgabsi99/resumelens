@@ -172,6 +172,21 @@ export const smartResumeModel = getSecureModel({
   },
 });
 
+/**
+ * contextModel — used exclusively for Contextual Retrieval (Anthropic, 2024).
+ * Generates 1-sentence context prefixes for resume chunks before embedding,
+ * dramatically reducing retrieval failures on out-of-context chunks.
+ * JSON response mode ensures parseable output.
+ */
+export const contextModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert resume analyst. Given a full resume and a set of extracted text chunks, you write ONE precise sentence contextualizing each chunk within the resume (company, role, date, section type). You respond ONLY with a valid JSON array of strings, one per chunk, in order.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
 export const structuredQuestionsModel = getSecureModel({
   model: "gemini-2.5-flash",
   systemInstruction:
@@ -194,6 +209,24 @@ export const portfolioModel = getSecureModel({
   model: "gemini-2.5-flash",
   systemInstruction:
     "You are an expert personal branding strategist and professional portfolio designer. You extract and enhance resume details to compile a high-converting, premium personal portfolio website. You respond ONLY with valid JSON — no preamble, no markdown fences, no explanation outside the JSON.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+export const rerankModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert search relevance ranker. Given a search query and a list of candidate chunks, you evaluate their relevance and return a JSON object listing the IDs of the top candidate chunks, sorted from most relevant to least relevant. You respond ONLY with valid JSON containing a single key 'rankedIds' mapped to a string array of IDs.",
+  generationConfig: {
+    responseMimeType: "application/json",
+  },
+});
+
+export const bulletOptimizerModel = getSecureModel({
+  model: "gemini-2.5-flash",
+  systemInstruction:
+    "You are an expert resume editor and career optimization assistant. You optimize resume sentences, bullet points, and phrases. You return ONLY a valid JSON object matching the requested schema with 3 alternate phrasings: 'metricDriven', 'actionFocused', and 'skillsTargeted'. Do NOT output markdown, quotes, or preambles.",
   generationConfig: {
     responseMimeType: "application/json",
   },

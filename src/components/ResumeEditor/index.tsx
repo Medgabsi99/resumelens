@@ -12,12 +12,13 @@ import { useResumeVersions } from "./useResumeVersions";
 import ToolbarButton from "./ToolbarButton";
 import ScoreTrendChart from "./ScoreTrendChart";
 import VersionDiffModal from "./VersionDiffModal";
-import { TemplateId, ResumeVersion } from "./types";
+import { TemplateId, ResumeVersion, type ResumeCustomStyle } from "./types";
 
 interface Props {
   initialText: string;
   suggestions: RewriteSuggestion[];
   targetRole?: string;
+  jobDescription?: string;
   resultScore: number;
   analysisId?: string;
 }
@@ -34,6 +35,7 @@ export default function ResumeEditor({
   initialText,
   suggestions,
   targetRole,
+  jobDescription,
   resultScore,
   analysisId,
 }: Props) {
@@ -50,6 +52,16 @@ export default function ResumeEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
+  // Design customizer
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const [customStyle, setCustomStyle] = useState<ResumeCustomStyle>({
+    fontFamily: "serif",
+    fontSize: "11pt",
+    lineHeight: "1.6",
+    padding: "56px 48px",
+    primaryColor: "#1e3a8a",
+  });
+
   // Version History States
   const [showHistory, setShowHistory] = useState(false);
   const [newVersionName, setNewVersionName] = useState("");
@@ -65,6 +77,101 @@ export default function ResumeEditor({
     saveVersion,
     deleteVersion,
   } = useResumeVersions(analysisId, showHistory, text, resultScore);
+
+  // AI Selection Bullet Optimizer states
+  const [selectedText, setSelectedText] = useState("");
+  const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
+  const [bubbleCoords, setBubbleCoords] = useState<{ top: number; left: number } | null>(null);
+  const [showOptimizerBubble, setShowOptimizerBubble] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizedAlternatives, setOptimizedAlternatives] = useState<{
+    metricDriven: string;
+    actionFocused: string;
+    skillsTargeted: string;
+  } | null>(null);
+  const [optimizeError, setOptimizeError] = useState<string | null>(null);
+
+  const handleTextareaSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    const el = e.currentTarget;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    
+    if (start !== end) {
+      const selected = el.value.slice(start, end).trim();
+      if (selected.length > 3 && selected.length < 500) {
+        setSelectedText(selected);
+        setSelectionRange({ start, end });
+        
+        // Compute approximate top line offset coordinate relative to text length
+        const linesBefore = el.value.slice(0, start).split("\n").length;
+        const totalLines = el.value.split("\n").length || 1;
+        const textareaHeight = el.offsetHeight || 400;
+        const calculatedTop = Math.max(10, Math.min(textareaHeight - 120, (linesBefore / totalLines) * textareaHeight));
+        
+        setBubbleCoords({
+          top: calculatedTop,
+          left: el.offsetWidth - 230, // Float at the right edge
+        });
+        
+        if (!isOptimizing) {
+          setOptimizedAlternatives(null);
+          setOptimizeError(null);
+          setShowOptimizerBubble(true);
+        }
+        return;
+      }
+    }
+    
+    if (!isOptimizing && !optimizedAlternatives) {
+      setShowOptimizerBubble(false);
+    }
+  };
+
+  const handleOptimizeBullet = async () => {
+    if (!selectedText.trim()) return;
+    setIsOptimizing(true);
+    setOptimizeError(null);
+    setOptimizedAlternatives(null);
+    
+    try {
+      const res = await fetch("/api/optimize-bullet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: selectedText,
+          targetRole,
+          jobDescription,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "Failed to generate alternatives");
+      }
+      setOptimizedAlternatives(data.alternatives);
+    } catch (err: any) {
+      setOptimizeError(err.message || "Something went wrong optimizing");
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const handleApplyAlternative = (alternative: string) => {
+    if (!selectionRange) return;
+    
+    const newText = text.slice(0, selectionRange.start) + alternative + text.slice(selectionRange.end);
+    setText(newText);
+    
+    // Clear selection state
+    setShowOptimizerBubble(false);
+    setOptimizedAlternatives(null);
+    setSelectedText("");
+    setSelectionRange(null);
+    
+    if (parsedData) {
+      setParsedData(null);
+      setIsEnhanced(false);
+    }
+  };
 
   const handleSaveVersion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +259,7 @@ export default function ResumeEditor({
     try {
       const data = parsedData || parseResume(text);
       const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
-      await downloadResumePdf(selectedTemplate, data, targetRole);
+      await downloadResumePdf(selectedTemplate, data, targetRole, customStyle);
     } catch (err: any) {
       console.error("PDF download error:", err);
       alert("Failed to download PDF. Please try again.");
@@ -256,7 +363,7 @@ export default function ResumeEditor({
 
   // Memoize the rendered template to avoid unnecessary re-renders during typing
   const TemplatePreview = useMemo(() => {
-    const props = { resumeText: text, targetRole, parsedData: parsedData || undefined };
+    const props = { resumeText: text, targetRole, parsedData: parsedData || undefined, customStyle };
     switch (selectedTemplate) {
       case "modern":
         return <ModernTemplate {...props} />;
@@ -269,7 +376,7 @@ export default function ResumeEditor({
       default:
         return <ProfessionalTemplate {...props} />;
     }
-  }, [text, selectedTemplate, targetRole, parsedData]);
+  }, [text, selectedTemplate, targetRole, parsedData, customStyle]);
 
   return (
     <div>
@@ -391,36 +498,163 @@ export default function ResumeEditor({
                   </span>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={handleDownloadPdf}
-                disabled={isDownloading}
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomizer(!showCustomizer)}
+                  style={{
+                    background: showCustomizer ? "rgba(79, 70, 229, 0.1)" : "transparent",
+                    color: "var(--accent)",
+                    border: `1.5px solid ${showCustomizer ? "var(--accent)" : "var(--accent-border)"}`,
+                    borderRadius: 8,
+                    padding: "5px 12px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "Instrument Sans, sans-serif",
+                    transition: "all 0.15s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  🎨 Style
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isDownloading}
+                  style={{
+                    background: "var(--accent)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "5px 14px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: isDownloading ? "wait" : "pointer",
+                    fontFamily: "Instrument Sans, sans-serif",
+                    transition: "all 0.15s",
+                    boxShadow: "0 2px 8px var(--brand-glow)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    opacity: isDownloading ? 0.7 : 1,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  {isDownloading ? "..." : "PDF"}
+                </button>
+              </div>
+            </div>
+
+            {/* Design Customizer Controls */}
+            {showCustomizer && (
+              <div
                 style={{
-                  background: "var(--accent)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "5px 14px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: isDownloading ? "wait" : "pointer",
-                  fontFamily: "Instrument Sans, sans-serif",
-                  transition: "all 0.15s",
-                  boxShadow: "0 2px 8px var(--brand-glow)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  opacity: isDownloading ? 0.7 : 1,
+                  background: "var(--paper-card)",
+                  borderBottom: "1px solid var(--border)",
+                  padding: "12px 16px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                  gap: 12,
+                  animation: "fadeIn 0.2s ease",
                 }}
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                {isDownloading ? "..." : "PDF"}
-              </button>
-            </div>
+                {/* Font Family */}
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Font</label>
+                  <select
+                    value={customStyle.fontFamily}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontFamily: e.target.value as any }))}
+                    style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
+                  >
+                    <option value="serif">Serif (Classic)</option>
+                    <option value="sans">Sans (Modern)</option>
+                    <option value="mono">Mono (Clean)</option>
+                  </select>
+                </div>
+
+                {/* Font Size */}
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Size</label>
+                  <select
+                    value={customStyle.fontSize}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontSize: e.target.value as any }))}
+                    style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
+                  >
+                    <option value="10pt">10pt (Small)</option>
+                    <option value="10.5pt">10.5pt (Medium)</option>
+                    <option value="11pt">11pt (Normal)</option>
+                    <option value="12pt">12pt (Large)</option>
+                  </select>
+                </div>
+
+                {/* Line Height */}
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Spacing</label>
+                  <select
+                    value={customStyle.lineHeight}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, lineHeight: e.target.value as any }))}
+                    style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
+                  >
+                    <option value="1.4">Compact (1.4)</option>
+                    <option value="1.5">Default (1.5)</option>
+                    <option value="1.6">Relaxed (1.6)</option>
+                    <option value="1.7">Spacious (1.7)</option>
+                  </select>
+                </div>
+
+                {/* Padding */}
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Margins</label>
+                  <select
+                    value={customStyle.padding}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, padding: e.target.value as any }))}
+                    style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
+                  >
+                    <option value="36px 32px">Tight</option>
+                    <option value="56px 48px">Normal</option>
+                    <option value="76px 64px">Wide</option>
+                  </select>
+                </div>
+
+                {/* Accent Color */}
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Theme Color</label>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 4 }}>
+                    {[
+                      { hex: "#1e3a8a", label: "navy" },
+                      { hex: "#4f46e5", label: "indigo" },
+                      { hex: "#10b981", label: "emerald" },
+                      { hex: "#374151", label: "charcoal" },
+                      { hex: "#8b5cf6", label: "purple" },
+                    ].map((col) => (
+                      <button
+                        key={col.hex}
+                        type="button"
+                        onClick={() => setCustomStyle(prev => ({ ...prev, primaryColor: col.hex }))}
+                        title={col.label}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          background: col.hex,
+                          border: customStyle.primaryColor === col.hex ? "2px solid var(--accent)" : "1px solid rgba(0,0,0,0.1)",
+                          cursor: "pointer",
+                          transition: "transform 0.1s",
+                          transform: customStyle.primaryColor === col.hex ? "scale(1.15)" : "none",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Scaled Preview Container */}
             <div
@@ -563,10 +797,113 @@ export default function ResumeEditor({
                 ref={textareaRef}
                 value={text}
                 onChange={handleTextChange}
+                onSelect={handleTextareaSelect}
                 className="sbs-editor-textarea"
                 style={{ flex: 1 }}
                 spellCheck={false}
               />
+
+              {/* Floating selection optimizer bubble */}
+              {showOptimizerBubble && bubbleCoords && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: bubbleCoords.top,
+                    right: 16,
+                    width: "280px",
+                    background: "var(--paper-card)",
+                    border: "1px solid var(--accent-border)",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                    padding: "12px",
+                    zIndex: 100,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontFamily: "DM Mono, monospace", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      ✨ Bullet Optimizer
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowOptimizerBubble(false);
+                        setOptimizedAlternatives(null);
+                        setSelectionRange(null);
+                      }}
+                      style={{ background: "transparent", border: "none", color: "var(--ink-faint)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {!isOptimizing && !optimizedAlternatives && (
+                    <div>
+                      <p style={{ fontSize: 11, color: "var(--ink-muted)", margin: "0 0 8px 0", lineHeight: 1.4 }}>
+                        Highlight text and click to optimize phrasing with targeted keywords or metrics.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleOptimizeBullet}
+                        style={{
+                          width: "100%",
+                          background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "6px 12px",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Optimize Selected Text ✨
+                      </button>
+                    </div>
+                  )}
+
+                  {isOptimizing && (
+                    <div style={{ textAlign: "center", padding: "12px 0" }}>
+                      <span style={{ display: "inline-block", animation: "spin 1s linear infinite", fontSize: 16 }}>⚙️</span>
+                      <div style={{ fontSize: 11, color: "var(--ink-muted)", marginTop: 6, fontWeight: 500 }}>
+                        Hiring Manager is drafting alternatives...
+                      </div>
+                    </div>
+                  )}
+
+                  {optimizeError && (
+                    <div style={{ color: "#dc2626", fontSize: 11, fontWeight: 500, padding: "4px 0" }}>
+                      ⚠ {optimizeError}
+                    </div>
+                  )}
+
+                  {optimizedAlternatives && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "240px", overflowY: "auto", paddingRight: 4 }}>
+                      {[
+                        { key: "metricDriven", label: "📈 Metric-Driven", text: optimizedAlternatives.metricDriven },
+                        { key: "actionFocused", label: "⚡ Action-Focused", text: optimizedAlternatives.actionFocused },
+                        { key: "skillsTargeted", label: "🎯 Skills-Targeted", text: optimizedAlternatives.skillsTargeted },
+                      ].map((alt) => (
+                        <div
+                          key={alt.key}
+                          onClick={() => handleApplyAlternative(alt.text)}
+                          style={{
+                            border: "1px solid var(--border)",
+                            borderRadius: 8,
+                            padding: 8,
+                            background: "var(--paper-warm)",
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                          className="hover:border-accent hover:bg-accent-bg"
+                        >
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>{alt.label}</div>
+                          <div style={{ fontSize: 11, color: "var(--ink)", lineHeight: 1.4 }}>{alt.text}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* History Sidebar */}
               {showHistory && analysisId && (

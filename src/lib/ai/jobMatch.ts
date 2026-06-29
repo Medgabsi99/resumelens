@@ -1,5 +1,9 @@
 import { JobMatchResult } from "@/types";
 import { withRetryAndTimeout, matchModel, smartResumeModel } from "./client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { embedText } from "./embeddings";
+import { retrieveRelevantChunks, hasEmbeddings, aggregateSectionScores } from "./retrieval";
+import logger from "@/lib/logger";
 
 export interface SmartResumeResult {
   contact: {
@@ -36,12 +40,71 @@ export async function matchJobToResume(
   jobDescription: string,
   jobTitle?: string,
   companyName?: string,
+  // Optional: pass these to enable embedding-based similarity grounding
+  userId?: string,
+  supabase?: SupabaseClient,
 ): Promise<JobMatchResult> {
   const titleLine = jobTitle ? ` for the role of "${jobTitle}"` : "";
   const companyLine = companyName ? ` at ${companyName}` : "";
 
-  const prompt = `Evaluate how well this candidate's resume matches the following job description${titleLine}${companyLine}.
+  // ── Embedding similarity signal (optional, grounding layer) ────────────
+  let embeddingSignalBlock = "";
+  if (userId && supabase) {
+    try {
+      const embeddingsExist = await hasEmbeddings(userId, supabase);
+      if (embeddingsExist) {
+        // Embed the job description with SEMANTIC_SIMILARITY task type
+        // (comparing two documents, not query vs. document)
+        const jdEmbedding = await embedText(jobDescription, "SEMANTIC_SIMILARITY");
 
+        // Retrieve top-10 resume chunks to get broad cross-section coverage
+        const chunks = await retrieveRelevantChunks(
+          jdEmbedding,
+          userId,
+          supabase,
+          10,   // broader retrieval for job matching
+          0.2,  // lower threshold to capture even weak signals
+        );
+
+        if (chunks.length > 0) {
+          const sectionScores = aggregateSectionScores(chunks);
+          const topChunks = chunks.slice(0, 3);
+
+          logger.info(`[job-match] Embedding scores: ${JSON.stringify(sectionScores)}`);
+
+          // Format embedding signals for LLM grounding
+          const scoreLines = Object.entries(sectionScores)
+            .sort(([, a], [, b]) => b - a)
+            .map(([section, score]) => `  ${section}: ${Math.round(score * 100)}% semantic match`)
+            .join("\n");
+
+          const topChunkLines = topChunks
+            .map((c) => `  [${c.chunk_type}] (${Math.round(c.similarity * 100)}% match): ${c.content.slice(0, 120)}...`)
+            .join("\n");
+
+          embeddingSignalBlock = `
+[EMBEDDING SIMILARITY SIGNAL — use these scores to calibrate your assessment]
+These are cosine similarity scores between the job description and the candidate's resume sections.
+Higher = more semantically aligned. Use these as an objective grounding signal for your scores.
+
+Per-section semantic similarity:
+${scoreLines}
+
+Top matching resume excerpts:
+${topChunkLines}
+[END EMBEDDING SIGNAL]
+
+`;
+        }
+      }
+    } catch (err) {
+      // Non-fatal — fall back to pure LLM matching
+      logger.warn("[job-match] Embedding signal failed, proceeding without it:", err);
+    }
+  }
+
+  const prompt = `Evaluate how well this candidate's resume matches the following job description${titleLine}${companyLine}.
+${embeddingSignalBlock}
 [RESUME START]
 ${resumeText.slice(0, 6000)}
 [RESUME END]

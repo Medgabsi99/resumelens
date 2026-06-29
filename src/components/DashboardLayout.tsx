@@ -7,14 +7,21 @@ import ThemeToggle from "./ThemeToggle";
 import { createBrowserClient } from "@/lib/supabase";
 import CommandPalette from "./CommandPalette";
 import AuroraBackground from "./AuroraBackground";
+import PageTransition from "./PageTransition";
+import OnboardingTour from "./OnboardingTour";
 import KeyboardShortcutsPanel from "./KeyboardShortcutsPanel";
+import Breadcrumbs from "./Breadcrumbs";
 import { useTheme } from "./ThemeProvider";
+import NotificationBell from "./NotificationBell";
+import ScrollToTop from "./ScrollToTop";
+import FloatingActionButton from "./FloatingActionButton";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
   matchPaths: string[];
+  shortcut: string;
 }
 
 // SVG icon components — consistent cross-platform rendering
@@ -98,15 +105,15 @@ function IconUsers() {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: <IconHome />, matchPaths: ["/dashboard"] },
-  { href: "/dashboard/applications", label: "Applications", icon: <IconBriefcase />, matchPaths: ["/dashboard/applications"] },
-  { href: "/dashboard/negotiator", label: "Salary Negotiator", icon: <IconDollar />, matchPaths: ["/dashboard/negotiator"] },
-  { href: "/dashboard/interviews", label: "Mock Interviews", icon: <IconMic />, matchPaths: ["/dashboard/interviews"] },
-  { href: "/dashboard/scanner", label: "ATS Scanner", icon: <IconSearch />, matchPaths: ["/dashboard/scanner"] },
-  { href: "/dashboard/learning-paths", label: "Learning Paths", icon: <IconGradCap />, matchPaths: ["/dashboard/learning-paths"] },
-  { href: "/dashboard/tailor", label: "Tailor Sandbox", icon: <IconSparkles />, matchPaths: ["/dashboard/tailor"] },
-  { href: "/dashboard/committee", label: "Recruiter Sandbox", icon: <IconUsers />, matchPaths: ["/dashboard/committee"] },
-  { href: "/dashboard/settings", label: "Settings", icon: <IconSettings />, matchPaths: ["/dashboard/settings"] },
+  { href: "/dashboard", label: "Dashboard", icon: <IconHome />, matchPaths: ["/dashboard"], shortcut: "g + d" },
+  { href: "/dashboard/applications", label: "Applications", icon: <IconBriefcase />, matchPaths: ["/dashboard/applications"], shortcut: "g + a" },
+  { href: "/dashboard/negotiator", label: "Salary Negotiator", icon: <IconDollar />, matchPaths: ["/dashboard/negotiator"], shortcut: "g + n" },
+  { href: "/dashboard/interviews", label: "Mock Interviews", icon: <IconMic />, matchPaths: ["/dashboard/interviews"], shortcut: "g + i" },
+  { href: "/dashboard/scanner", label: "ATS Scanner", icon: <IconSearch />, matchPaths: ["/dashboard/scanner"], shortcut: "g + s" },
+  { href: "/dashboard/learning-paths", label: "Learning Paths", icon: <IconGradCap />, matchPaths: ["/dashboard/learning-paths"], shortcut: "g + l" },
+  { href: "/dashboard/tailor", label: "Tailor Sandbox", icon: <IconSparkles />, matchPaths: ["/dashboard/tailor"], shortcut: "g + t" },
+  { href: "/dashboard/committee", label: "Recruiter Sandbox", icon: <IconUsers />, matchPaths: ["/dashboard/committee"], shortcut: "g + c" },
+  { href: "/dashboard/settings", label: "Settings", icon: <IconSettings />, matchPaths: ["/dashboard/settings"], shortcut: "g + e" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -117,6 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   
   // Collapsible Sidebar States
   const [collapsed, setCollapsed] = useState(false);
@@ -161,6 +169,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setPaletteOpen((v) => !v);
+        return;
+      }
+
+      // ── ⌘\ / Ctrl+\ — sidebar toggle ─────────────────────
+      if ((e.metaKey || e.ctrlKey) && e.key === "\\") {
+        e.preventDefault();
+        toggleSidebar();
         return;
       }
 
@@ -209,6 +224,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return;
       }
 
+      // ── [ — toggle sidebar (single-key, VS-Code-style) ────
+      if (key === "[") {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
+
       // ── ? — shortcuts panel ───────────────────────────────
       if (key === "?") {
         e.preventDefault();
@@ -230,7 +252,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return;
       }
     },
-    [router, toggleTheme]
+    [router, toggleTheme, toggleSidebar]
   );
 
   useEffect(() => {
@@ -324,8 +346,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.href}
                 href={item.href}
-                title={isCollapsed ? item.label : undefined}
-                className={`px-3 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center transition-all duration-200 ${
+                title={isCollapsed ? `${item.label} (${item.shortcut})` : undefined}
+                className={`group px-3 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center transition-all duration-200 ${
                   isCollapsed ? "justify-center" : "gap-3"
                 }`}
                 style={{
@@ -336,6 +358,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <span className="flex-shrink-0 opacity-80">{item.icon}</span>
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
+                {!isCollapsed && (
+                  <span className="ml-auto font-mono text-[9px] font-medium text-ink-faint opacity-50 group-hover:opacity-100 transition bg-paper border border-border/60 px-1.5 py-0.5 rounded leading-none select-none flex-shrink-0">
+                    {item.shortcut}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -446,7 +473,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <NotificationBell />
               <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider bg-paper border border-border px-3 py-1 rounded-lg">
                 🚀 AI Career Suite
               </span>
@@ -465,6 +493,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
 
               <div className="flex items-center gap-3">
+                <NotificationBell />
                 <ThemeToggle />
                 <button
                   onClick={() => setMobileOpen((v) => !v)}
@@ -519,11 +548,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           {/* Main content area */}
-          <main
-            key={pathname}
-            className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-8 py-10 fade-up flex-1"
-          >
-            {children}
+          <main className="relative z-10 flex-1">
+            <PageTransition className="w-full max-w-6xl mx-auto px-4 md:px-8 py-10">
+              <Breadcrumbs />
+              {children}
+            </PageTransition>
           </main>
         </div>
       </div>
@@ -533,6 +562,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Keyboard Shortcuts Panel */}
       <KeyboardShortcutsPanel isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+      {/* First-run Onboarding Tour */}
+      <OnboardingTour forceOpen={tourOpen} onClose={() => setTourOpen(false)} />
+      <ScrollToTop />
+      <FloatingActionButton />
     </div>
   );
 }

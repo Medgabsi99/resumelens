@@ -36,6 +36,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     icon: "🎨",
     rows: [
       { description: "Show keyboard shortcuts", keys: [["?"]] },
+      { description: "Toggle sidebar",           keys: [["["], ["Ctrl", "\\"]] },
       { description: "Toggle dark / light mode", keys: [["T"]] },
       { description: "Close modal / dialog",     keys: [["Esc"]] },
     ],

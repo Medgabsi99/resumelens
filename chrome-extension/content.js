@@ -1,4 +1,3 @@
-// ── Scraper Function (callable dynamically from popup) ────────────────
 function scrapeJobDetails() {
   const url = window.location.href;
   let jobTitle = "";
@@ -6,10 +5,101 @@ function scrapeJobDetails() {
   let jobDescription = "";
 
   if (url.includes("linkedin.com")) {
-    // LinkedIn Selectors
-    jobTitle = document.querySelector(".job-details-jobs-unified-top-card__job-title, .jobs-details__main-content h1, h1")?.innerText || "";
-    companyName = document.querySelector(".job-details-jobs-unified-top-card__company-name, .jobs-details__top-card-org-name, .jobs-unified-top-card__company-name")?.innerText || "";
-    jobDescription = document.querySelector(".jobs-description__content, #job-details")?.innerText || "";
+
+    // ── 1. JSON-LD (most stable, works on both logged-in and public pages) ──
+    // LinkedIn embeds a <script type="application/ld+json"> JobPosting object
+    // on every job detail page. It never changes with UI redesigns, so we try
+    // this first before touching any CSS class that may be hashed/renamed.
+    try {
+      const ldScripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (const script of ldScripts) {
+        const json = JSON.parse(script.textContent);
+        const posting =
+          json["@type"] === "JobPosting"
+            ? json
+            : Array.isArray(json["@graph"])
+            ? json["@graph"].find((n) => n["@type"] === "JobPosting")
+            : null;
+
+        if (posting) {
+          jobTitle       = posting.title || "";
+          companyName    = posting.hiringOrganization?.name || "";
+          // description comes as raw HTML — strip tags to get clean plain text
+          const tmp      = document.createElement("div");
+          tmp.innerHTML  = posting.description || "";
+          jobDescription = tmp.innerText.trim();
+          break;
+        }
+      }
+    } catch (_) {}
+
+    // ── 2. CSS selectors — logged-in authenticated layout ──────────────────
+    // Only run if JSON-LD missed anything. Class names here are stable BEM
+    // names LinkedIn has kept across multiple redesigns, but may still rotate.
+    if (!jobTitle) {
+      jobTitle =
+        document.querySelector(
+          ".job-details-jobs-unified-top-card__job-title h1, " +
+          "h1.job-details-jobs-unified-top-card__job-title, " +
+          ".jobs-unified-top-card__job-title h1"
+        )?.innerText?.trim() || "";
+    }
+
+    if (!companyName) {
+      // The company name lives inside an <a> tag inside the top-card container.
+      // Selecting the container's full innerText pulls in "· Location · X applicants"
+      // noise. We target the anchor directly, or the first link pointing to /company/.
+      companyName =
+        document.querySelector(
+          ".job-details-jobs-unified-top-card__company-name a, " +
+          ".jobs-unified-top-card__company-name a, " +
+          ".topcard__org-name-link, " +
+          "a[href*='linkedin.com/company/']"
+        )?.innerText?.trim() || "";
+    }
+
+    if (!jobDescription) {
+      // #job-details is the description panel. Its direct child
+      // .jobs-box__html-content (or .jobs-description-content__text in newer
+      // builds) holds ONLY the job description HTML — siblings like
+      // "About the company" and "Meet the hiring team" live in separate
+      // sections outside this element, so this selector is tight.
+      const descEl =
+        document.querySelector(
+          "#job-details .jobs-box__html-content, " +
+          "#job-details .jobs-description-content__text, " +
+          ".jobs-description__content .jobs-box__html-content, " +
+          ".jobs-description-content__text"
+        ) ||
+        // Older layout: show-more-less div wrapping the markup
+        document.querySelector(
+          ".jobs-description .show-more-less-html__markup, " +
+          ".show-more-less-html__markup--less, " +
+          ".show-more-less-html__markup"
+        );
+
+      jobDescription = descEl?.innerText?.trim() || "";
+    }
+
+    // ── 3. Public (unauthenticated) layout fallback ────────────────────────
+    if (!jobTitle) {
+      jobTitle =
+        document.querySelector("h2.top-card-layout__title, h1.top-card-layout__title")
+          ?.innerText?.trim() || "";
+    }
+    if (!companyName) {
+      companyName =
+        document.querySelector("a.topcard__org-name-link, .topcard__org-name-link")
+          ?.innerText?.trim() || "";
+    }
+    if (!jobDescription) {
+      jobDescription =
+        document.querySelector(
+          "div.show-more-less-html__markup, " +
+          ".description__text .show-more-less-html__markup"
+        )?.innerText?.trim() || "";
+    }
+
   } else if (url.includes("indeed.com")) {
     // Indeed Selectors
     jobTitle = document.querySelector(".jobsearch-JobInfoHeader-title, h1")?.innerText || "";
@@ -29,10 +119,17 @@ function scrapeJobDetails() {
     }
     jobDescription = document.querySelector(".section.page-centered")?.innerText || "";
   }
+  // ── Shared post-processing ─────────────────────────────────────────────
+  // Strip "· Company · Location · N applicants" noise that bleeds in if the
+  // container was grabbed instead of the anchor
 
-  // Clean company name from extra noise
-  if (companyName) {
-    companyName = companyName.split("\n")[0].split("•")[0].replace(/at\s+/i, "").trim();
+   if (companyName) {
+    companyName = companyName
+      .split("\n")[0]
+      .split("·")[0]
+      .replace(/\s*at\s+/i, "")
+      .trim()
+      .replace(/\s+/g, " ");
   }
 
   // Fallback heuristic selectors
@@ -40,31 +137,31 @@ function scrapeJobDetails() {
     jobTitle = document.title.split(" - ")[0].split(" | ")[0].trim();
   }
   if (!companyName) {
-    const titleParts = document.title.split(" at ");
-    if (titleParts.length > 1) {
-      companyName = titleParts[1].split(" - ")[0].split(" | ")[0].trim();
+    const parts = document.title.split(" at ");
+    if (parts.length > 1) {
+      companyName = parts[1].split(" - ")[0].split(" | ")[0].trim();
     }
   }
+
+  // Last-resort description — only fires if every selector above missed
   if (!jobDescription) {
-    const mainContent = document.querySelector("main, article, #content, .job-description, .job-details");
-    jobDescription = mainContent?.innerText || document.body.innerText;
+    const mainContent = document.querySelector(
+      "main, article, #content, .job-description, .job-details"
+    );
+    jobDescription = mainContent?.innerText || "";
   }
 
-  jobTitle = jobTitle.trim().replace(/\s+/g, " ");
-  companyName = companyName.trim().replace(/\s+/g, " ");
+  jobTitle       = jobTitle.trim().replace(/\s+/g, " ");
+  companyName    = companyName.trim().replace(/\s+/g, " ");
   jobDescription = jobDescription.trim();
 
   if (jobDescription.length > 8000) {
-    jobDescription = jobDescription.slice(0, 8000) + "\n\n[Truncated for length]";
+    jobDescription = jobDescription.slice(0, 8000) + "\n\n[Truncated]";
   }
 
-  return {
-    jobTitle,
-    companyName,
-    jobDescription,
-    jobUrl: url,
-  };
+  return { jobTitle, companyName, jobDescription, jobUrl: url };
 }
+
 
 // ── Floating Control Widget Panel ─────────────────────────────────────
 let widgetContainer = null;
@@ -249,6 +346,9 @@ function buildWidget() {
       <button class="rl-btn" id="rlTailorBtn" disabled>
         ✨ Auto-Tailor & Inject
       </button>
+      <button class="rl-btn" id="rlAutoFillBtn" style="margin-top: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" disabled>
+        📝 Auto-Fill Job Form
+      </button>
       <div class="rl-note" id="rlStatusNote">
         Click elements inside application form to target injection
       </div>
@@ -260,16 +360,19 @@ function buildWidget() {
   // Hook up event listeners
   const select = document.getElementById("rlResumeSelect");
   const button = document.getElementById("rlTailorBtn");
+  const autoFillBtn = document.getElementById("rlAutoFillBtn");
 
   select.addEventListener("change", (e) => {
     activeResumeId = e.target.value;
     button.disabled = !activeResumeId;
+    autoFillBtn.disabled = !activeResumeId;
     if (activeResumeId) {
       chrome.storage.local.set({ activeResumeId });
     }
   });
 
   button.addEventListener("click", handleAutoTailorSync);
+  autoFillBtn.addEventListener("click", handleAutoFillForm);
 
   // Sync state
   syncResumesAndState();
@@ -282,12 +385,14 @@ function syncResumesAndState() {
     (response) => {
       const select = document.getElementById("rlResumeSelect");
       const button = document.getElementById("rlTailorBtn");
+      const autoFillBtn = document.getElementById("rlAutoFillBtn");
 
       if (!response || !response.success || !response.data?.success) {
         if (select) {
           select.innerHTML = '<option value="">-- Log in to Web App --</option>';
         }
         if (button) button.disabled = true;
+        if (autoFillBtn) autoFillBtn.disabled = true;
         return;
       }
 
@@ -307,6 +412,7 @@ function syncResumesAndState() {
             activeResumeId = result.activeResumeId;
             select.value = activeResumeId;
             if (button) button.disabled = false;
+            if (autoFillBtn) autoFillBtn.disabled = false;
           }
         });
       }
@@ -413,25 +519,252 @@ function injectTailoredText(text) {
   });
 }
 
-// Fill input/textarea value triggering synthetic React/Vue framework state updates
-function fillElement(el, value) {
-  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-    el.value = value;
-  } else if (el.isContentEditable) {
-    el.innerText = value;
+function extractFieldsFromResume(text) {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const nameLine = lines[0] || "";
+  
+  const nameParts = nameLine.split(/\s+/);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+  
+  let email = "";
+  const emailMatch = text.match(/[\w.+-]+@[\w.-]+\.\w+/);
+  if (emailMatch) email = emailMatch[0];
+  
+  let phone = "";
+  const phoneMatch = text.match(/[+]?[\d\s\-()]{7,}/);
+  if (phoneMatch) phone = phoneMatch[0].trim();
+  
+  let linkedin = "";
+  let github = "";
+  let website = "";
+  
+  const linkMatches = text.match(/https?:\/\/[^\s]+/g) || [];
+  linkMatches.forEach(link => {
+    const cleanLink = link.replace(/[,;|]$/, "");
+    if (cleanLink.includes("linkedin.com")) {
+      linkedin = cleanLink;
+    } else if (cleanLink.includes("github.com")) {
+      github = cleanLink;
+    } else if (!cleanLink.includes("resume") && !cleanLink.includes("portfolio")) {
+      website = cleanLink;
+    }
+  });
+
+  if (!linkedin) {
+    const liMatch = text.match(/linkedin\.com\/in\/[a-zA-Z0-9_-]+/i);
+    if (liMatch) linkedin = "https://" + liMatch[0];
+  }
+  if (!github) {
+    const ghMatch = text.match(/github\.com\/[a-zA-Z0-9_-]+/i);
+    if (ghMatch) github = "https://" + ghMatch[0];
   }
 
-  // Fire input/change events so framework state observers register the updates
-  const inputEvent = new Event("input", { bubbles: true });
-  const changeEvent = new Event("change", { bubbles: true });
-  el.dispatchEvent(inputEvent);
-  el.dispatchEvent(changeEvent);
+  let currentTitle = "";
+  let currentCompany = "";
   
-  // Attempt to focus and blur to commit fields
+  const expIdx = lines.findIndex(l => l.toLowerCase().includes("experience") && l.length < 25);
+  if (expIdx > -1 && expIdx + 1 < lines.length) {
+    const firstJobLine = lines[expIdx + 1];
+    const parts = firstJobLine.split(/\s+at\s+|\s+@\s+|\s+[—–-]\s+|\s*\|\s*/i);
+    currentTitle = parts[0]?.trim() || "";
+    currentCompany = parts[1]?.trim() || "";
+  }
+  
+  let school = "";
+  let degree = "";
+  const eduIdx = lines.findIndex(l => l.toLowerCase().includes("education") && l.length < 25);
+  if (eduIdx > -1 && eduIdx + 1 < lines.length) {
+    const firstEduLine = lines[eduIdx + 1];
+    const parts = firstEduLine.split(/\s+from\s+|\s+@\s+|\s+[—–-]\s+|\s*\|\s*|,\s*/i);
+    degree = parts[0]?.trim() || "";
+    school = parts[1]?.trim() || "";
+  }
+
+  return {
+    fullName: nameLine,
+    firstName,
+    lastName,
+    email,
+    phone,
+    linkedin,
+    github,
+    website,
+    currentTitle,
+    currentCompany,
+    school,
+    degree
+  };
+}
+
+function findAndFillForm(fields) {
+  const inputs = document.querySelectorAll("input, textarea, select");
+  let fillCount = 0;
+
+  inputs.forEach(el => {
+    const id = (el.id || "").toLowerCase();
+    const name = (el.name || "").toLowerCase();
+    const placeholder = (el.placeholder || "").toLowerCase();
+    const autocomplete = (el.getAttribute("autocomplete") || "").toLowerCase();
+    
+    let labelText = "";
+    if (el.id) {
+      const labelEl = document.querySelector(`label[for="${el.id}"]`);
+      if (labelEl) labelText = labelEl.innerText.toLowerCase();
+    }
+    if (!labelText) {
+      const parentLabel = el.closest("label");
+      if (parentLabel) labelText = parentLabel.innerText.toLowerCase();
+    }
+
+    const testMatch = (patterns) => {
+      return patterns.some(pattern => 
+        id.includes(pattern) || 
+        name.includes(pattern) || 
+        placeholder.includes(pattern) || 
+        autocomplete.includes(pattern) ||
+        labelText.includes(pattern)
+      );
+    };
+
+    let valToFill = null;
+
+    if (testMatch(["first name", "firstname", "given name", "first_name"])) {
+      valToFill = fields.firstName;
+    } else if (testMatch(["last name", "lastname", "family name", "last_name", "surname"])) {
+      valToFill = fields.lastName;
+    } else if (testMatch(["full name", "fullname", "name"])) {
+      valToFill = fields.fullName;
+    } else if (testMatch(["email", "e-mail"])) {
+      valToFill = fields.email;
+    } else if (testMatch(["phone", "telephone", "mobile", "cell"])) {
+      valToFill = fields.phone;
+    } else if (testMatch(["linkedin"])) {
+      valToFill = fields.linkedin;
+    } else if (testMatch(["github"])) {
+      valToFill = fields.github;
+    } else if (testMatch(["portfolio", "website", "personal site", "homepage"])) {
+      valToFill = fields.website || fields.github;
+    } else if (testMatch(["employer", "company", "current firm"])) {
+      valToFill = fields.currentCompany;
+    } else if (testMatch(["job title", "current role", "occupation", "position"])) {
+      valToFill = fields.currentTitle;
+    } else if (testMatch(["school", "university", "college", "education institute"])) {
+      valToFill = fields.school;
+    } else if (testMatch(["degree", "education major", "program of study"])) {
+      valToFill = fields.degree;
+    }
+
+    if (valToFill && !el.value) {
+      fillElement(el, valToFill);
+      fillCount++;
+      
+      const origBorder = el.style.border;
+      el.style.border = "1.5px solid #10b981";
+      setTimeout(() => {
+        el.style.border = origBorder;
+      }, 3000);
+    }
+  });
+
+  return fillCount;
+}
+
+async function handleAutoFillForm() {
+  if (!activeResumeId) return;
+
+  const autoFillBtn = document.getElementById("rlAutoFillBtn");
+  const note = document.getElementById("rlStatusNote");
+
+  const originalText = autoFillBtn.innerText;
+  autoFillBtn.disabled = true;
+  autoFillBtn.innerText = "Filling... ⏳";
+  note.innerText = "Parsing resume details...";
+
+  const resume = savedResumes.find(r => r.id === activeResumeId);
+  if (!resume || !resume.resume_text) {
+    note.innerText = "Failed: Selected resume content is empty";
+    autoFillBtn.disabled = false;
+    autoFillBtn.innerText = originalText;
+    return;
+  }
+
+  try {
+    const fields = extractFieldsFromResume(resume.resume_text);
+    note.innerText = "Scanning page inputs...";
+    
+    const fillCount = findAndFillForm(fields);
+    
+    if (fillCount > 0) {
+      note.innerText = `Successfully filled ${fillCount} fields!`;
+      showToast(`✓ Auto-filled ${fillCount} form inputs from your resume!`);
+    } else {
+      note.innerText = "Could not match any input fields on this page.";
+      showToast("No standard fields detected for auto-fill.", true);
+    }
+  } catch (err) {
+    console.error("Auto-fill error:", err);
+    note.innerText = "Error: " + err.message;
+    showToast("Error parsing or filling form", true);
+  } finally {
+    autoFillBtn.disabled = false;
+    autoFillBtn.innerText = originalText;
+  }
+}
+
+// Fill input/textarea value triggering synthetic React/Vue framework state updates
+function fillElement(el, value) {
+  if (el.tagName === "SELECT") {
+    const lowerVal = value.toLowerCase();
+    const matchedOption = Array.from(el.options).find(opt => 
+      opt.text.toLowerCase().includes(lowerVal) || opt.value.toLowerCase().includes(lowerVal)
+    );
+    if (matchedOption) {
+      el.value = matchedOption.value;
+    }
+  } else if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+    // React overrides the native .value setter with its own tracked version.
+    // Directly assigning el.value = x bypasses React's internal fiber state,
+    // so the field looks filled but submits empty. We grab the original native
+    // setter from the prototype and call it — React's change detection then
+    // picks it up correctly when we fire the input event below.
+    const proto =
+      el.tagName === "INPUT"
+        ? window.HTMLInputElement.prototype
+        : window.HTMLTextAreaElement.prototype;
+    const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+
+    if (nativeSetter) {
+      nativeSetter.call(el, value);
+    } else {
+      // Non-React / plain DOM fallback
+      el.value = value;
+    }
+  } else if (el.isContentEditable) {
+    // contentEditable divs (e.g. Quill, Draft.js, ProseMirror)
+    // innerText wipes the DOM structure, so use execCommand when available
+    // to stay inside the editor's undo stack and mutation observers.
+    el.focus();
+    if (document.execCommand) {
+      document.execCommand("selectAll", false, null);
+      document.execCommand("insertText", false, value);
+    } else {
+      // execCommand removed in future browsers — manual fallback
+      el.innerText = value;
+    }
+  }
+
+  // Fire the full event sequence React/Vue/Angular all listen for.
+  // `input`  → triggers React's onChange synthetic handler
+  // `change` → triggers Vue/Angular and native form validation
+  el.dispatchEvent(new Event("input",  { bubbles: true }));
+  el.dispatchEvent(new Event("change", { bubbles: true }));
+
+  // Some ATS forms (Workday, iCIMS) also watch blur for field-level validation
   try {
     el.focus();
     el.blur();
-  } catch(e){}
+  } catch (e) {}
 }
 
 // ── SPA Transition Routing Observer ───────────────────────────────────
@@ -456,6 +789,31 @@ function checkUrlAndRender() {
   }
 }
 
-// Monitor SPA navigation
-let spaInterval = setInterval(checkUrlAndRender, 1500);
-checkUrlAndRender();
+// ── SPA Navigation Monitor ────────────────────────────────────────────
+// Guard against double-injection: popup.js re-executes this file via
+// executeScript on pages already covered by manifest content_scripts
+// (LinkedIn, Indeed). Without this check, each popup open stacks another
+// setInterval on top of the existing one — 1 becomes 2 becomes N,
+// hammering the DOM every 1.5s × N times and re-running checkUrlAndRender
+// in overlapping bursts.
+if (window.__rlIntervalRunning) {
+  // Content script already live — skip re-initialization entirely.
+  // __rlScrape is already bound, widget already mounted, interval already ticking.
+} else {
+  window.__rlIntervalRunning = true;
+
+  // Poll for SPA URL changes. LinkedIn and Indeed are client-side routers —
+  // they swap content without firing a full page load, so popstate/hashchange
+  // alone are not enough. 1500ms is a reasonable balance between responsiveness
+  // and CPU cost; a MutationObserver on document.title is a lower-overhead
+  // alternative if this ever becomes a perf concern.
+  setInterval(checkUrlAndRender, 1500);
+
+  // Run immediately so the widget appears without waiting for the first tick.
+  checkUrlAndRender();
+}
+
+// Expose scraper to popup.js so it can retrieve job details via
+// executeScript { func: () => window.__rlScrape() } without needing
+// to re-inject the full file and risk the double-injection problem above.
+window.__rlScrape = scrapeJobDetails;

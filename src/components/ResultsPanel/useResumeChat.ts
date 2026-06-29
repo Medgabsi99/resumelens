@@ -42,6 +42,10 @@ export function useResumeChat(
           resumeText,
           jobDescription,
           targetRole,
+          history: chatHistory.map((h) => ({
+            role: h.role === "ai" ? "assistant" : "user",
+            content: h.text,
+          })),
         }),
       });
 

@@ -407,3 +407,257 @@ html {
   opacity: 0.8;
   text-decoration: line-through;
 }
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────────
+   Single authoritative block — overrides every animation & transition in the
+   app when the user has opted into reduced motion in their OS settings.
+   Components may keep their own @media blocks for clarity, but this catches
+   anything they miss. ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  /* 1. Kill all keyframe animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+  }
+
+  /* 2. Make all transitions instant */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* 3. Smooth scroll → instant jump */
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* 4. Named animation utility classes used across components */
+  .aurora-blob,
+  .progress-shimmer,
+  .progress-dot,
+  .notif-badge,
+  .notif-panel,
+  .stt-btn,
+  .stt-btn.leaving,
+  .fab-btn,
+  .fab-action,
+  .fab-label,
+  .ctx-menu,
+  .page-enter,
+  .skeleton-pulse,
+  [class*="animate-"] {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* 5. Remove hover transforms that feel "jumpy" without animation */
+  .sbs-rewrite-pill:hover:not(:disabled),
+  .ctx-item:hover,
+  .fab-action-row:hover .fab-action {
+    transform: none !important;
+  }
+
+  /* 6. Aurora — hide blurred blobs entirely (they only add value in motion) */
+  .aurora-bg {
+    opacity: 0 !important;
+  }
+}
+
+/* ─── Print / Export Styles ──────────────────────────────────────────────────
+   Applied when the user triggers Ctrl+P or the PrintButton component.
+   Goal: a clean, chrome-free document — all navigation, FABs, modals,
+   and interactive widgets are hidden; content is optimised for paper / PDF. */
+@media print {
+
+  /* ── 1. Page setup ─────────────────────────────────────────────────────── */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  /* ── 2. Reset backgrounds & colours ───────────────────────────────────── */
+  *,
+  *::before,
+  *::after {
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html, body {
+    background: white !important;
+    color: #0f172a !important;
+    font-size: 12pt;
+    line-height: 1.6;
+    width: 100%;
+  }
+
+  /* ── 3. Hide all UI chrome ─────────────────────────────────────────────── */
+
+  /* Sidebar / nav */
+  aside,
+  nav,
+  header,
+  [data-sidebar],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Floating elements */
+  .stt-btn,
+  .fab-btn,
+  [class*="fab-"],
+  [class*="notif-"],
+  [class*="ctx-"],
+  [class*="palette"],
+  [class*="tour"],
+  [class*="shortcuts"],
+  [class*="progress-bar"] {
+    display: none !important;
+  }
+
+  /* Interactive controls that make no sense on paper */
+  button:not(.print-show),
+  input,
+  select,
+  textarea,
+  [role="dialog"],
+  [role="menu"],
+  [role="tooltip"],
+  .premium-input,
+  .btn-gradient {
+    display: none !important;
+  }
+
+  /* ── 4. Content layout — full width ────────────────────────────────────── */
+  main,
+  [class*="content"],
+  .print-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure the main content pane fills the page */
+  .flex-1,
+  [class*="flex-1"] {
+    width: 100% !important;
+  }
+
+  /* ── 5. Typography ─────────────────────────────────────────────────────── */
+  h1 { font-size: 22pt; margin-bottom: 8pt; }
+  h2 { font-size: 17pt; margin-bottom: 6pt; margin-top: 14pt; }
+  h3 { font-size: 13pt; margin-bottom: 4pt; margin-top: 10pt; }
+  h4 { font-size: 11pt; }
+  p, li { font-size: 10.5pt; }
+
+  /* Keep headings with their following content */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* ── 6. Page-break helpers ─────────────────────────────────────────────── */
+  .print-break-before { page-break-before: always; break-before: page; }
+  .print-break-after  { page-break-after:  always; break-after:  page; }
+  .print-avoid-break  {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Cards / sections should not split across pages */
+  .glass-card,
+  [class*="card"],
+  [class*="section"],
+  article,
+  section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* ── 7. Borders & score badges — keep them visible ─────────────────────── */
+  .glass-card,
+  [class*="border"] {
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  /* Score / status badges — keep their border, strip colour fill */
+  [class*="badge"],
+  [class*="pill"],
+  span[class*="rounded"] {
+    border: 1px solid #94a3b8 !important;
+    padding: 1px 6px !important;
+  }
+
+  /* ── 8. Show URLs after links ───────────────────────────────────────────── */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #64748b !important;
+    word-break: break-all;
+  }
+  /* Suppress URL display for icon-only / no-href / internal anchors */
+  a[href^="#"]::after,
+  a[href^="javascript"]::after,
+  a.no-print-href::after {
+    content: none;
+  }
+
+  /* ── 9. Tables ─────────────────────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 5pt 8pt !important;
+    text-align: left;
+  }
+  thead {
+    background: #f8fafc !important;
+    display: table-header-group; /* repeat on each page */
+  }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+
+  /* ── 10. Print-only elements (shown on screen but visible when printing) ─ */
+  .print-only {
+    display: block !important;
+  }
+
+  /* ── 11. ResumeLens report branding ─────────────────────────────────────── */
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2pt solid #6366f1 !important;
+    padding-bottom: 10pt;
+    margin-bottom: 18pt;
+  }
+  .print-footer {
+    display: block !important;
+    text-align: center;
+    font-size: 9pt;
+    color: #94a3b8 !important;
+    border-top: 1pt solid #e2e8f0 !important;
+    padding-top: 8pt;
+    margin-top: 24pt;
+  }
+}
+
+/* ── Screen-only utility: hides the element when printing ──────────────────── */
+.no-print {
+  /* intentionally empty — overridden by @media print above */
+}
+

@@ -8,6 +8,7 @@ import {
   APPLICATION_STATUS_COLORS,
 } from "@/types";
 import AddApplicationModal from "@/components/AddApplicationModal";
+import SharedEmptyState from "@/components/EmptyState";
 
 // Extracted Subcomponents
 import StatCard from "./StatCard";
@@ -49,6 +50,13 @@ export default function ApplicationTracker() {
     }
   }, []);
 
+  // Listen for FAB-triggered add-application event
+  useEffect(() => {
+    const handler = () => setShowAddModal(true);
+    window.addEventListener("fab:add-application", handler);
+    return () => window.removeEventListener("fab:add-application", handler);
+  }, []);
+
   // Drag and Drop Hook
   const {
     draggingId,
@@ -61,6 +69,9 @@ export default function ApplicationTracker() {
     handleDragLeave,
     handleCardDragEnter,
     handleDropColumn,
+    handleListDragStart,
+    handleListCardDragEnter,
+    handleListDrop,
   } = useDragAndDrop(applications, handleStatusChange, setApplications);
 
   // Filtered applications
@@ -184,11 +195,18 @@ export default function ApplicationTracker() {
         <>
           {viewMode === "list" ? (
             filteredApps.length === 0 ? (
-              <div className="text-center py-12 text-ink-muted text-sm font-medium border border-dashed border-border rounded-2xl">
-                No applications match your current filters.
-              </div>
+              <SharedEmptyState
+                illustration="search"
+                title="No applications match your filters"
+                description="Try adjusting your search keyword or status filter to find what you're looking for."
+                compact
+              />
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div
+                className="grid grid-cols-1 gap-4"
+                onDragOver={handleDragOver}
+                onDrop={handleListDrop}
+              >
                 {filteredApps.map((app) => (
                   <ApplicationCard
                     key={app.id}
@@ -196,8 +214,23 @@ export default function ApplicationTracker() {
                     onStatusChange={(s) => handleStatusChange(app, s)}
                     onEdit={() => setEditingApp(app)}
                     onDelete={() => handleDelete(app)}
+                    isDragging={draggingId === app.id}
+                    isInsertTarget={insertBeforeId === app.id}
+                    onDragStart={(e) => handleListDragStart(e, app.id)}
+                    onDragEnd={handleDragEnd}
+                    onCardDragEnter={(e) => handleListCardDragEnter(e, app.id)}
                   />
                 ))}
+                {/* End-of-list drop zone */}
+                <div
+                  onDragEnter={() => {}}
+                  className="h-10 rounded-xl border-2 border-dashed border-transparent transition-all duration-200"
+                  style={{
+                    borderColor: draggingId ? "var(--accent)" : "transparent",
+                    background: draggingId ? "var(--accent-bg)" : "transparent",
+                    opacity: draggingId ? 0.6 : 0,
+                  }}
+                />
               </div>
             )
           ) : (
@@ -313,6 +346,7 @@ export default function ApplicationTracker() {
                                 onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
                                 onEdit={() => setEditingApp(app)}
                                 onDelete={() => handleDelete(app)}
+                                onStatusChange={(s) => handleStatusChange(app, s)}
                               />
                             ))
                           )}

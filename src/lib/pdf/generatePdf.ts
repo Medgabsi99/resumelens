@@ -10,9 +10,10 @@ import { type ParsedResume } from "@/lib/parseResume";
 export function getPdfTemplateComponent(
   templateId: string,
   data: ParsedResume,
-  targetRole?: string
+  targetRole?: string,
+  customStyle?: any
 ) {
-  const props = { data, targetRole };
+  const props = { data, targetRole, customStyle };
   switch (templateId) {
     case "modern":
       return React.createElement(ModernPdfTemplate, props);
@@ -33,9 +34,10 @@ export function getPdfTemplateComponent(
 export function renderResumePdf(
   templateId: string,
   data: ParsedResume,
-  targetRole?: string
+  targetRole?: string,
+  customStyle?: any
 ): React.ReactElement<any> {
-  const component = getPdfTemplateComponent(templateId, data, targetRole);
+  const component = getPdfTemplateComponent(templateId, data, targetRole, customStyle);
   return React.createElement(
     DocumentWrapper,
     { title: `Resume - ${data.contact.name || "CV"}`, children: component }

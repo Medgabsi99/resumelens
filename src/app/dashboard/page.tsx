@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { JobApplication, APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from "@/types";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import ResumeDiffViewer from "@/components/ResumeDiffViewer";
 import { SkeletonTable } from "@/components/Skeleton";
+import EmptyState from "@/components/EmptyState";
+import { useContextMenu } from "@/components/ContextMenu";
+import PrintButton from "@/components/PrintButton";
+import SpotlightCard from "@/components/SpotlightCard";
 
 interface AnalysisItem {
   id: string;
@@ -16,6 +21,8 @@ interface AnalysisItem {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { show: showContextMenu } = useContextMenu();
   const [mounted, setMounted] = useState(false);
   const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -339,7 +346,7 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {/* Average ATS Score */}
-          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+          <SpotlightCard className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
             <div className="flex items-center justify-between text-ink-muted mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider font-mono">Avg Score</span>
               <span className="text-lg">🎯</span>
@@ -363,10 +370,10 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Total Analyses */}
-          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+          <SpotlightCard className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
             <div className="flex items-center justify-between text-ink-muted mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total Reviews</span>
               <span className="text-lg">📄</span>
@@ -379,10 +386,10 @@ export default function DashboardPage() {
                 {loading ? <div className="skeleton h-3 w-36 mt-1" /> : "Resumes reviewed over time"}
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Tracked Applications */}
-          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+          <SpotlightCard className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
             <div className="flex items-center justify-between text-ink-muted mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider font-mono">Tracked Jobs</span>
               <span className="text-lg">📋</span>
@@ -395,10 +402,10 @@ export default function DashboardPage() {
                 {loading ? <div className="skeleton h-3 w-40 mt-1" /> : "Applications in search tracker"}
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Success Rate */}
-          <div className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
+          <SpotlightCard className="glass-card bg-paper-card p-5 rounded-2xl border border-border flex flex-col justify-between">
             <div className="flex items-center justify-between text-ink-muted mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider font-mono">Interview Success</span>
               <span className="text-lg">🚀</span>
@@ -411,13 +418,13 @@ export default function DashboardPage() {
                 {loading ? <div className="skeleton h-3 w-32 mt-1" /> : "Active funnel conversion"}
               </div>
             </div>
-          </div>
+          </SpotlightCard>
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
           {/* Chart 1: Score Progression */}
-          <div className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px] relative overflow-hidden">
+          <SpotlightCard className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px] relative overflow-hidden">
 
             {/* ── Header ── */}
             <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
@@ -686,10 +693,10 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Chart 2: Pipeline Funnel */}
-          <div className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px]">
+          <SpotlightCard className="glass-card bg-paper-card p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[300px]">
             <div>
               <h3 className="text-lg font-bold text-ink mb-1 font-display">Application Pipeline</h3>
               <p className="text-xs text-ink-muted mb-4">Status of active job search tracker opportunities</p>
@@ -744,7 +751,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-          </div>
+          </SpotlightCard>
         </div>
 
         {/* Tabbed Activity History */}
@@ -780,7 +787,7 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Tab right side: Compare button + Search */}
+            {/* Tab right side: Compare button + Print + Search */}
             <div className="flex items-center gap-3 w-full sm:w-auto">
               {activeTab === "reviews" && analyses.length >= 2 && (
                 <button
@@ -792,6 +799,7 @@ export default function DashboardPage() {
                   Compare
                 </button>
               )}
+              <PrintButton label="Export" className="flex-shrink-0 text-xs" />
               <div className="w-full sm:w-64 relative">
                 {activeTab === "reviews" ? (
                   <input
@@ -836,7 +844,38 @@ export default function DashboardPage() {
                       {pagedAnalyses.map((item) => (
                         <tr
                           key={item.id}
-                          className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group"
+                          className="border-b border-border/40 hover:bg-paper-warm/20 transition-all group cursor-context-menu"
+                          onContextMenu={(e) => {
+                            showContextMenu(e, [
+                              {
+                                key: "view",
+                                label: "View Report",
+                                icon: "📊",
+                                shortcut: "Enter",
+                                onClick: () => router.push(`/dashboard/${item.id}`),
+                              },
+                              {
+                                key: "tailor",
+                                label: "Open in Tailor Sandbox",
+                                icon: "✨",
+                                onClick: () => router.push(`/dashboard/tailor?analysisId=${item.id}`),
+                              },
+                              {
+                                key: "copy-score",
+                                label: `Copy Score (${item.score}/100)`,
+                                icon: "📋",
+                                onClick: () => navigator.clipboard.writeText(`ATS Score: ${item.score}/100 — ${item.target_role || "General Resume"}`),
+                              },
+                              {
+                                key: "delete",
+                                label: "Delete Review",
+                                icon: "🗑️",
+                                danger: true,
+                                separator: true,
+                                onClick: () => handleDeleteAnalysis(item.id),
+                              },
+                            ]);
+                          }}
                         >
                           <td className="py-4 font-bold text-ink">
                             {item.target_role || "General Resume Assessment"}
@@ -877,6 +916,30 @@ export default function DashboardPage() {
                       <div
                         key={item.id}
                         className="glass-card bg-paper-card p-4 rounded-xl border border-border flex flex-col gap-3"
+                        onContextMenu={(e) => {
+                          showContextMenu(e, [
+                            {
+                              key: "view",
+                              label: "View Report",
+                              icon: "📊",
+                              onClick: () => router.push(`/dashboard/${item.id}`),
+                            },
+                            {
+                              key: "tailor",
+                              label: "Open in Tailor Sandbox",
+                              icon: "✨",
+                              onClick: () => router.push(`/dashboard/tailor?analysisId=${item.id}`),
+                            },
+                            {
+                              key: "delete",
+                              label: "Delete Review",
+                              icon: "🗑️",
+                              danger: true,
+                              separator: true,
+                              onClick: () => handleDeleteAnalysis(item.id),
+                            },
+                          ]);
+                        }}
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="font-bold text-ink leading-tight">
@@ -943,10 +1006,22 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </>
+              ) : reviewsSearch ? (
+                <EmptyState
+                  illustration="search"
+                  title="No reviews match your filter"
+                  description={`No resume analyses found for "${reviewsSearch}". Try a different keyword or clear the filter.`}
+                  compact
+                />
               ) : (
-                <div className="text-center py-12 text-ink-muted text-sm">
-                  {reviewsSearch ? "No reviews match your filter" : "No resume reviews found"}
-                </div>
+                <EmptyState
+                  illustration="resume"
+                  title="No resume reviews yet"
+                  description="Upload your resume and run your first AI analysis. You'll see your score history, progression chart, and detailed feedback here."
+                  ctaHref="/"
+                  ctaLabel="📄 Analyze My Resume"
+                  compact
+                />
               )
             ) : filteredApplications.length > 0 ? (
               <>
@@ -1118,10 +1193,22 @@ export default function DashboardPage() {
                   </div>
                 )}
               </>
+            ) : appsSearch ? (
+              <EmptyState
+                illustration="search"
+                title="No applications match your filter"
+                description={`No tracked jobs found for "${appsSearch}". Try adjusting your search or clear it to see all tracked applications.`}
+                compact
+              />
             ) : (
-              <div className="text-center py-12 text-ink-muted text-sm">
-                {appsSearch ? "No applications match your filter" : "No tracked applications found"}
-              </div>
+              <EmptyState
+                illustration="applications"
+                title="No tracked applications yet"
+                description="Start your job search pipeline. Track every company, role, and interview status — never miss a follow-up again."
+                ctaHref="/dashboard/applications"
+                ctaLabel="📋 Add Your First Application"
+                compact
+              />
             )}
           </div>
         </div>

@@ -7,13 +7,14 @@ import { type ParsedResume } from "@/lib/parseResume";
 export async function downloadResumePdf(
   templateId: string,
   data: ParsedResume,
-  targetRole?: string
+  targetRole?: string,
+  customStyle?: any
 ) {
   // Dynamically import to ensure code-splitting / lazy-loading
   const { pdf } = await import("@react-pdf/renderer");
   const { renderResumePdf } = await import("./generatePdf");
 
-  const doc = renderResumePdf(templateId, data, targetRole);
+  const doc = renderResumePdf(templateId, data, targetRole, customStyle);
   const blob = await pdf(doc as any).toBlob();
 
   const fileName = `${(data.contact.name || "Resume").replace(/\s+/g, "_")}-${templateId}.pdf`;

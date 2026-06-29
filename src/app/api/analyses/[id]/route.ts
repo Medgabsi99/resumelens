@@ -13,7 +13,7 @@ export async function GET(
 
   const { data: analysis, error } = await supabase
     .from("analyses")
-    .select("id, resume_text, job_description, target_role, score")
+    .select("id, resume_text, job_description, target_role, score, result_json, created_at")
     .eq("id", params.id)
     .eq("user_id", session.user.id)
     .single();
@@ -28,10 +28,13 @@ export async function GET(
   return NextResponse.json({
     success: true,
     data: {
-      resumeText: analysis.resume_text || "",
-      jobDescription: analysis.job_description || "",
-      targetRole: analysis.target_role || "",
+      id: analysis.id,
+      resume_text: analysis.resume_text || "",
+      job_description: analysis.job_description || "",
+      target_role: analysis.target_role || "",
       score: analysis.score,
+      result_json: analysis.result_json,
+      created_at: analysis.created_at,
     },
   });
 }

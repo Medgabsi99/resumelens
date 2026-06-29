@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { JobApplication, PRIORITY_COLORS } from "@/types";
+import { JobApplication, PRIORITY_COLORS, APPLICATION_STATUS_LABELS, ApplicationStatus } from "@/types";
 import { formatDate, daysUntil } from "./utils";
+import { useContextMenu } from "@/components/ContextMenu";
 
 interface KanbanCardProps {
   app: JobApplication;
@@ -11,6 +12,7 @@ interface KanbanCardProps {
   onCardDragEnter?: (e: React.DragEvent) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onStatusChange?: (status: ApplicationStatus) => void;
 }
 
 export default function KanbanCard({
@@ -22,7 +24,9 @@ export default function KanbanCard({
   onCardDragEnter,
   onEdit,
   onDelete,
+  onStatusChange,
 }: KanbanCardProps) {
+  const { show: showContextMenu } = useContextMenu();
   const followUpDays = daysUntil(app.follow_up_at);
   const followUpUrgent = followUpDays !== null && followUpDays <= 3;
 
@@ -48,9 +52,57 @@ export default function KanbanCard({
     return `${currency} ${minStr || maxStr}`;
   }, [app.salary_min, app.salary_max, app.salary_currency]);
 
+  const STATUS_QUICK_MOVES: ApplicationStatus[] = ["applied", "screening", "interviewing", "offer", "accepted", "rejected"];
+
+  const buildContextMenu = (e: React.MouseEvent) => {
+    const items = [
+      {
+        key: "edit",
+        label: "Edit Application",
+        icon: "✏️",
+        shortcut: "E",
+        onClick: onEdit,
+      },
+      ...(app.job_url ? [{
+        key: "open-url",
+        label: "Open Job Posting",
+        icon: "↗",
+        onClick: () => window.open(app.job_url!, "_blank", "noopener"),
+      }] : []),
+      ...(onStatusChange ? [{
+        key: "status-sep",
+        label: "Move to Status...",
+        icon: "⟶",
+        separator: true,
+        disabled: true,
+        onClick: () => {},
+      },
+        ...STATUS_QUICK_MOVES
+          .filter(s => s !== app.status)
+          .slice(0, 4)
+          .map(s => ({
+            key: `move-${s}`,
+            label: APPLICATION_STATUS_LABELS[s],
+            icon: s === "accepted" ? "✅" : s === "rejected" ? "❌" : s === "offer" ? "🎉" : "→",
+            onClick: () => onStatusChange!(s),
+          }))
+      ] : []),
+      {
+        key: "delete",
+        label: "Delete Application",
+        icon: "🗑️",
+        danger: true,
+        separator: true,
+        onClick: onDelete,
+      },
+    ];
+    showContextMenu(e, items);
+  };
+
   return (
     <div
       onDragEnter={onCardDragEnter}
+      onContextMenu={buildContextMenu}
       style={{ position: "relative" }}
     >
       {/* Insert-before drop indicator */}

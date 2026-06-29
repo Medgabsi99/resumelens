@@ -4,6 +4,7 @@ import { useState } from "react";
 import { JobMatchResult } from "@/types";
 import * as Diff from "diff";
 import { parseResume } from "@/lib/parseResume";
+import SpotlightCard from "./SpotlightCard";
 
 interface Props {
   resumeText: string;
@@ -581,7 +582,7 @@ export default function JobMatchPanel({
         </div>
 
         {/* Top Recommendations */}
-        <div
+        <SpotlightCard
           style={{
             background: "var(--paper-card)",
             border: "1.5px solid var(--accent-border)",
@@ -618,7 +619,7 @@ export default function JobMatchPanel({
               </li>
             ))}
           </ol>
-        </div>
+        </SpotlightCard>
 
         {/* Applied Tailored Badge */}
         {appliedTailored && (
@@ -670,7 +671,7 @@ export default function JobMatchPanel({
 
         {/* Auto-Tailor CTA */}
         {!showDiff && !appliedTailored && (
-          <div
+          <SpotlightCard
             style={{
               background: "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
               border: "1.5px dashed rgba(99, 102, 241, 0.4)",
@@ -742,12 +743,12 @@ export default function JobMatchPanel({
                 ⚠ {tailorError}
               </div>
             )}
-          </div>
+          </SpotlightCard>
         )}
 
         {/* Visual Diff Panel */}
         {showDiff && tailoredResult && (
-          <div
+          <SpotlightCard
             style={{
               background: "var(--paper-card)",
               border: "1.5px solid var(--accent-border)",
@@ -905,7 +906,7 @@ export default function JobMatchPanel({
               )}
 
             </div>
-          </div>
+          </SpotlightCard>
         )}
 
         {/* Reset Button */}

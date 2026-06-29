@@ -4,7 +4,7 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { matchJobToResume } from "@/lib/ai";
+import { matchJobToResume } from "@/lib/ai/jobMatch";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -51,7 +51,9 @@ export async function POST(req: NextRequest) {
       resumeText,
       jobDescription,
       jobTitle,
-      companyName
+      companyName,
+      session.user.id,  // userId — enables embedding-based similarity grounding
+      supabase,         // authenticated client — for vector search
     );
 
     // ── 5. Persist match to database (optional) ─────────────

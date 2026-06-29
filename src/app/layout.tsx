@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastProvider from "@/components/ToastProvider";
+import { ProgressProvider, RouteProgressTrigger } from "@/components/NavigationProgress";
+import FetchProgressInterceptor from "@/components/FetchProgressInterceptor";
+import { ContextMenuProvider } from "@/components/ContextMenu";
 
 export const metadata: Metadata = {
   title: "ResumeLens — AI Resume Reviewer",
@@ -40,9 +43,16 @@ export default function RootLayout({
       </head>
       <body className="bg-paper text-ink font-body antialiased">
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ProgressProvider>
+            <ContextMenuProvider>
+              <RouteProgressTrigger />
+              <FetchProgressInterceptor />
+              <ToastProvider>{children}</ToastProvider>
+            </ContextMenuProvider>
+          </ProgressProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import SpotlightCard from "./SpotlightCard";
 import { type EvaluateResponse } from "@/lib/ai";
 import StreamingText from "@/components/StreamingText";
 
@@ -116,17 +117,24 @@ export default function MockInterviewBoard({
   };
 
   // ── Toggle Mic Recording ──────────────────────────────────
-  const toggleRecording = () => {
-    if (!recognitionRef.current) return;
+const toggleRecording = async () => {
+  if (!recognitionRef.current) return;
 
-    if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-    } else {
+  if (isRecording) {
+    recognitionRef.current.stop();
+    setIsRecording(false);
+  } else {
+    try {
+      // Explicitly request mic permission first
+      await navigator.mediaDevices.getUserMedia({ audio: true });
       setIsRecording(true);
       recognitionRef.current.start();
+    } catch (err) {
+      console.error("Microphone permission denied:", err);
+      setEvalError("Microphone access was denied. Please allow microphone access in your browser settings and try again.");
     }
-  };
+  }
+};
 
   // ── Submit Current Answer for Evaluation ──────────────────
   const handleSubmitAnswer = async () => {
@@ -327,7 +335,7 @@ export default function MockInterviewBoard({
             </div>
 
             {/* Question Card */}
-            <div
+            <SpotlightCard
               style={{
                 background: "linear-gradient(135deg, #181822 0%, #13131a 100%)",
                 border: "1.5px solid #282836",
@@ -338,7 +346,7 @@ export default function MockInterviewBoard({
                 gap: 16,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ display: "flex", justifyItems: "center", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", lineHeight: 1.5, margin: 0 }}>
                   {currentSession.question}
                 </h3>
@@ -361,7 +369,7 @@ export default function MockInterviewBoard({
                   🔊 Replay
                 </button>
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* Answer & Recording Section */}
             {!currentSession.evaluation ? (

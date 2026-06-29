@@ -343,7 +343,7 @@ export default function ResultsPanel({
 
           {/* Launch ATS Structural Scanner & Heatmap */}
           {analysisId && (
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }} className="print:hidden">
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }} className="print:hidden">
               <a
                 href={`/dashboard/scanner?analysisId=${analysisId}`}
                 style={{
@@ -368,6 +368,31 @@ export default function ResultsPanel({
                 }}
               >
                 🔥 Open ATS Structural Scanner & Heatmap ➔
+              </a>
+              <a
+                href={`/dashboard/committee?analysisId=${analysisId}`}
+                style={{
+                  background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                  color: "white",
+                  padding: "10px 18px",
+                  borderRadius: 10,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  boxShadow: "0 4px 12px rgba(236, 72, 153, 0.25)",
+                  transition: "transform 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.02)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                👥 Consult AI Peer Review Committee ➔
               </a>
             </div>
           )}
@@ -482,6 +507,7 @@ export default function ResultsPanel({
             initialText={resumeText || ""}
             suggestions={result.suggestions}
             targetRole={targetRole}
+            jobDescription={jobDescription}
             resultScore={result.score}
             analysisId={analysisId}
           />

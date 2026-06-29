@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/components/ToastProvider";
 import { type CommitteeDebriefResult, type DebriefMessage } from "@/types";
+import SpotlightCard from "@/components/SpotlightCard";
 
 interface ResumeItem {
   id: string;
@@ -37,6 +38,11 @@ export default function CommitteeSimulationPage() {
   const [debriefData, setDebriefData] = useState<CommitteeDebriefResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
+  // Playback Control States
+  const [visibleMessageCount, setVisibleMessageCount] = useState(1);
+  const [isPlayingDebrief, setIsPlayingDebrief] = useState(false);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+
   const CONVENING_STEPS = [
     "Sarah (HR Recruiter) entering the debrief room...",
     "Alex (Engineering Manager) auditing tech stack depth...",
@@ -57,6 +63,30 @@ export default function CommitteeSimulationPage() {
       loadPastSimulation(analysisId);
     }
   }, []);
+
+  // Playback Timer Loop
+  useEffect(() => {
+    if (!activeSimulation || !debriefData || !isPlayingDebrief) return;
+
+    const totalMessages = debriefData.debriefTranscript.length;
+    if (visibleMessageCount >= totalMessages) {
+      setIsPlayingDebrief(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setVisibleMessageCount((prev) => {
+        const next = prev + 1;
+        // Scroll transcript view
+        setTimeout(() => {
+          transcriptEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, 50);
+        return next;
+      });
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [activeSimulation, debriefData, isPlayingDebrief, visibleMessageCount]);
 
   const fetchResumes = async () => {
     setLoadingResumes(true);
@@ -94,8 +124,51 @@ export default function CommitteeSimulationPage() {
           ? JSON.parse(data.data.result_json)
           : data.data.result_json;
 
-      if (!parsedJson.isCommittee) {
-        throw new Error("This past report is a standard review, not a committee debrief.");
+      // If it is not a committee debrief, automatically convene a new committee debrief using its details!
+      if (!parsedJson || !parsedJson.isCommittee) {
+        clearInterval(interval);
+        setIsConvening(true);
+        setConveningStep(0);
+
+        setRoleTitle(data.data.target_role || "");
+        setCompanyName(data.data.target_company || "");
+        setJobDescription(data.data.job_description || "");
+
+        const stepInterval = setInterval(() => {
+          setConveningStep((s) => Math.min(s + 1, CONVENING_STEPS.length - 1));
+        }, 2000);
+
+        try {
+          const committeeRes = await fetch("/api/analyze/committee", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              resumeText: data.data.resume_text,
+              jobDescription: data.data.job_description || "Universal professional standards review",
+              targetRole: data.data.target_role || undefined,
+              companyName: data.data.target_company || undefined,
+            }),
+          });
+
+          const committeeData = await committeeRes.json();
+          if (!committeeRes.ok || !committeeData.success) {
+            throw new Error(committeeData.error || "Failed to convene hiring panel.");
+          }
+
+          setDebriefData(committeeData.data);
+          setFileName("Active Analysis Link");
+          setActiveSimulation(true);
+          setVisibleMessageCount(1);
+          setIsPlayingDebrief(true);
+          toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
+        } catch (err: any) {
+          console.error(err);
+          toastError(err.message || "Failed to compile panel debrief.");
+        } finally {
+          clearInterval(stepInterval);
+          setIsConvening(false);
+        }
+        return;
       }
 
       setDebriefData(parsedJson);
@@ -103,6 +176,8 @@ export default function CommitteeSimulationPage() {
       setJobDescription(data.data.job_description || "");
       setFileName("Past Saved Report");
       setActiveSimulation(true);
+      setVisibleMessageCount(1);
+      setIsPlayingDebrief(true);
     } catch (err: any) {
       console.error(err);
       toastError(err.message || "Failed to load past committee simulation.");
@@ -155,6 +230,8 @@ export default function CommitteeSimulationPage() {
       setDebriefData(data.data);
       setFileName(selected.name);
       setActiveSimulation(true);
+      setVisibleMessageCount(1);
+      setIsPlayingDebrief(true);
       toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
     } catch (err: any) {
       console.error(err);
@@ -169,6 +246,8 @@ export default function CommitteeSimulationPage() {
     setActiveSimulation(false);
     setDebriefData(null);
     setFileName(null);
+    setVisibleMessageCount(1);
+    setIsPlayingDebrief(false);
     if (typeof window !== "undefined") {
       window.history.replaceState({}, "", "/dashboard/committee");
     }
@@ -233,12 +312,28 @@ export default function CommitteeSimulationPage() {
     }
   };
 
+  // Helper to determine if a specific speaker is actively speaking (most recent visible message)
+  const currentActiveSpeaker = debriefData && visibleMessageCount > 0
+    ? debriefData.debriefTranscript[visibleMessageCount - 1]?.speaker
+    : null;
+
   if (!mounted) return null;
 
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         
+        {/* CSS for Equalizer animation */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes eqPulse {
+            0% { height: 4px; }
+            100% { height: 16px; }
+          }
+          .eq-bar-1 { animation: eqPulse 0.5s ease-in-out infinite alternate; }
+          .eq-bar-2 { animation: eqPulse 0.7s ease-in-out infinite alternate 0.15s; }
+          .eq-bar-3 { animation: eqPulse 0.6s ease-in-out infinite alternate 0.3s; }
+        `}} />
+
         {/* Launcher Configuration (Setup View) */}
         {!activeSimulation && (
           <div className="max-w-3xl mx-auto fade-up space-y-6">
@@ -262,7 +357,7 @@ export default function CommitteeSimulationPage() {
                 </p>
               </div>
             ) : (
-              <div className="glass-card bg-paper-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+              <SpotlightCard className="glass-card bg-paper-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
                 <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
@@ -342,7 +437,7 @@ export default function CommitteeSimulationPage() {
                 >
                   ✨ Convene Hiring Committee Debrief
                 </button>
-              </div>
+              </SpotlightCard>
             )}
           </div>
         )}
@@ -388,60 +483,116 @@ export default function CommitteeSimulationPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Sarah HR */}
-              <div className="glass-card bg-paper-card border border-border rounded-2xl p-5 shadow flex items-center justify-between gap-4">
+              <SpotlightCard className={`glass-card bg-paper-card border rounded-2xl p-5 shadow flex items-center justify-between gap-4 transition-all duration-300 ${
+                currentActiveSpeaker === "HR Recruiter" ? "border-pink-500/40 ring-1 ring-pink-500/20 bg-pink-950/5" : "border-border"
+              }`}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse" />
+                    <span className={`w-2.5 h-2.5 rounded-full ${currentActiveSpeaker === "HR Recruiter" ? "bg-pink-500 animate-ping" : "bg-pink-500/40"}`} />
                     <h4 className="font-display text-sm font-bold text-ink">Sarah (HR Recruiter)</h4>
                   </div>
                   <p className="text-[10px] text-ink-muted font-mono leading-tight">Focus: Formatting, Spacing, Gaps, Syntax</p>
                 </div>
-                <div className="text-2xl font-extrabold text-pink-400 font-mono">
-                  {debriefData.hrScore}%
+                <div className="flex items-center gap-3">
+                  {currentActiveSpeaker === "HR Recruiter" && (
+                    <div className="flex items-end gap-[2px] h-4 text-pink-500">
+                      <span className="w-[3px] bg-current rounded-full eq-bar-1" style={{ height: "12px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-2" style={{ height: "6px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-3" style={{ height: "10px" }} />
+                    </div>
+                  )}
+                  <div className="text-2xl font-extrabold text-pink-400 font-mono">
+                    {debriefData.hrScore}%
+                  </div>
                 </div>
-              </div>
+              </SpotlightCard>
 
               {/* Alex EM */}
-              <div className="glass-card bg-paper-card border border-border rounded-2xl p-5 shadow flex items-center justify-between gap-4">
+              <SpotlightCard className={`glass-card bg-paper-card border rounded-2xl p-5 shadow flex items-center justify-between gap-4 transition-all duration-300 ${
+                currentActiveSpeaker === "Engineering Manager" ? "border-indigo-500/40 ring-1 ring-indigo-500/20 bg-indigo-950/5" : "border-border"
+              }`}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+                    <span className={`w-2.5 h-2.5 rounded-full ${currentActiveSpeaker === "Engineering Manager" ? "bg-indigo-500 animate-ping" : "bg-indigo-500/40"}`} />
                     <h4 className="font-display text-sm font-bold text-ink">Alex (Engineering Mgr)</h4>
                   </div>
                   <p className="text-[10px] text-ink-muted font-mono leading-tight">Focus: Tech depth, scale, logic, tools</p>
                 </div>
-                <div className="text-2xl font-extrabold text-indigo-400 font-mono">
-                  {debriefData.techScore}%
+                <div className="flex items-center gap-3">
+                  {currentActiveSpeaker === "Engineering Manager" && (
+                    <div className="flex items-end gap-[2px] h-4 text-indigo-500">
+                      <span className="w-[3px] bg-current rounded-full eq-bar-1" style={{ height: "8px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-2" style={{ height: "12px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-3" style={{ height: "6px" }} />
+                    </div>
+                  )}
+                  <div className="text-2xl font-extrabold text-indigo-400 font-mono">
+                    {debriefData.techScore}%
+                  </div>
                 </div>
-              </div>
+              </SpotlightCard>
 
               {/* Emma PM */}
-              <div className="glass-card bg-paper-card border border-border rounded-2xl p-5 shadow flex items-center justify-between gap-4">
+              <SpotlightCard className={`glass-card bg-paper-card border rounded-2xl p-5 shadow flex items-center justify-between gap-4 transition-all duration-300 ${
+                currentActiveSpeaker === "Product Manager" ? "border-teal-500/40 ring-1 ring-teal-500/20 bg-teal-950/5" : "border-border"
+              }`}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
+                    <span className={`w-2.5 h-2.5 rounded-full ${currentActiveSpeaker === "Product Manager" ? "bg-teal-500 animate-ping" : "bg-teal-500/40"}`} />
                     <h4 className="font-display text-sm font-bold text-ink">Emma (Product Manager)</h4>
                   </div>
                   <p className="text-[10px] text-ink-muted font-mono leading-tight">Focus: Business impact, metrics, value</p>
                 </div>
-                <div className="text-2xl font-extrabold text-teal-400 font-mono">
-                  {debriefData.productScore}%
+                <div className="flex items-center gap-3">
+                  {currentActiveSpeaker === "Product Manager" && (
+                    <div className="flex items-end gap-[2px] h-4 text-teal-500">
+                      <span className="w-[3px] bg-current rounded-full eq-bar-1" style={{ height: "10px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-2" style={{ height: "6px" }} />
+                      <span className="w-[3px] bg-current rounded-full eq-bar-3" style={{ height: "12px" }} />
+                    </div>
+                  )}
+                  <div className="text-2xl font-extrabold text-teal-400 font-mono">
+                    {debriefData.productScore}%
+                  </div>
                 </div>
-              </div>
+              </SpotlightCard>
 
             </div>
 
             {/* Simulated Debrief Transcript Feed */}
-            <div className="glass-card bg-paper-card border border-border rounded-2xl shadow-xl flex flex-col h-[50vh] overflow-hidden">
+            <SpotlightCard className="glass-card bg-paper-card border border-border rounded-2xl shadow-xl flex flex-col h-[50vh] overflow-hidden">
               <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
                 <span className="text-xs font-mono font-bold tracking-wider text-ink uppercase flex items-center gap-2">
                   🎙️ Debrief Room Transcript Feed
                 </span>
-                <span className="text-[10px] text-ink-muted font-mono">Simulated Deliberations</span>
+                
+                {/* Playback controls */}
+                <div className="flex items-center gap-3 print:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setIsPlayingDebrief(!isPlayingDebrief)}
+                    className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-paper border border-border rounded-lg hover:bg-paper-warm text-ink transition cursor-pointer"
+                  >
+                    {isPlayingDebrief ? "⏸ Pause" : "▶ Play"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPlayingDebrief(false);
+                      setVisibleMessageCount(debriefData.debriefTranscript.length);
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-paper border border-border rounded-lg hover:bg-paper-warm text-ink transition cursor-pointer"
+                  >
+                    ⏩ Skip
+                  </button>
+                  <span className="text-[10px] text-ink-muted font-mono">
+                    {visibleMessageCount} of {debriefData.debriefTranscript.length}
+                  </span>
+                </div>
               </div>
 
-              <div className="p-5 flex-1 overflow-y-auto space-y-4">
-                {debriefData.debriefTranscript.map((msg, i) => (
+              <div id="debrief-transcript-feed" className="p-5 flex-1 overflow-y-auto space-y-4">
+                {debriefData.debriefTranscript.slice(0, visibleMessageCount).map((msg, i) => (
                   <div key={i} className="flex gap-4 items-start select-text max-w-4xl animate-fadeIn">
                     
                     {/* Speaker Avatar */}
@@ -463,14 +614,15 @@ export default function CommitteeSimulationPage() {
 
                   </div>
                 ))}
+                <div ref={transcriptEndRef} />
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* Strengths and Weaknesses Comparison columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* Strengths */}
-              <div className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
+              <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
                 <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
                   🟢 Strengths Highlighted
                 </h4>
@@ -482,10 +634,10 @@ export default function CommitteeSimulationPage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </SpotlightCard>
 
               {/* Weaknesses */}
-              <div className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
+              <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
                 <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
                   🔴 Weaknesses Identified
                 </h4>
@@ -497,12 +649,12 @@ export default function CommitteeSimulationPage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </SpotlightCard>
 
             </div>
 
             {/* Actionable Remedies Section */}
-            <div className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
+            <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
               <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
                 🛠️ Actionable Committee Remedies
               </h4>
@@ -516,7 +668,7 @@ export default function CommitteeSimulationPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </SpotlightCard>
 
             {/* Actions Bar */}
             <div className="flex items-center justify-between bg-paper-card border border-border rounded-2xl p-4 shadow">

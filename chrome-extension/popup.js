@@ -67,25 +67,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     activeTabUrl = tab.url;
 
     // Inject and run scraping content script dynamically if not already running
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: tab.id },
-        files: ["content.js"],
-      },
-      (results) => {
-        if (chrome.runtime.lastError || !results || results.length === 0) {
-          console.warn("Could not execute script:", chrome.runtime.lastError);
-          return;
-        }
-
-        const data = results[0].result;
-        if (data) {
-          if (data.jobTitle) jobTitleInput.value = data.jobTitle;
-          if (data.companyName) companyNameInput.value = data.companyName;
-          if (data.jobDescription) jobDescriptionInput.value = data.jobDescription;
-        }
+chrome.scripting.executeScript(
+  {
+    target: { tabId: tab.id },
+    func: () => {
+      // If content.js already ran (LinkedIn/Indeed via manifest content_scripts),
+      // __rlScrape is already available — call it directly.
+      if (typeof window.__rlScrape === "function") {
+        return window.__rlScrape();
       }
-    );
+      // Fallback: page not covered by content_scripts (Greenhouse, Lever, etc.)
+      // Run a minimal inline scrape so we still return something useful.
+      const url = window.location.href;
+      const jobTitle =
+        document.querySelector("h1")?.innerText?.trim().replace(/\s+/g, " ") ||
+        document.title.split(" - ")[0].split(" | ")[0].trim();
+      const companyName = (() => {
+        const parts = document.title.split(" at ");
+        return parts.length > 1
+          ? parts[1].split(" - ")[0].split(" | ")[0].trim()
+          : "";
+      })();
+      const main = document.querySelector(
+        "main, article, #content, .job-description, .job-details, #jobDescriptionText"
+      );
+      let jobDescription = (main?.innerText || document.body.innerText || "").trim();
+      if (jobDescription.length > 8000) {
+        jobDescription = jobDescription.slice(0, 8000) + "\n\n[Truncated for length]";
+      }
+      return { jobTitle, companyName, jobDescription, jobUrl: url };
+    },
+  },
+  (results) => {
+    if (chrome.runtime.lastError || !results || results.length === 0) {
+      console.warn("Could not execute script:", chrome.runtime.lastError);
+      return;
+    }
+
+    const data = results[0].result;
+    if (data) {
+      if (data.jobTitle)       jobTitleInput.value       = data.jobTitle;
+      if (data.companyName)    companyNameInput.value    = data.companyName;
+      if (data.jobDescription) jobDescriptionInput.value = data.jobDescription;
+    }
+  }
+);
   });
 
   // 2. Test Backend connection & Load saved Resumes list

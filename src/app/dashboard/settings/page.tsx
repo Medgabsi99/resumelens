@@ -6,6 +6,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { createBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/components/ToastProvider";
+import OnboardingTour, { resetOnboardingTour } from "@/components/OnboardingTour";
 
 interface UserProfile {
   id: string;
@@ -41,6 +42,9 @@ export default function SettingsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteText, setDeleteText] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // Tour replay
+  const [tourReplayOpen, setTourReplayOpen] = useState(false);
 
   useEffect(() => {
     async function loadSettingsData() {
@@ -546,6 +550,63 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* PREFERENCES */}
+            <div style={{
+              background: "var(--paper-card)",
+              border: "1px solid var(--border)",
+              borderRadius: 18,
+              padding: 28,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Preferences</h2>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Personalization and onboarding options.</p>
+              </div>
+
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                background: "var(--paper-warm)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+              }}>
+                <div>
+                  <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+                    🎓 Onboarding Tour
+                  </p>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}>
+                    Replay the 4-step feature walkthrough shown on first login.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    resetOnboardingTour();
+                    setTourReplayOpen(true);
+                  }}
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: 10,
+                    background: "transparent",
+                    color: "var(--accent)",
+                    border: "1.5px solid var(--accent-border)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-bg)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                >
+                  Replay Tour →
+                </button>
+              </div>
+            </div>
+
             {/* DANGER ZONE */}
             <div style={{
               background: "var(--paper-card)",
@@ -697,6 +758,13 @@ export default function SettingsPage() {
             </div>
           </div>
         </>
+      )}
+      {/* Tour Replay Overlay */}
+      {tourReplayOpen && (
+        <OnboardingTour
+          forceOpen={tourReplayOpen}
+          onClose={() => setTourReplayOpen(false)}
+        />
       )}
     </DashboardLayout>
   );

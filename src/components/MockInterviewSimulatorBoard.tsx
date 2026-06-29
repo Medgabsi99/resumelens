@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import SpotlightCard from "./SpotlightCard";
 import { type MockInterviewTranscriptEntry, type MockInterviewScorecard } from "@/lib/ai";
 import ConfettiCannon from "@/components/ConfettiCannon";
 
@@ -37,6 +38,7 @@ export default function MockInterviewSimulatorBoard({
   // Voice toggles
   const [isMuted, setIsMuted] = useState(false);
   const [isSupportedSpeech, setIsSupportedSpeech] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   
   // Live coach trigger
   const [showHint, setShowHint] = useState(false);
@@ -48,23 +50,34 @@ export default function MockInterviewSimulatorBoard({
   const [confettiKey, setConfettiKey] = useState(0);
 
   const recognitionRef = useRef<any>(null);
+  const baselineTextRef = useRef<string>("");
+  const timerRef = useRef<any>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
   const isFinished = currentIdx >= questions.length;
 
   // ── Live Pacing & Metrics ────────────────────────────────
   const wordsCount = answerText.trim() ? answerText.trim().split(/\s+/).length : 0;
-  // Dynamic WPM rating (assuming standard speaking rate or simulated pacing indicator)
-  const estimatedWpm = Math.round(wordsCount * 1.35); // simulated scale based on word density
+  
+  // Real WPM calculation: count words dictated during active recording.
+  const estimatedWpm = useMemo(() => {
+    if (recordingSeconds === 0) {
+      return 0; // manual input fallback
+    }
+    const minutes = recordingSeconds / 60;
+    return Math.max(1, Math.round(wordsCount / minutes));
+  }, [wordsCount, recordingSeconds]);
 
   const getPacingRating = (wpm: number) => {
-    if (wpm === 0) return "Not speaking yet";
-    if (wpm < 85) return "Too Slow (Target: 95-140 WPM)";
+    if (wpm === 0) return recordingSeconds > 0 ? "Listening..." : "Manual typing (pacing metrics require voice)";
+    if (wpm < 90) return "Too Slow (Target: 95-140 WPM)";
     if (wpm > 145) return "Too Fast (Target: 95-140 WPM)";
     return "Ideal speaking pace";
   };
 
   const getPacingColor = (wpm: number) => {
     if (wpm === 0) return "text-ink-muted";
-    if (wpm < 85 || wpm > 145) return "text-amber-400";
+    if (wpm < 90 || wpm > 145) return "text-amber-400";
     return "text-emerald-400";
   };
 
@@ -94,25 +107,45 @@ export default function MockInterviewSimulatorBoard({
 
         rec.onresult = (event: any) => {
           let finalTranscript = "";
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
+          let interimTranscript = "";
+          for (let i = 0; i < event.results.length; ++i) {
+            const segment = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + " ";
+              finalTranscript += segment + " ";
+            } else {
+              interimTranscript += segment;
             }
           }
-          if (finalTranscript) {
-            setAnswerText((prev) => {
-              const cleanPrev = prev.trim();
-              return cleanPrev ? `${cleanPrev} ${finalTranscript.trim()}` : finalTranscript.trim();
-            });
+
+          const base = baselineTextRef.current.trim();
+          const finalSoFar = finalTranscript.trim();
+          const interimSoFar = interimTranscript.trim();
+
+          let combined = base;
+          if (finalSoFar) {
+            combined = combined ? `${combined} ${finalSoFar}` : finalSoFar;
           }
+          if (interimSoFar) {
+            combined = combined ? `${combined} ${interimSoFar}` : interimSoFar;
+          }
+          setAnswerText(combined);
         };
 
         rec.onerror = (err: any) => {
           console.error("Speech recognition error:", err);
+          stopTimer();
           setIsRecording(false);
+          if (err.error === "network") {
+            setEvalError("Google speech recognition service is currently unreachable (network error). Please verify your internet connection or type your response manually.");
+          } else if (err.error === "not-allowed") {
+            setEvalError("Microphone access was denied. Please allow microphone permissions in your browser settings.");
+          } else {
+            setEvalError(`Speech recognition error (${err.error || "unknown"}). Please dictate again or type your response manually.`);
+          }
         };
 
         rec.onend = () => {
+          stopTimer();
           setIsRecording(false);
         };
 
@@ -121,6 +154,43 @@ export default function MockInterviewSimulatorBoard({
     }
   }, []);
 
+  // Load voices list asynchronously and monitor onvoiceschanged
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const updateVoices = () => {
+      setVoices(window.speechSynthesis.getVoices());
+    };
+
+    updateVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }, []);
+
+  const getPreferredVoice = (voiceList: SpeechSynthesisVoice[]) => {
+    const enVoices = voiceList.filter((v) => v.lang.startsWith("en-"));
+    if (enVoices.length === 0) return null;
+
+    return (
+      enVoices.find(
+        (v) =>
+          (v.name.toLowerCase().includes("natural") ||
+            v.name.toLowerCase().includes("online")) &&
+          (v.name.toLowerCase().includes("google") ||
+            v.name.toLowerCase().includes("microsoft")),
+      ) ||
+      enVoices.find(
+        (v) =>
+          v.name.toLowerCase().includes("natural") ||
+          v.name.toLowerCase().includes("online"),
+      ) ||
+      enVoices.find((v) => v.name.toLowerCase().includes("google")) ||
+      enVoices.find((v) => v.name.toLowerCase().includes("apple")) ||
+      enVoices[0]
+    );
+  };
+
   // ── Speech Synthesis: Read Question ───────────────────────
   useEffect(() => {
     if (isFinished || isMuted || typeof window === "undefined" || !window.speechSynthesis) return;
@@ -128,38 +198,73 @@ export default function MockInterviewSimulatorBoard({
     window.speechSynthesis.cancel();
     const questionText = questions[currentIdx];
     const utterance = new SpeechSynthesisUtterance(questionText);
-    utterance.rate = 1.05;
+    utterance.rate = 1.02; // slightly more natural pacing
+    utterance.pitch = 1.0;
     
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith("en-") && v.name.toLowerCase().includes("natural")) ||
-                    voices.find(v => v.lang.startsWith("en-"));
-    if (enVoice) utterance.voice = enVoice;
+    const preferred = getPreferredVoice(voices);
+    if (preferred) utterance.voice = preferred;
 
     window.speechSynthesis.speak(utterance);
 
     return () => {
       window.speechSynthesis.cancel();
     };
-  }, [currentIdx, isFinished, isMuted, questions]);
+  }, [currentIdx, isFinished, isMuted, questions, voices]);
 
   const handleReplay = () => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(questions[currentIdx]);
-    utterance.rate = 1.05;
+    utterance.rate = 1.02;
+    
+    const preferred = getPreferredVoice(voices);
+    if (preferred) utterance.voice = preferred;
+    
     window.speechSynthesis.speak(utterance);
   };
 
+  // ── Timer Helpers ──────────────────────────────────────────
+  const startTimer = () => {
+    stopTimer();
+    setRecordingSeconds(0);
+    timerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopTimer();
+    };
+  }, []);
+
   // ── Toggle Mic Recording ──────────────────────────────────
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!recognitionRef.current) return;
 
     if (isRecording) {
       recognitionRef.current.stop();
+      stopTimer();
       setIsRecording(false);
     } else {
-      setIsRecording(true);
-      recognitionRef.current.start();
+      try {
+        // Explicitly request mic permission first
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        baselineTextRef.current = answerText;
+        setIsRecording(true);
+        startTimer();
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error("Microphone permission denied:", err);
+        setEvalError("Microphone access was denied. Please allow microphone access in your browser settings and try again.");
+      }
     }
   };
 
@@ -170,6 +275,8 @@ export default function MockInterviewSimulatorBoard({
     setIsEvaluating(true);
     setEvalError(null);
     setShowHint(false);
+    stopTimer();
+    setRecordingSeconds(0);
 
     if (isRecording && recognitionRef.current) {
       recognitionRef.current.stop();
@@ -301,7 +408,7 @@ export default function MockInterviewSimulatorBoard({
   // ── Render ────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 overflow-y-auto backdrop-blur-md font-sans text-slate-100"
+     className="z-[9999] flex items-center justify-center p-4 backdrop-blur-md font-body text-slate-100"
       style={{
         background: "rgba(10, 10, 12, 0.96)",
       }}
@@ -326,7 +433,7 @@ export default function MockInterviewSimulatorBoard({
       `}} />
 
       <div
-        className="w-full max-w-5xl bg-[#121216] border border-[#2c2c38] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="w-full max-w-5xl mx-auto bg-[#121216] border border-[#2c2c38] rounded-2xl shadow-2xl flex flex-col min-h-[80vh] overflow-hidden"
       >
         {/* Board Top Nav Header */}
         <div className="flex items-center justify-between border-b border-[#2c2c38] px-6 py-4">
@@ -374,7 +481,7 @@ export default function MockInterviewSimulatorBoard({
                   </div>
                 </div>
 
-                <div className="bg-[#181822] border border-[#2a2a38] rounded-xl p-5 relative shadow-md">
+                <SpotlightCard className="bg-[#181822] border border-[#2a2a38] rounded-xl p-5 relative shadow-md">
                   <div className="flex justify-between items-start gap-4">
                     <p className="text-base font-medium leading-relaxed text-slate-100 pr-10">
                       {questions[currentIdx]}
@@ -386,7 +493,7 @@ export default function MockInterviewSimulatorBoard({
                       🗣️ Replay
                     </button>
                   </div>
-                </div>
+                </SpotlightCard>
               </div>
 
               {/* Response Feed Area */}
@@ -424,8 +531,17 @@ export default function MockInterviewSimulatorBoard({
                 <textarea
                   value={answerText}
                   onChange={(e) => setAnswerText(e.target.value)}
-                  placeholder="Record or type your response here. Try to frame your response with Situation, Task, Action, and Results (STAR)."
-                  className="w-full flex-1 min-h-[160px] bg-[#181822] border border-[#2a2a3a] rounded-xl p-4 text-sm text-slate-100 outline-none focus:border-indigo-500 transition resize-none leading-relaxed"
+                  readOnly={isRecording}
+                  placeholder={
+                    isRecording
+                      ? "Listening... Speak clearly into your microphone."
+                      : "Record or type your response here. Try to frame your response with Situation, Task, Action, and Results (STAR)."
+                  }
+                  className={`w-full flex-1 min-h-[160px] bg-[#181822] border rounded-xl p-4 text-sm text-slate-100 outline-none transition resize-none leading-relaxed ${
+                    isRecording
+                      ? "border-rose-500/50 shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse"
+                      : "border-[#2a2a3a] focus:border-indigo-500"
+                  }`}
                 />
 
                 <div className="flex justify-between items-center">

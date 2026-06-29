@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
+import { type ResumeCustomStyle } from "../../components/ResumeEditor/types";
 
 const styles = StyleSheet.create({
   container: {
@@ -134,16 +135,38 @@ const styles = StyleSheet.create({
 interface Props {
   data: ParsedResume;
   targetRole?: string;
+  customStyle?: ResumeCustomStyle;
 }
 
-export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
+export default function ProfessionalPdfTemplate({ data, targetRole, customStyle }: Props) {
+  const style = customStyle || {
+    fontFamily: "serif",
+    fontSize: "11pt",
+    lineHeight: "1.6",
+    padding: "56px 48px",
+    primaryColor: "#1e3a8a",
+  };
+
+  const resolvedFont = style.fontFamily === "sans" ? "Inter" : style.fontFamily === "mono" ? "Courier" : "Lora";
+  
+  // Convert pt/em strings to raw numbers for React-PDF StyleSheet overrides
+  const resolvedFontSize = parseFloat(style.fontSize) || 10;
+  const resolvedLineHeight = parseFloat(style.lineHeight) || 1.5;
+  const resolvedColor = style.primaryColor || "#1e3a8a";
+
+  const containerStyle = [styles.container, { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight }];
+  const headerStyle = [styles.header, { borderBottomColor: resolvedColor }];
+  const nameStyle = [styles.name, { color: resolvedColor }];
+  const roleStyle = [styles.role, { color: resolvedColor }];
+  const sectionTitleStyle = [styles.sectionTitle, { color: resolvedColor }];
+
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.name}>{data.contact.name || "Your Name"}</Text>
+      <View style={headerStyle}>
+        <Text style={nameStyle}>{data.contact.name || "Your Name"}</Text>
         {targetRole && (
-          <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
+          <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>
         )}
         <Text style={styles.contact}>
           {[
@@ -159,7 +182,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
       {/* Summary */}
       {data.summary && (
         <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>PROFESSIONAL SUMMARY</Text>
+          <Text style={sectionTitleStyle}>PROFESSIONAL SUMMARY</Text>
           <Text style={styles.projectDesc}>{data.summary}</Text>
         </View>
       )}
@@ -167,7 +190,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
       {/* Experience */}
       {data.experience.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>WORK EXPERIENCE</Text>
+          <Text style={sectionTitleStyle}>WORK EXPERIENCE</Text>
           {data.experience.map((exp, idx) => (
             <View key={idx} style={styles.entry} wrap={false}>
               <View style={styles.entryHeader}>
@@ -197,7 +220,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
       {/* Education */}
       {data.education.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>EDUCATION</Text>
+          <Text style={sectionTitleStyle}>EDUCATION</Text>
           {data.education.map((edu, idx) => (
             <View key={idx} style={styles.eduEntry} wrap={false}>
               <View style={styles.eduLeft}>
@@ -213,7 +236,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
       {/* Skills */}
       {data.skills.length > 0 && (
         <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>SKILLS</Text>
+          <Text style={sectionTitleStyle}>SKILLS</Text>
           <Text style={styles.skillsText}>{data.skills.join(", ")}</Text>
         </View>
       )}
@@ -221,7 +244,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole }: Props) {
       {/* Projects */}
       {data.projects && data.projects.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>KEY PROJECTS</Text>
+          <Text style={sectionTitleStyle}>KEY PROJECTS</Text>
           {data.projects.map((proj, idx) => (
             <View key={idx} style={styles.projectEntry} wrap={false}>
               <Text style={styles.projectTitle}>{proj.name}</Text>

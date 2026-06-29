@@ -126,7 +126,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       target_role: targetRole || null,
       resume_text: resumeText,
       job_description: jobDescription || null,
-    }),
+    }).select("id"),
     incrementUsage(userId),
   ]);
 
@@ -134,5 +134,26 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     console.error("[analyze] DB insert failed:", insertResult.error.message);
   }
 
+  // ── 7. Fire-and-forget: embed resume chunks into pgvector ─
+  // Non-blocking — runs in background after response is returned.
+  // If embedding fails, chat/job-match gracefully falls back to full-text.
+  const insertedId = insertResult.data?.[0]?.id;
+  if (!insertResult.error && insertedId) {
+    const embedUrl = new URL("/api/embed", req.nextUrl.origin).toString();
+    // Pass auth cookies so the embed endpoint can authenticate the request
+    const cookieHeader = req.headers.get("cookie") ?? "";
+    fetch(embedUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "cookie": cookieHeader,
+      },
+      body: JSON.stringify({ resumeText, analysisId: insertedId }),
+    }).catch((err) => {
+      console.warn("[analyze] Background embed failed (non-fatal):", err?.message);
+    });
+  }
+
   return NextResponse.json({ success: true, data: result, extractedText: resumeText });
 }
+

@@ -1,10 +1,11 @@
+"use client";
 import { useRef, useState, useCallback } from "react";
 import { JobApplication, ApplicationStatus } from "@/types";
 
 interface DragState {
   draggingId: string | null;
   dragOverColumn: ApplicationStatus | null;
-  /** The card id we're hovering *above* for within-column reorder */
+  /** The card id we're hovering *above* for within-column or list reorder */
   insertBeforeId: string | null;
 }
 
@@ -59,41 +60,34 @@ export function useDragAndDrop(
     ghostRef.current = null;
   }, []);
 
-  // ── Drag start ───────────────────────────────────────────────
+  // ── KANBAN: Drag start ────────────────────────────────────────
   const handleDragStart = useCallback(
     (e: React.DragEvent, id: string) => {
       const app = applications.find((a) => a.id === id);
       const label = app ? `${app.job_title} @ ${app.company_name}` : id;
-
-      // Set drag data
       e.dataTransfer.setData("text/plain", id);
       e.dataTransfer.effectAllowed = "move";
-
-      // Create ghost and use it as drag image
       const ghost = createGhost(label);
       e.dataTransfer.setDragImage(ghost, 0, 0);
-
-      // Needs to stay in DOM for setDragImage to work — remove after a tick
       setTimeout(removeGhost, 0);
-
       setDrag((d) => ({ ...d, draggingId: id }));
     },
     [applications, createGhost, removeGhost]
   );
 
-  // ── Drag end ─────────────────────────────────────────────────
+  // ── KANBAN: Drag end ──────────────────────────────────────────
   const handleDragEnd = useCallback(() => {
     removeGhost();
     setDrag(INITIAL);
   }, [removeGhost]);
 
-  // ── Column drag-over (needed to allow drop) ──────────────────
+  // ── Column drag-over (needed to allow drop) ───────────────────
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   }, []);
 
-  // ── Column drag-enter — highlight target column ──────────────
+  // ── Column drag-enter — highlight target column ───────────────
   const handleDragEnter = useCallback(
     (e: React.DragEvent, status: ApplicationStatus) => {
       e.preventDefault();
@@ -102,14 +96,10 @@ export function useDragAndDrop(
     []
   );
 
-  // ── Column drag-leave ────────────────────────────────────────
-  const handleDragLeave = useCallback(
-    (_status: ApplicationStatus) => {
-      // Only clear if we truly left (relatedTarget check avoids flicker on child hover)
-      // We leave the column highlight until drop/end to avoid flicker
-    },
-    []
-  );
+  // ── Column drag-leave ─────────────────────────────────────────
+  const handleDragLeave = useCallback((_status: ApplicationStatus) => {
+    // Leave column highlight until drop/end to avoid flicker
+  }, []);
 
   // ── Card drag-enter — track insert-before position ───────────
   const handleCardDragEnter = useCallback(
@@ -120,7 +110,7 @@ export function useDragAndDrop(
     []
   );
 
-  // ── Drop on column ───────────────────────────────────────────
+  // ── KANBAN: Drop on column ────────────────────────────────────
   const handleDropColumn = useCallback(
     async (e: React.DragEvent, status: ApplicationStatus) => {
       e.preventDefault();
@@ -133,7 +123,7 @@ export function useDragAndDrop(
       const insertBefore = drag.insertBeforeId;
       setDrag(INITIAL);
 
-      // Status change
+      // Status change (cross-column)
       if (app.status !== status) {
         await handleStatusChange(app, status);
       }
@@ -145,7 +135,6 @@ export function useDragAndDrop(
         const insertIdx = others.findIndex((a) => a.id === insertBefore);
         const reordered = [...others];
         reordered.splice(insertIdx >= 0 ? insertIdx : reordered.length, 0, app);
-
         const updated = applications.map((a) => {
           const found = reordered.find((r) => r.id === a.id);
           return found ?? a;
@@ -154,6 +143,66 @@ export function useDragAndDrop(
       }
     },
     [applications, drag.draggingId, drag.insertBeforeId, handleStatusChange, onReorder]
+  );
+
+  // ── LIST VIEW: Drag start ─────────────────────────────────────
+  const handleListDragStart = useCallback(
+    (e: React.DragEvent, id: string) => {
+      const app = applications.find((a) => a.id === id);
+      const label = app ? `${app.job_title} @ ${app.company_name}` : id;
+      e.dataTransfer.setData("text/plain", id);
+      e.dataTransfer.effectAllowed = "move";
+      const ghost = createGhost(label);
+      e.dataTransfer.setDragImage(ghost, 0, 0);
+      setTimeout(removeGhost, 0);
+      setDrag((d) => ({ ...d, draggingId: id }));
+    },
+    [applications, createGhost, removeGhost]
+  );
+
+  // ── LIST VIEW: Card drag-enter ────────────────────────────────
+  const handleListCardDragEnter = useCallback(
+    (e: React.DragEvent, cardId: string) => {
+      e.preventDefault();
+      setDrag((d) => ({ ...d, insertBeforeId: cardId }));
+    },
+    []
+  );
+
+  // ── LIST VIEW: Drop (pure reorder, no status change) ─────────
+  const handleListDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain") || drag.draggingId;
+      const insertBefore = drag.insertBeforeId;
+      setDrag(INITIAL);
+
+      if (!id || !onReorder) return;
+
+      const draggedApp = applications.find((a) => a.id === id);
+      if (!draggedApp) return;
+
+      // Remove dragged from list
+      const withoutDragged = applications.filter((a) => a.id !== id);
+
+      if (!insertBefore || insertBefore === id) {
+        // Drop at end
+        onReorder([...withoutDragged, draggedApp]);
+        return;
+      }
+
+      // Insert before target
+      const insertIdx = withoutDragged.findIndex((a) => a.id === insertBefore);
+      if (insertIdx === -1) {
+        onReorder([...withoutDragged, draggedApp]);
+        return;
+      }
+
+      const result = [...withoutDragged];
+      result.splice(insertIdx, 0, draggedApp);
+      onReorder(result);
+    },
+    [applications, drag.draggingId, drag.insertBeforeId, onReorder]
   );
 
   return {
@@ -167,6 +216,10 @@ export function useDragAndDrop(
     handleDragLeave,
     handleCardDragEnter,
     handleDropColumn,
+    // List-view reorder
+    handleListDragStart,
+    handleListCardDragEnter,
+    handleListDrop,
   };
 }
 export default useDragAndDrop;

@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { createBrowserClient } from "@/lib/supabase";
 import AuroraBackground from "@/components/AuroraBackground";
 import ConfettiCannon from "@/components/ConfettiCannon";
+import ParsingProgressVisualizer from "@/components/ParsingProgressVisualizer";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -353,114 +354,100 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Input Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-          {/* Left — Resume */}
-          <Panel label="Your Resume">
-            {/* Drop zone */}
-            <div
-              {...getRootProps()}
-              className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-2 transition-all duration-300"
-              style={{
-                borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
-                background: isDragActive ? "var(--accent-bg)" : "var(--paper-warm)",
-              }}
-            >
-              <input {...getInputProps()} />
-              <div className="text-2xl mb-1">{fileName ? "📄" : "📤"}</div>
-              <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
-                {fileName
-                  ? `${fileName}`
-                  : isDragActive
-                  ? "Drop your file here..."
-                  : "Drop PDF, DOCX, or TXT here, or click to browse"}
-              </p>
+        {loading ? (
+          <div className="my-12">
+            <ParsingProgressVisualizer currentStep={loadingStep} />
+          </div>
+        ) : (
+          <>
+            {/* Input Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+              {/* Left — Resume */}
+              <Panel label="Your Resume">
+                {/* Drop zone */}
+                <div
+                  {...getRootProps()}
+                  className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-2 transition-all duration-300"
+                  style={{
+                    borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
+                    background: isDragActive ? "var(--accent-bg)" : "var(--paper-warm)",
+                  }}
+                >
+                  <input {...getInputProps()} />
+                  <div className="text-2xl mb-1">{fileName ? "📄" : "📤"}</div>
+                  <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
+                    {fileName
+                      ? `${fileName}`
+                      : isDragActive
+                      ? "Drop your file here..."
+                      : "Drop PDF, DOCX, or TXT here, or click to browse"}
+                  </p>
+                </div>
+
+                <div className="relative my-5 text-center">
+                  <span className="absolute inset-y-1/2 left-0 right-0 h-px" style={{ background: "var(--border)" }} />
+                  <span className="relative px-3 font-mono text-[10px] tracking-widest text-ink-faint uppercase" style={{ background: "var(--paper-card)" }}>
+                    or paste resume text
+                  </span>
+                </div>
+
+                <textarea
+                  value={resumeText}
+                  onChange={(e) => {
+                    setResumeText(e.target.value);
+                    if (e.target.value) { setUploadedFile(null); setFileName(null); }
+                  }}
+                  placeholder="Paste the raw text of your resume here..."
+                  className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed"
+                />
+                <div className="flex justify-between items-center mt-1.5 px-0.5">
+                  <span className="text-[10px] font-mono text-ink-faint">
+                    {resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : ""}
+                  </span>
+                  {resumeText.length > 500 && (
+                    <span className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}>
+                      {resumeText.length >= 4000 ? "✓ Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
+                    </span>
+                  )}
+                </div>
+              </Panel>
+
+              {/* Right — Job context */}
+              <Panel label="Job Context (recommended)">
+                <textarea
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  placeholder="Paste the job description here. Enabling this unlocks personalized matching, ATS gap analysis, and tailored rewrites..."
+                  className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed mb-4"
+                />
+                <input
+                  type="text"
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  placeholder='Target role, e.g. "Senior Frontend Developer"'
+                  className="premium-input w-full"
+                />
+              </Panel>
             </div>
 
-            <div className="relative my-5 text-center">
-              <span className="absolute inset-y-1/2 left-0 right-0 h-px" style={{ background: "var(--border)" }} />
-              <span className="relative px-3 font-mono text-[10px] tracking-widest text-ink-faint uppercase" style={{ background: "var(--paper-card)" }}>
-                or paste resume text
-              </span>
-            </div>
+            {/* CTA */}
+            <div className="flex flex-col items-center justify-center mb-12">
+              <button
+                onClick={handleAnalyze}
+                disabled={loading}
+                className="btn-gradient px-8 py-3.5 rounded-xl text-base font-semibold min-w-[200px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>Analyze Resume →</span>
+              </button>
 
-            <textarea
-              value={resumeText}
-              onChange={(e) => {
-                setResumeText(e.target.value);
-                if (e.target.value) { setUploadedFile(null); setFileName(null); }
-              }}
-              placeholder="Paste the raw text of your resume here..."
-              className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed"
-            />
-            <div className="flex justify-between items-center mt-1.5 px-0.5">
-              <span className="text-[10px] font-mono text-ink-faint">
-                {resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : ""}
-              </span>
-              {resumeText.length > 500 && (
-                <span className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}>
-                  {resumeText.length >= 4000 ? "✓ Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
-                </span>
+              {error && (
+                <p className="text-red-500 font-medium text-sm mt-4 text-center max-w-md bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">
+                  {error}
+                </p>
               )}
             </div>
-          </Panel>
-
-          {/* Right — Job context */}
-          <Panel label="Job Context (recommended)">
-            <textarea
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the job description here. Enabling this unlocks personalized matching, ATS gap analysis, and tailored rewrites..."
-              className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed mb-4"
-            />
-            <input
-              type="text"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              placeholder='Target role, e.g. "Senior Frontend Developer"'
-              className="premium-input w-full"
-            />
-          </Panel>
-        </div>
-
-        {/* CTA */}
-        <div className="flex flex-col items-center justify-center mb-12">
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="btn-gradient px-8 py-3.5 rounded-xl text-base font-semibold min-w-[200px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center gap-1.5">
-                <span>{LOADING_STEPS[loadingStep]}</span>
-              </span>
-            ) : (
-              <span>Analyze Resume →</span>
-            )}
-          </button>
-
-          {error && (
-            <p className="text-red-500 font-medium text-sm mt-4 text-center max-w-md bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">
-              {error}
-            </p>
-          )}
-
-          {/* Loading indicator */}
-          {loading && (
-            <div className="flex justify-center gap-2 mt-6">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 rounded-full"
-                  style={{
-                    background: "var(--accent)",
-                    animation: `pulse-dot 1.4s ease ${i * 0.2}s infinite`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+          </>
+        )}
 
         {/* Results */}
         {result && (

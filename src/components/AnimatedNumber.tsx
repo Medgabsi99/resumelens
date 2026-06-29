@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getReducedMotion } from "@/hooks/useReducedMotion";
 
 interface Props {
   /** Target value to count up to */
@@ -63,6 +64,12 @@ export default function AnimatedNumber({
 
   // Run rAF loop when triggered
   useEffect(() => {
+    // Reduced-motion: snap straight to final value, skip counting animation
+    if (getReducedMotion()) {
+      setDisplay(value);
+      return;
+    }
+
     if (!started || value === 0) return;
 
     startTimeRef.current = performance.now();

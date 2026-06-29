@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { type AtsStructureResult, type AtsZoneHighlight } from "@/lib/ai";
+import SpotlightCard from "./SpotlightCard";
 
 interface Props {
   data: AtsStructureResult;
@@ -247,7 +248,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
       <div className="flex-1 space-y-6 w-full">
         
         {/* Score & General summary */}
-        <div className="bg-paper-card border border-border rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-lg">
+        <SpotlightCard className="bg-paper-card border border-border rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-lg">
           <div className="relative flex items-center justify-center w-24 h-24 shrink-0">
             <div className="absolute inset-2 rounded-full bg-slate-900 border-4 border-border/20" />
             <div className={`absolute inset-2 rounded-full border-4 ${scoreBorderColor} border-t-transparent animate-spin [animation-duration:3s] opacity-20`} />
@@ -272,7 +273,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
           >
             ← Back
           </button>
-        </div>
+        </SpotlightCard>
 
         {/* Structured Checklist Grid */}
         <div className="space-y-3">
@@ -292,7 +293,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
               const val = (data.checklist as any)[check.key];
               if (!val) return null;
               return (
-                <div
+                <SpotlightCard
                   key={check.key}
                   className="bg-paper border border-border rounded-xl p-4 flex gap-3.5 items-start"
                 >
@@ -303,7 +304,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
                     <h4 className="text-sm font-bold text-ink leading-tight">{check.label}</h4>
                     <p className="text-xs text-ink-muted mt-1 leading-normal">{val.details}</p>
                   </div>
-                </div>
+                </SpotlightCard>
               );
             })}
           </div>
@@ -311,7 +312,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
 
         {/* Active Inspection Detail Card */}
         {activeHighlight && (
-          <div className="bg-paper-card border border-border rounded-2xl p-5 space-y-3.5 shadow-lg border-l-4 border-l-accent animate-scale-up">
+          <SpotlightCard className="bg-paper-card border border-border rounded-2xl p-5 space-y-3.5 shadow-lg border-l-4 border-l-accent animate-scale-up">
             <div className="flex justify-between items-center">
               <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
                 🔎 Active Zone Inspection: <span className="text-accent capitalize">{activeHighlight.zone}</span>
@@ -330,7 +331,7 @@ export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
               <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block">Actionable Remedy</span>
               <p className="text-xs text-ink-muted leading-relaxed">{activeHighlight.remedy}</p>
             </div>
-          </div>
+          </SpotlightCard>
         )}
 
       </div>

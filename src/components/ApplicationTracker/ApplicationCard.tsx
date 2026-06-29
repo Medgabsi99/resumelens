@@ -7,12 +7,19 @@ import {
   ApplicationStatus,
 } from "@/types";
 import { formatDate, daysUntil } from "./utils";
+import { useContextMenu } from "@/components/ContextMenu";
 
 interface ApplicationCardProps {
   app: JobApplication;
   onStatusChange: (s: ApplicationStatus) => void;
   onEdit: () => void;
   onDelete: () => void;
+  // Drag-to-reorder props (optional — only used in list view)
+  isDragging?: boolean;
+  isInsertTarget?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  onCardDragEnter?: (e: React.DragEvent) => void;
 }
 
 export default function ApplicationCard({
@@ -20,20 +27,123 @@ export default function ApplicationCard({
   onStatusChange,
   onEdit,
   onDelete,
+  isDragging = false,
+  isInsertTarget = false,
+  onDragStart,
+  onDragEnd,
+  onCardDragEnter,
 }: ApplicationCardProps) {
+  const { show: showContextMenu } = useContextMenu();
   const statusColor = APPLICATION_STATUS_COLORS[app.status];
   const followUpDays = daysUntil(app.follow_up_at);
   const followUpUrgent = followUpDays !== null && followUpDays <= 3;
 
+  const isDraggable = Boolean(onDragStart);
+
+  const STATUS_OPTIONS: ApplicationStatus[] = ["saved", "applied", "screening", "interviewing", "offer", "accepted", "rejected"];
+
+  const buildContextMenu = (e: React.MouseEvent) => {
+    showContextMenu(e, [
+      {
+        key: "edit",
+        label: "Edit Application",
+        icon: "✏️",
+        shortcut: "E",
+        onClick: onEdit,
+      },
+      ...(app.job_url ? [{
+        key: "open-url",
+        label: "Open Job Posting",
+        icon: "↗",
+        onClick: () => window.open(app.job_url!, "_blank", "noopener"),
+      }] : []),
+      {
+        key: "copy-role",
+        label: "Copy Role Title",
+        icon: "📋",
+        onClick: () => navigator.clipboard.writeText(`${app.job_title} at ${app.company_name}`),
+      },
+      {
+        key: "status-header",
+        label: "Move to Status",
+        icon: "⟶",
+        separator: true,
+        disabled: true,
+        onClick: () => {},
+      },
+      ...STATUS_OPTIONS
+        .filter(s => s !== app.status)
+        .slice(0, 4)
+        .map(s => ({
+          key: `move-${s}`,
+          label: APPLICATION_STATUS_LABELS[s],
+          icon: s === "accepted" ? "✅" : s === "rejected" ? "❌" : s === "offer" ? "🎉" : "→",
+          onClick: () => onStatusChange(s),
+        })),
+      {
+        key: "delete",
+        label: "Delete Application",
+        icon: "🗑️",
+        danger: true,
+        separator: true,
+        onClick: onDelete,
+      },
+    ]);
+  };
+
   return (
     <div
-      className="glass-card bg-paper-card border p-6 rounded-2xl shadow-sm transition-all duration-200"
-      style={{
-        borderLeft: `4px solid ${PRIORITY_COLORS[app.priority]}`,
-      }}
+      onDragEnter={onCardDragEnter}
+      onContextMenu={buildContextMenu}
+      style={{ position: "relative" }}
     >
+      {/* Insert-before drop indicator */}
+      {isInsertTarget && (
+        <div
+          style={{
+            position: "absolute",
+            top: -4,
+            left: 0,
+            right: 0,
+            height: 3,
+            borderRadius: 99,
+            background: "var(--accent)",
+            boxShadow: "0 0 10px var(--accent)",
+            zIndex: 10,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      <div
+        draggable={isDraggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        className={`group glass-card bg-paper-card border p-6 rounded-2xl shadow-sm transition-all duration-200 ${
+          isDraggable ? "cursor-grab active:cursor-grabbing select-none" : ""
+        } ${isDragging ? "opacity-40 scale-[0.99] border-accent/40" : "opacity-100"}`}
+        style={{
+          borderLeft: `4px solid ${PRIORITY_COLORS[app.priority]}`,
+        }}
+      >
       <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap mb-4">
-        <div className="min-w-0">
+        {/* Drag handle — only shows when draggable */}
+        {isDraggable && (
+          <div
+            className="flex-shrink-0 self-center opacity-0 group-hover:opacity-40 transition-opacity duration-150 cursor-grab active:cursor-grabbing -ml-2 pr-1"
+            title="Drag to reorder"
+            aria-hidden="true"
+          >
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="currentColor" className="text-ink-faint">
+              <circle cx="2" cy="3" r="1.4" />
+              <circle cx="8" cy="3" r="1.4" />
+              <circle cx="2" cy="9" r="1.4" />
+              <circle cx="8" cy="9" r="1.4" />
+              <circle cx="2" cy="15" r="1.4" />
+              <circle cx="8" cy="15" r="1.4" />
+            </svg>
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
             <h3 className="text-lg font-bold text-ink leading-snug">
               {app.job_title}
@@ -172,6 +282,7 @@ export default function ApplicationCard({
           {app.notes}
         </div>
       )}
+      </div>
     </div>
   );
 }

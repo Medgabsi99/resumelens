@@ -6,6 +6,7 @@ import SalaryNegotiatorBoard from "@/components/SalaryNegotiatorBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";
 import { useToast } from "@/components/ToastProvider";
+import EmptyState from "@/components/EmptyState";
 
 interface ResumeItem {
   id: string;
@@ -404,10 +405,12 @@ export default function NegotiatorPage() {
                   <SkeletonHistoryCard />
                 </div>
               ) : history.length === 0 ? (
-                <div className="text-center text-xs text-ink-muted py-8">
-                  <p>No completed negotiations found.</p>
-                  <p className="text-[10px] text-ink-faint mt-1">Complete your first session above to log scorecard details!</p>
-                </div>
+                <EmptyState
+                  illustration="negotiator"
+                  title="No negotiations logged yet"
+                  description="Complete your first salary negotiation simulation above. Your scorecards, tactics, and compensation gains will appear here."
+                  compact
+                />
               ) : (
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                   {history.map((item) => {
