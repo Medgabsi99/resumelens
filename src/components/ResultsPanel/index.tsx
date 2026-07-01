@@ -24,6 +24,8 @@ import Chip from "./Chip";
 import AtsBar from "./AtsBar";
 import RewriteSuggestionCard from "./RewriteSuggestionCard";
 import BulletRewriterCard from "./BulletRewriterCard";
+import XyzBulletAuditor from "./XyzBulletAuditor";
+import ActiveVerbAuditor from "./ActiveVerbAuditor";
 import ScoreRing from "@/components/ScoreRing";
 import StreamingText from "@/components/StreamingText";
 
@@ -399,6 +401,29 @@ export default function ResultsPanel({
         </div>
       )}
 
+      {/* Active Verb Strength Auditor — client-side, no API needed */}
+      {resumeText && resumeText.length > 50 && (
+        <div style={{ padding: "0 30px 24px" }} className="print:hidden">
+          <div
+            style={{
+              fontSize: 11,
+              fontFamily: "DM Mono, monospace",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--ink-faint)",
+              marginBottom: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            Action Verb Audit
+            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+          </div>
+          <ActiveVerbAuditor resumeText={resumeText} />
+        </div>
+      )}
+
       <div className={styles.previewSection}>
         <div>
           <div
@@ -500,6 +525,39 @@ export default function ResultsPanel({
             ))}
           </div>
         </Section>
+
+        {/* Google XYZ Bullet Auditor — AI-powered upgrader for each weak bullet */}
+        {result.weaknesses && result.weaknesses.length > 0 && resumeText && (
+          <Section title="⭐ Google XYZ Bullet Auditor" delay={4.5}>
+            <p
+              style={{
+                fontSize: 12.5,
+                color: "var(--ink-muted)",
+                lineHeight: 1.6,
+                marginBottom: 16,
+                padding: "10px 14px",
+                background: "var(--paper)",
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+              }}
+            >
+              🔬 The <strong>Google XYZ formula</strong> rewrites each weak point using:{" "}
+              <em>"Accomplished [X] as measured by [Y] by doing [Z]"</em>. Click{" "}
+              <strong>⚡ XYZ Audit</strong> on any bullet to get an AI-powered breakdown and 3
+              recruiter-ready rewrites.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {result.weaknesses.map((w, i) => (
+                <XyzBulletAuditor
+                  key={i}
+                  bullet={w}
+                  targetRole={targetRole}
+                  jobDescription={jobDescription}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* Inline Resume Editor */}
         <div className="print:hidden" style={{ marginTop: 8 }}>

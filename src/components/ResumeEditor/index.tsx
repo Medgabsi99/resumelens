@@ -91,6 +91,10 @@ export default function ResumeEditor({
   } | null>(null);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
 
+  // ATS Plain-Text Sandbox
+  const [showAtsView, setShowAtsView] = useState(false);
+
+
   const handleTextareaSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const el = e.currentTarget;
     const start = el.selectionStart;
@@ -777,6 +781,11 @@ export default function ResumeEditor({
                   label="↓ .txt"
                   variant="primary"
                 />
+                <ToolbarButton
+                  onClick={() => setShowAtsView((v) => !v)}
+                  label={showAtsView ? "✏️ Edit" : "🤖 ATS View"}
+                  variant={showAtsView ? "primary" : "default"}
+                />
               </div>
               {smartError && (
                 <div style={{
@@ -791,17 +800,161 @@ export default function ResumeEditor({
               )}
             </div>
 
-            <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
-              {/* Textarea */}
-              <textarea
-                ref={textareaRef}
-                value={text}
-                onChange={handleTextChange}
-                onSelect={handleTextareaSelect}
-                className="sbs-editor-textarea"
-                style={{ flex: 1 }}
-                spellCheck={false}
-              />
+            <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative", flexDirection: "column" }}>
+              {/* ATS Plain-Text Sandbox */}
+              {showAtsView ? (
+                <div
+                  style={{
+                    flex: 1,
+                    overflow: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "#0d1117",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "#161b22",
+                      borderBottom: "1px solid #30363d",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "#21262d",
+                          border: "1px solid #30363d",
+                          borderRadius: 6,
+                          padding: "3px 10px",
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: "#58a6ff",
+                          fontWeight: 700,
+                        }}
+                      >
+                        🤖 ATS Parser Simulation
+                      </span>
+                      <span style={{ fontSize: 10.5, color: "#8b949e", fontFamily: "DM Mono, monospace" }}>
+                        This is what machines see — no formatting, no icons
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <span
+                        style={{
+                          background: "#1f6feb",
+                          color: "#fff",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          fontFamily: "DM Mono, monospace",
+                        }}
+                      >
+                        {text.split(/\s+/).filter(Boolean).length} words
+                      </span>
+                      <span
+                        style={{
+                          background: text.length > 10000 ? "#da3633" : "#238636",
+                          color: "#fff",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          fontFamily: "DM Mono, monospace",
+                        }}
+                      >
+                        {text.length > 10000 ? "⚠ Too Long" : "✓ Char Count OK"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* The actual ATS-rendered text */}
+                  <pre
+                    style={{
+                      margin: 0,
+                      padding: "16px 20px",
+                      fontFamily: "DM Mono, Courier New, monospace",
+                      fontSize: 11.5,
+                      color: "#c9d1d9",
+                      lineHeight: 1.7,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      flex: 1,
+                      overflow: "auto",
+                    }}
+                  >
+                    {/* Strip markdown/emoji/special chars to simulate ATS */}
+                    {text
+                      .replace(/[\u{1F300}-\u{1FAFF}]/gu, "[emoji]")
+                      .replace(/[*_~`#>]/g, "")
+                      .replace(/\|/g, " ")
+                      .replace(/(-{3,}|={3,})/g, "---")
+                      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+                      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
+                      .replace(/\s{3,}/g, "  ")
+                      .trim()}
+                  </pre>
+
+                  {/* Checklist */}
+                  <div
+                    style={{
+                      borderTop: "1px solid #30363d",
+                      background: "#161b22",
+                      padding: "10px 16px",
+                      display: "flex",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {[
+                      { check: !/[*_~`]/.test(text), label: "No Markdown" },
+                      { check: !/[\u{1F300}-\u{1FAFF}]/u.test(text), label: "No Emoji" },
+                      { check: !/\|/.test(text), label: "No Tables" },
+                      { check: text.split("\n").some((l) => /^[A-Z][A-Z ]{3,}$/.test(l.trim())), label: "Clear Sections" },
+                      { check: /\d/.test(text), label: "Has Metrics" },
+                    ].map((item) => (
+                      <span
+                        key={item.label}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 10,
+                          fontFamily: "DM Mono, monospace",
+                          color: item.check ? "#3fb950" : "#f85149",
+                          background: item.check ? "rgba(63,185,80,0.1)" : "rgba(248,81,73,0.1)",
+                          border: `1px solid ${item.check ? "rgba(63,185,80,0.3)" : "rgba(248,81,73,0.3)"}`,
+                          padding: "3px 9px",
+                          borderRadius: 20,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {item.check ? "✓" : "✗"} {item.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Normal textarea */
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={handleTextChange}
+                  onSelect={handleTextareaSelect}
+                  className="sbs-editor-textarea"
+                  style={{ flex: 1 }}
+                  spellCheck={false}
+                />
+              )}
 
               {/* Floating selection optimizer bubble */}
               {showOptimizerBubble && bubbleCoords && (
