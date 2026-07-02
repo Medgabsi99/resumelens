@@ -1,15 +1,113 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { createBrowserClient } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
+import {
+  compose,
+  required,
+  isEmail,
+  minLength,
+  maxLength,
+  noScript,
+  checkPasswordStrength,
+  validateForm,
+  hasErrors,
+} from "@/lib/validate";
 
-// Inner component that uses useSearchParams — must be inside Suspense
+// ─── Inline error label ───────────────────────────────────────────────────
+
+function FieldError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <span
+      role="alert"
+      style={{
+        display: "block",
+        marginTop: 4,
+        fontSize: 11.5,
+        color: "#ef4444",
+        fontFamily: "Instrument Sans, sans-serif",
+        fontWeight: 500,
+        lineHeight: 1.4,
+      }}
+    >
+      {msg}
+    </span>
+  );
+}
+
+// ─── Password Strength Meter ──────────────────────────────────────────────
+
+function PasswordStrengthMeter({ password }: { password: string }) {
+  if (!password) return null;
+  const s = checkPasswordStrength(password);
+
+  return (
+    <div style={{ marginTop: 6 }}>
+      {/* Bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: 3,
+          marginBottom: 4,
+        }}
+      >
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 3,
+              borderRadius: 10,
+              background: i < s.score ? s.color : "var(--border)",
+              transition: "background 0.25s ease",
+            }}
+          />
+        ))}
+      </div>
+      {/* Label */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontFamily: "DM Mono, monospace",
+            fontWeight: 700,
+            color: s.color,
+            transition: "color 0.2s",
+          }}
+        >
+          {s.label}
+        </span>
+        {s.suggestions.length > 0 && (
+          <span style={{ fontSize: 10, color: "var(--ink-faint)", fontFamily: "DM Mono, monospace" }}>
+            {s.suggestions[0]}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Validation rules ─────────────────────────────────────────────────────
+
+const emailRules = compose(required("Email"), isEmail(), noScript());
+const loginPasswordRules = compose(required("Password"), minLength(6, "Password"));
+const signupPasswordRules = compose(
+  required("Password"),
+  minLength(8, "Password"),
+  maxLength(128, "Password"),
+  noScript()
+);
+
+// ─── Inner form component ─────────────────────────────────────────────────
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
@@ -21,14 +119,41 @@ function LoginForm() {
 
   const supabase = createBrowserClient();
 
+  // Compute errors live
+  const errors = validateForm({ email, password }, {
+    email: emailRules,
+    password: mode === "login" ? loginPasswordRules : signupPasswordRules,
+  });
+
+  const touch = useCallback((field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }, []);
+
+  // Only show an error if the field has been touched
+  const fieldError = (field: "email" | "password") =>
+    touched[field] ? errors[field] : null;
+
   async function handleSubmit() {
+    // Touch all fields to surface errors
+    setTouched({ email: true, password: true });
+    if (hasErrors(errors)) return;
+
     setLoading(true);
     setMessage(null);
 
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) { setMessage({ type: "error", text: error.message }); return; }
+        if (error) {
+          setMessage({
+            type: "error",
+            text:
+              error.message === "Invalid login credentials"
+                ? "Incorrect email or password. Please try again."
+                : error.message,
+          });
+          return;
+        }
         window.location.href = next;
       } else {
         const { error } = await supabase.auth.signUp({
@@ -36,7 +161,10 @@ function LoginForm() {
           password,
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
-        if (error) { setMessage({ type: "error", text: error.message }); return; }
+        if (error) {
+          setMessage({ type: "error", text: error.message });
+          return;
+        }
         setMessage({ type: "success", text: "Check your email for a confirmation link." });
       }
     } finally {
@@ -59,19 +187,38 @@ function LoginForm() {
     }
   }
 
+  function handleModeSwitch() {
+    setMode(mode === "login" ? "signup" : "login");
+    setTouched({});
+    setMessage(null);
+  }
+
+  const canSubmit = !loading;
+
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6" style={{ background: "var(--paper)" }}>
+    <div
+      className="min-h-screen relative overflow-hidden flex items-center justify-center p-6"
+      style={{ background: "var(--paper)" }}
+    >
       {/* Background glow blobs */}
       <div className="glow-blob top-[-50px] right-[-50px] w-[300px] h-[300px]" />
-      <div className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]" style={{ animationDelay: "-1.5s" }} />
+      <div
+        className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]"
+        style={{ animationDelay: "-1.5s" }}
+      />
 
       <div className="relative z-10 w-full max-w-[400px] fade-up">
         <div className="text-center mb-8">
-          <a href="/" className="font-display text-3xl font-bold tracking-tight no-underline text-ink inline-block">
+          <a
+            href="/"
+            className="font-display text-3xl font-bold tracking-tight no-underline text-ink inline-block"
+          >
             Resume<span style={{ color: "var(--accent)" }}>Lens</span>
           </a>
           <p className="text-ink-muted text-sm mt-2">
-            {mode === "login" ? "Welcome back to your dashboard" : "Create your account for unlimited reviews"}
+            {mode === "login"
+              ? "Welcome back to your dashboard"
+              : "Create your account for unlimited reviews"}
           </p>
         </div>
 
@@ -96,10 +243,14 @@ function LoginForm() {
             <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
           </div>
 
-          {/* Email + password */}
+          {/* Fields */}
           <div className="flex flex-col gap-4">
+            {/* Email */}
             <div>
-              <label htmlFor="login-email" className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase mb-1.5">
+              <label
+                htmlFor="login-email"
+                className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase mb-1.5"
+              >
                 Email Address
               </label>
               <input
@@ -108,6 +259,7 @@ function LoginForm() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => touch("email")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -115,11 +267,21 @@ function LoginForm() {
                   }
                 }}
                 className="premium-input"
+                style={fieldError("email") ? { borderColor: "#ef4444" } : undefined}
+                aria-invalid={!!fieldError("email")}
+                aria-describedby="login-email-error"
+                autoComplete="email"
               />
+              <FieldError msg={fieldError("email")} />
             </div>
+
+            {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="login-password" className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase">
+                <label
+                  htmlFor="login-password"
+                  className="block text-[11px] font-mono font-bold tracking-wider text-ink-muted uppercase"
+                >
                   Password
                 </label>
                 {mode === "login" && (
@@ -134,17 +296,27 @@ function LoginForm() {
               <input
                 id="login-password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={mode === "signup" ? "min. 8 characters" : "••••••••"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => touch("password")}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 className="premium-input"
+                style={fieldError("password") ? { borderColor: "#ef4444" } : undefined}
+                aria-invalid={!!fieldError("password")}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
+              <FieldError msg={fieldError("password")} />
+              {/* Password strength meter — only on signup */}
+              {mode === "signup" && <PasswordStrengthMeter password={password} />}
             </div>
           </div>
 
+          {/* Server-level message */}
           {message && (
-            <div className="mt-4 p-3.5 rounded-xl text-sm leading-relaxed border"
+            <div
+              className="mt-4 p-3.5 rounded-xl text-sm leading-relaxed border"
+              role="alert"
               style={{
                 background: message.type === "error" ? "rgba(239, 68, 68, 0.08)" : "rgba(16, 185, 129, 0.08)",
                 color: message.type === "error" ? "#ef4444" : "#10b981",
@@ -158,7 +330,7 @@ function LoginForm() {
           <button
             id="login-submit"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={!canSubmit}
             className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold cursor-pointer mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Processing..." : mode === "login" ? "Sign In" : "Create Account"}
@@ -167,7 +339,7 @@ function LoginForm() {
           <p className="text-center text-xs text-ink-muted mt-6">
             {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              onClick={handleModeSwitch}
               className="bg-transparent border-none text-accent hover:text-accent-hover font-bold cursor-pointer text-xs transition-colors duration-150"
             >
               {mode === "login" ? "Sign up free" : "Sign in"}
@@ -178,8 +350,6 @@ function LoginForm() {
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {};
 
 // Page export wraps with Suspense (required by Next.js App Router for useSearchParams)
 export default function LoginPage() {

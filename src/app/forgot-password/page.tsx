@@ -2,9 +2,33 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase";
+import { compose, required, isEmail, noScript } from "@/lib/validate";
+
+const emailRules = compose(required("Email"), isEmail(), noScript());
+
+function FieldError({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return (
+    <span
+      role="alert"
+      style={{
+        display: "block",
+        marginTop: 4,
+        fontSize: 11.5,
+        color: "#ef4444",
+        fontFamily: "Instrument Sans, sans-serif",
+        fontWeight: 500,
+        lineHeight: 1.4,
+      }}
+    >
+      {msg}
+    </span>
+  );
+}
 
 function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
+  const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
@@ -18,18 +42,20 @@ function ForgotPasswordForm() {
 
   const supabase = createBrowserClient();
 
+  const emailError = touched ? emailRules(email) : null;
+
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!email.trim()) {
-      setMessage({ type: "error", text: "Please enter your email address." });
-      return;
-    }
+    setTouched(true);
+
+    const err = emailRules(email);
+    if (err) return;
 
     setLoading(true);
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
@@ -105,19 +131,44 @@ function ForgotPasswordForm() {
             your password.
           </p>
 
-          <form onSubmit={handleSubmit}>
-            <input
-              id="forgot-email"
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-              style={inputStyle}
-            />
+          <form onSubmit={handleSubmit} noValidate>
+            <div>
+              <label
+                htmlFor="forgot-email"
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontFamily: "DM Mono, monospace",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                  color: "var(--ink-muted)",
+                  marginBottom: 6,
+                }}
+              >
+                Email Address
+              </label>
+              <input
+                id="forgot-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched(true)}
+                autoFocus
+                autoComplete="email"
+                aria-invalid={!!emailError}
+                style={{
+                  ...inputStyle,
+                  borderColor: emailError ? "#ef4444" : undefined,
+                }}
+              />
+              <FieldError msg={emailError} />
+            </div>
 
             {message && (
               <div
+                role="alert"
                 style={{
                   marginTop: 12,
                   padding: "10px 14px",
@@ -133,6 +184,9 @@ function ForgotPasswordForm() {
                   lineHeight: 1.5,
                 }}
               >
+                {message.type === "success" && (
+                  <span style={{ marginRight: 6 }}>✅</span>
+                )}
                 {message.text}
               </div>
             )}
@@ -199,6 +253,7 @@ const inputStyle: React.CSSProperties = {
   color: "var(--ink)",
   outline: "none",
   fontFamily: "Instrument Sans, sans-serif",
+  transition: "border-color 0.15s",
 };
 
 export default function ForgotPasswordPage() {

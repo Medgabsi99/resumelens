@@ -5,7 +5,7 @@ import { getSecureModel } from "@/lib/ai/client";
 export const maxDuration = 30;
 
 const bulletRewriteModel = getSecureModel({
-  model: "gemini-2.0-flash",
+  model: "gemini-2.5-flash",
   systemInstruction:
     "You are an expert resume writer. Generate powerful, quantified bullet point rewrites. Follow the exact output format requested. Never deviate from the format.",
 });

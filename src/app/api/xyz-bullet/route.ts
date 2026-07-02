@@ -5,7 +5,7 @@ import { getSecureModel, withRetryAndTimeout } from "@/lib/ai/client";
 export const maxDuration = 45;
 
 const xyzModel = getSecureModel({
-  model: "gemini-2.0-flash",
+  model: "gemini-2.5-flash",
   systemInstruction:
     "You are an elite resume strategist who coaches candidates at top FAANG companies. You apply the Google XYZ formula rigorously: Accomplished [X] as measured by [Y] by doing [Z]. Every bullet you produce is crisp, impactful, and passes ATS screening.",
 });

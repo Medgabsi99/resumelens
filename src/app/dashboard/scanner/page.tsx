@@ -59,7 +59,7 @@ export default function ScannerPage() {
         throw new Error(data.error || "Failed to load past analysis");
       }
 
-      const resumeText = data.data.resumeText;
+      const resumeText = data.data.resume_text || data.data.resumeText;
       if (!resumeText) {
         throw new Error("No resume text available in this past analysis.");
       }
