@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
-import { JobApplication, APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from "@/types";
+import { APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from "@/types";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import ResumeDiffViewer from "@/components/ResumeDiffViewer";
 import { SkeletonTable } from "@/components/Skeleton";
@@ -12,280 +12,33 @@ import EmptyState from "@/components/EmptyState";
 import { useContextMenu } from "@/components/ContextMenu";
 import PrintButton from "@/components/PrintButton";
 import SpotlightCard from "@/components/SpotlightCard";
-
-interface AnalysisItem {
-  id: string;
-  score: number;
-  target_role: string | null;
-  created_at: string;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { useScoreChart } from "@/hooks/useScoreChart";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { show: showContextMenu } = useContextMenu();
   const [mounted, setMounted] = useState(false);
-  const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Tabs: 'reviews' | 'applications'
-  const [activeTab, setActiveTab] = useState<"reviews" | "applications">("reviews");
-  
-  // Search filters
-  const [reviewsSearch, setReviewsSearch] = useState("");
-  const [appsSearch, setAppsSearch] = useState("");
+  const {
+    analyses, applications, loading, error,
+    activeTab, setActiveTab,
+    reviewsSearch, setReviewsSearch,
+    appsSearch, setAppsSearch,
+    reviewsPage, setReviewsPage,
+    appsPage, setAppsPage,
+    reviewsTotalPages, appsTotalPages,
+    pagedAnalyses, pagedApplications,
+    filteredAnalysesCount, filteredApplicationsCount, PAGE_SIZE,
+    deleteTargetId, setDeleteTargetId,
+    isDeleting, handleDeleteAnalysis, confirmDeleteAnalysis,
+    diffOpen, setDiffOpen,
+    stats, funnelData, formatDate,
+  } = useDashboardData();
 
-  // Pagination
-  const PAGE_SIZE = 8;
-  const [reviewsPage, setReviewsPage] = useState(1);
-  const [appsPage, setAppsPage] = useState(1);
-
-  // Interactive Chart States
-  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
-  const [chartPeriod, setChartPeriod] = useState<5 | 10 | 0>(0); // 0 = all
-
-  // Deletion Modal States
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Diff viewer
-  const [diffOpen, setDiffOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    async function loadData() {
-      try {
-        const [analysesRes, appsRes] = await Promise.all([
-          fetch("/api/analyses"),
-          fetch("/api/applications"),
-        ]);
-
-        const analysesData = await analysesRes.json();
-        const appsData = await appsRes.json();
-
-        if (!analysesRes.ok || !analysesData.success) {
-          throw new Error(analysesData.error || "Failed to load analyses");
-        }
-        if (!appsRes.ok || !appsData.success) {
-          throw new Error(appsData.error || "Failed to load applications");
-        }
-
-        setAnalyses(analysesData.data || []);
-        setApplications(appsData.data || []);
-      } catch (e: any) {
-        console.error(e);
-        setError(e.message || "Failed to fetch dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
-
-  // Format Date helper
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Delete Analysis helper
-  const handleDeleteAnalysis = async (id: string) => {
-    setDeleteTargetId(id);
-  };
-
-  const confirmDeleteAnalysis = async () => {
-    if (!deleteTargetId) return;
-    setIsDeleting(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/analyses/${deleteTargetId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.error || "Failed to delete analysis. Please try again.");
-        return;
-      }
-      setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
-      setDeleteTargetId(null);
-    } catch (e) {
-      console.error(e);
-      setError("Network error: could not delete analysis.");
-    } finally {
-      setIsDeleting(false);
-      if (!error) setDeleteTargetId(null);
-    }
-  };
-
-  // ─── Stat Calculations ─────────────────────────────────
-  const stats = useMemo(() => {
-    const totalReviews = analyses.length;
-    
-    // Average ATS score
-    const avgScore = totalReviews > 0 
-      ? Math.round(analyses.reduce((acc, a) => acc + a.score, 0) / totalReviews)
-      : 0;
-
-    const totalApps = applications.length;
-
-    // Success Rate (Percentage of apps in Screening, Interviewing, Offer, or Accepted stages)
-    const activePipelineCount = applications.filter((a) => 
-      ["screening", "interviewing", "offer", "accepted"].includes(a.status)
-    ).length;
-    const successRate = totalApps > 0 
-      ? Math.round((activePipelineCount / totalApps) * 100)
-      : 0;
-
-    return {
-      avgScore,
-      totalReviews,
-      totalApps,
-      successRate,
-    };
-  }, [analyses, applications]);
-
-  // ─── Filtered Data ─────────────────────────────────────
-  const filteredAnalyses = useMemo(() => {
-    return analyses.filter((a) => {
-      const role = a.target_role?.toLowerCase() || "general resume review";
-      return role.includes(reviewsSearch.toLowerCase());
-    });
-  }, [analyses, reviewsSearch]);
-
-  const filteredApplications = useMemo(() => {
-    return applications.filter((a) => {
-      const company = a.company_name.toLowerCase();
-      const title = a.job_title.toLowerCase();
-      const query = appsSearch.toLowerCase();
-      return company.includes(query) || title.includes(query);
-    });
-  }, [applications, appsSearch]);
-
-  // ─── Paged slices ───────────────────────────────────────
-  const reviewsTotalPages = Math.max(1, Math.ceil(filteredAnalyses.length / PAGE_SIZE));
-  const appsTotalPages    = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
-  const pagedAnalyses     = filteredAnalyses.slice((reviewsPage - 1) * PAGE_SIZE, reviewsPage * PAGE_SIZE);
-  const pagedApplications = filteredApplications.slice((appsPage - 1) * PAGE_SIZE, appsPage * PAGE_SIZE);
-
-  // Reset pages when search or tab changes
-  useEffect(() => { setReviewsPage(1); }, [reviewsSearch]);
-  useEffect(() => { setAppsPage(1); },    [appsSearch]);
-  useEffect(() => { setReviewsPage(1); setAppsPage(1); }, [activeTab]);
-
-  // ─── SVG Score Progression Chart Data ───────────────────
-  const scoreChartData = useMemo(() => {
-    const allSorted = [...analyses].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-    const sorted = chartPeriod === 0 ? allSorted : allSorted.slice(-chartPeriod);
-
-    if (sorted.length < 1) return null;
-
-    const scores = sorted.map((d) => d.score);
-    const minScore = Math.max(0, Math.min(...scores) - 12);
-    const maxScore = Math.min(100, Math.max(...scores) + 12);
-    const scoreRange = maxScore - minScore || 20;
-
-    const svgW = 560;
-    const svgH = 210;
-    const padding = { top: 24, right: 28, bottom: 38, left: 38 };
-    const plotW = svgW - padding.left - padding.right;
-    const plotH = svgH - padding.top - padding.bottom;
-
-    const xOf = (i: number) => padding.left + (i / Math.max(sorted.length - 1, 1)) * plotW;
-    const yOf = (v: number) => padding.top + plotH - ((v - minScore) / scoreRange) * plotH;
-
-    const points = sorted.map((item, i) => ({
-      x: xOf(i),
-      y: yOf(item.score),
-      score: item.score,
-      role: item.target_role || "General Review",
-      date: formatDate(item.created_at),
-    }));
-
-    // Smooth cubic bezier path
-    const smoothPath = points.reduce((d, p, i, arr) => {
-      if (i === 0) return `M${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-      const prev = arr[i - 1];
-      const cpx = (prev.x + p.x) / 2;
-      return `${d} C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${p.y.toFixed(1)} ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-    }, "");
-
-    const areaPath = points.length > 0
-      ? `${smoothPath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
-      : "";
-
-    // Milestone bands (only include if within visible score range)
-    const milestones = [
-      { value: 60, label: "Fair",  color: "#f59e0b" },
-      { value: 80, label: "Good",  color: "#6366f1" },
-      { value: 90, label: "Elite", color: "#10b981" },
-    ].filter((m) => m.value >= minScore && m.value <= maxScore);
-
-    const yGridValues = [20, 40, 60, 80, 100].filter((v) => v >= minScore && v <= maxScore);
-
-    // Best score index
-    const bestIdx = scores.indexOf(Math.max(...scores));
-
-    const firstScore = sorted[0].score;
-    const lastScore = sorted[sorted.length - 1].score;
-    const bestScore = Math.max(...scores);
-    const delta = lastScore - firstScore;
-
-    return {
-      points, smoothPath, areaPath, milestones,
-      minScore, maxScore, scoreRange, yGridValues,
-      svgW, svgH, padding, plotW, plotH,
-      sorted, bestIdx, firstScore, lastScore, bestScore, delta,
-      xOf, yOf,
-    };
-  }, [analyses, chartPeriod]);
-
-  // ─── Funnel/Pipeline Chart Data ────────────────────────
-  const funnelData = useMemo(() => {
-    const groups = {
-      saved: 0,
-      applied: 0,
-      screening: 0,
-      interviewing: 0,
-      offer: 0,
-      accepted: 0,
-    };
-
-    applications.forEach((app) => {
-      const status = app.status as keyof typeof groups;
-      if (status in groups) {
-        groups[status]++;
-      }
-    });
-
-    // Merge offer + accepted
-    const offerAcceptedCount = groups.offer + groups.accepted;
-
-    const data = [
-      { label: "Saved Jobs", count: groups.saved, color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)" },
-      { label: "Applied", count: groups.applied, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)" },
-      { label: "Screening", count: groups.screening, color: "#6366f1", bg: "rgba(99, 102, 241, 0.1)" },
-      { label: "Interviewing", count: groups.interviewing, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
-      { label: "Offers / Hired", count: offerAcceptedCount, color: "#10b981", bg: "rgba(16, 185, 129, 0.1)" },
-    ];
-
-    const maxCount = Math.max(...data.map((d) => d.count), 1);
-
-    return {
-      stages: data,
-      maxCount,
-    };
-  }, [applications]);
+  const { chartPeriod, setChartPeriod, hoveredPoint, setHoveredPoint, scoreChartData } =
+    useScoreChart(analyses, formatDate);
 
   // Helper score badges
   const getScoreBadgeStyles = (score: number) => {
@@ -296,12 +49,9 @@ export default function DashboardPage() {
 
   const getPriorityBadgeStyles = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "text-rose-500 bg-rose-500/10 border-rose-500/20";
-      case "medium":
-        return "text-amber-500 bg-amber-500/10 border-amber-500/20";
-      default:
-        return "text-slate-500 bg-slate-500/10 border-slate-500/20";
+      case "high":   return "text-rose-500 bg-rose-500/10 border-rose-500/20";
+      case "medium": return "text-amber-500 bg-amber-500/10 border-amber-500/20";
+      default:       return "text-slate-500 bg-slate-500/10 border-slate-500/20";
     }
   };
 
@@ -829,7 +579,7 @@ export default function DashboardPage() {
                 <SkeletonTable rows={4} cols={4} />
               </div>
             ) : activeTab === "reviews" ? (
-              filteredAnalyses.length > 0 ? (
+              filteredAnalysesCount > 0 ? (
                 <>
                   <table className="hidden sm:table w-full text-left border-collapse text-sm">
                     <thead>
@@ -979,9 +729,9 @@ export default function DashboardPage() {
                       <div className="text-xs text-ink-muted">
                         Showing <span className="font-semibold text-ink">{(reviewsPage - 1) * PAGE_SIZE + 1}</span> to{" "}
                         <span className="font-semibold text-ink">
-                          {Math.min(reviewsPage * PAGE_SIZE, filteredAnalyses.length)}
+                          {Math.min(reviewsPage * PAGE_SIZE, filteredAnalysesCount)}
                         </span>{" "}
-                        of <span className="font-semibold text-ink">{filteredAnalyses.length}</span> reviews
+                        of <span className="font-semibold text-ink">{filteredAnalysesCount}</span> reviews
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -1023,7 +773,7 @@ export default function DashboardPage() {
                   compact
                 />
               )
-            ) : filteredApplications.length > 0 ? (
+            ) : filteredApplicationsCount > 0 ? (
               <>
                 <table className="hidden sm:table w-full text-left border-collapse text-sm">
                   <thead>
@@ -1166,9 +916,9 @@ export default function DashboardPage() {
                     <div className="text-xs text-ink-muted">
                       Showing <span className="font-semibold text-ink">{(appsPage - 1) * PAGE_SIZE + 1}</span> to{" "}
                       <span className="font-semibold text-ink">
-                        {Math.min(appsPage * PAGE_SIZE, filteredApplications.length)}
+                        {Math.min(appsPage * PAGE_SIZE, filteredApplicationsCount)}
                       </span>{" "}
-                      of <span className="font-semibold text-ink">{filteredApplications.length}</span> applications
+                      of <span className="font-semibold text-ink">{filteredApplicationsCount}</span> applications
                     </div>
                     <div className="flex items-center gap-2">
                       <button
