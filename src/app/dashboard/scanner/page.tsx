@@ -154,7 +154,7 @@ export default function ScannerPage() {
         {/* Title */}
         {!scannerData && !loading && (
           <div className="space-y-1.5">
-            <h1 className="font-display text-4xl font-bold tracking-tight text-ink flex items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink flex items-center gap-2 flex-wrap">
               PDF ATS-Compliance Heatmap & Structural Scanner 🔍
             </h1>
             <p className="text-ink-muted text-sm max-w-3xl">
@@ -171,7 +171,7 @@ export default function ScannerPage() {
 
         {/* Loading Step View */}
         {loading && (
-          <div className="bg-paper-card border border-border rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[350px]">
+          <div className="bg-paper-card border border-border rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[280px] sm:min-h-[350px]">
             <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
             <h3 className="font-display text-lg font-bold text-ink mt-2">
               {SCANNING_STEPS[scanStep]}
@@ -187,7 +187,7 @@ export default function ScannerPage() {
           <div className="max-w-2xl mx-auto">
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed border-border/80 rounded-2xl p-12 text-center cursor-pointer transition bg-paper-card hover:bg-paper-warm hover:border-accent-border flex flex-col items-center justify-center min-h-[300px] shadow-lg ${
+              className={`border-2 border-dashed border-border/80 rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition bg-paper-card hover:bg-paper-warm hover:border-accent-border flex flex-col items-center justify-center min-h-[240px] sm:min-h-[300px] shadow-lg ${
                 isDragActive ? "border-accent bg-accent/5" : ""
               }`}
             >

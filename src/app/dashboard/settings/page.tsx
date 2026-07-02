@@ -306,7 +306,7 @@ export default function SettingsPage() {
 
               {/* Change Password Form */}
               <form onSubmit={handleUpdatePassword} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <label htmlFor="new-password" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>New Password</label>
                     <input
@@ -392,12 +392,14 @@ export default function SettingsPage() {
               {profile && (
                 <div style={{
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   justifyContent: "space-between",
                   padding: "16px 20px",
                   background: "var(--paper-warm)",
                   border: "1px solid var(--border)",
                   borderRadius: 12,
+                  flexWrap: "wrap",
+                  gap: 12,
                 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -424,7 +426,7 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  <div>
+                  <div style={{ flexShrink: 0 }}>
                     {profile.plan === "monthly" || profile.stripe_customer_id ? (
                       <button
                         onClick={handleManageBilling}
@@ -567,12 +569,14 @@ export default function SettingsPage() {
 
               <div style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 justifyContent: "space-between",
                 padding: "16px 20px",
                 background: "var(--paper-warm)",
                 border: "1px solid var(--border)",
                 borderRadius: 12,
+                flexWrap: "wrap",
+                gap: 12,
               }}>
                 <div>
                   <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
@@ -624,12 +628,14 @@ export default function SettingsPage() {
 
               <div style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 justifyContent: "space-between",
                 padding: "16px 20px",
                 background: "rgba(239, 68, 68, 0.04)",
                 border: "1px solid rgba(239, 68, 68, 0.1)",
                 borderRadius: 12,
+                flexWrap: "wrap",
+                gap: 12,
               }}>
                 <div style={{ flex: 1, paddingRight: 20 }}>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", fontWeight: 500, marginBottom: 4 }}>
