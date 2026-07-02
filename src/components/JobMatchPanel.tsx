@@ -217,13 +217,10 @@ export default function JobMatchPanel({
             background: verdict.bg,
             border: `1.5px solid ${verdict.text}30`,
             borderRadius: 12,
-            padding: 24,
+            padding: 20,
             marginBottom: 20,
-            display: "grid",
-            gridTemplateColumns: "auto 1fr",
-            gap: 24,
-            alignItems: "center",
           }}
+          className="flex flex-wrap items-center gap-5"
         >
           <div
             style={{
@@ -362,14 +359,7 @@ export default function JobMatchPanel({
           >
             Experience Match
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr auto",
-              gap: 16,
-              alignItems: "center",
-            }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
             <div>
               <div style={{ fontSize: 11, color: "var(--ink-faint)", marginBottom: 2 }}>
                 They want
@@ -405,12 +395,8 @@ export default function JobMatchPanel({
 
         {/* Strengths & Gaps */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 12,
-            marginBottom: 20,
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          style={{ marginBottom: 20 }}
         >
           <div
             style={{
@@ -496,12 +482,8 @@ export default function JobMatchPanel({
 
         {/* Skills */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 12,
-            marginBottom: 20,
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          style={{ marginBottom: 20 }}
         >
           <div>
             <div
@@ -948,14 +930,7 @@ export default function JobMatchPanel({
         tailored recommendations to increase your chances of landing the interview.
       </p>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" style={{ marginBottom: 12 }}>
         <input
           type="text"
           placeholder="Job title (e.g. Senior Product Designer)"
@@ -1027,6 +1002,8 @@ export default function JobMatchPanel({
             cursor: isMatching ? "not-allowed" : "pointer",
             fontFamily: "Instrument Sans, sans-serif",
             transition: "opacity 0.15s",
+            minHeight: 44,
+            width: "100%",
           }}
         >
           {isMatching ? "Analyzing match..." : "Match My Resume 🎯"}

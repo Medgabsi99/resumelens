@@ -237,7 +237,7 @@ const toggleRecording = async () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding: 12,
         overflowY: "auto",
         backdropFilter: "blur(12px)",
         color: "#f3f4f6",
@@ -251,14 +251,15 @@ const toggleRecording = async () => {
           border: "1px solid #23232a",
           borderRadius: 16,
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-          padding: 32,
+          padding: "20px 16px",
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: 20,
           maxHeight: "90vh",
           overflowY: "auto",
           fontFamily: "Instrument Sans, sans-serif",
         }}
+        className="sm:[padding:32px] sm:[gap:24px]"
       >
         {/* Style injection for speech animations */}
         <style dangerouslySetInnerHTML={{ __html: `
@@ -284,7 +285,7 @@ const toggleRecording = async () => {
         {!isFinished ? (
           <>
             {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span
                   style={{
@@ -444,6 +445,8 @@ const toggleRecording = async () => {
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: isEvaluating || !answerText.trim() ? "not-allowed" : "pointer",
+                      width: "100%",
+                      minHeight: 44,
                     }}
                   >
                     {isEvaluating ? "Hiring Manager is evaluating..." : "Submit Answer & Grade ➔"}
@@ -594,7 +597,7 @@ const toggleRecording = async () => {
           /* ── Final Summary Dashboard ───────────────────────── */
           <>
             {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #23232a", paddingBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, borderBottom: "1px solid #23232a", paddingBottom: 16 }}>
               <div>
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: "#ffffff", margin: 0 }}>
                   Interview Performance Summary
