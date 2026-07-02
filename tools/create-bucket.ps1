@@ -1,5 +1,18 @@
-$Url='https://ucyqobzlnuqmbagccdgn.supabase.co/storage/v1/bucket'
-$Body = @{ name='pdfs'; public=$true } | ConvertTo-Json
-$Headers = @{ Authorization = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjeXFvYnpsbnVxbWJhZ2NjZGduIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTEzNTAyMSwiZXhwIjoyMDk0NzExMDIxfQ.l_a59utWkAU5EoTbpnyPWbdfxBpLBppcF-jv3W7-OFk' }
+# tools/create-bucket.ps1
+# Creates the 'pdfs' Supabase Storage bucket on a fresh environment.
+# Usage: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your shell (or .env.local),
+#        then run:  .\tools\create-bucket.ps1
+
+$Url = "$env:SUPABASE_URL/storage/v1/bucket"
+$Key = $env:SUPABASE_SERVICE_ROLE_KEY
+
+if (-not $Url -or -not $Key) {
+    Write-Error "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set as environment variables."
+    exit 1
+}
+
+$Body    = @{ name = 'pdfs'; public = $true } | ConvertTo-Json
+$Headers = @{ Authorization = "Bearer $Key" }
+
 Invoke-RestMethod -Uri $Url -Method Post -Body $Body -Headers $Headers -ContentType 'application/json'
 Write-Output 'Created bucket (or already existed)'
