@@ -1,77 +1,12 @@
-import { useState, useEffect, useRef } from "react";
-import { type NegotiationOffer, type NegotiationTurnResponse, type NegotiationScorecard, type RecruiterProfile } from "@/lib/ai";
+"use client";
+
+import { useEffect, useRef } from "react";
+import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";
 import SpotlightCard from "@/components/SpotlightCard";
-
-const playSynthSound = (type: "concession" | "warning" | "outcome") => {
-  if (typeof window === "undefined") return;
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextClass) return;
-
-  try {
-    const ctx = new AudioContextClass();
-    
-    if (type === "concession") {
-      // Ascending chime: C5 to E5 to G5
-      const now = ctx.currentTime;
-      const playTone = (freq: number, start: number, duration: number) => {
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, start);
-        gainNode.gain.setValueAtTime(0, start);
-        gainNode.gain.linearRampToValueAtTime(0.12, start + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        osc.start(start);
-        osc.stop(start + duration);
-      };
-      playTone(523.25, now, 0.35); // C5
-      playTone(659.25, now + 0.08, 0.35); // E5
-      playTone(783.99, now + 0.16, 0.45); // G5
-    } else if (type === "warning") {
-      // Double low sawtooth beeps
-      const now = ctx.currentTime;
-      const playBeep = (start: number) => {
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(150, start);
-        gainNode.gain.setValueAtTime(0, start);
-        gainNode.gain.linearRampToValueAtTime(0.06, start + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
-        osc.start(start);
-        osc.stop(start + 0.18);
-      };
-      playBeep(now);
-      playBeep(now + 0.22);
-    } else if (type === "outcome") {
-      // Majestic major chord
-      const now = ctx.currentTime;
-      const playTone = (freq: number, delay: number) => {
-        const osc = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now + delay);
-        gainNode.gain.setValueAtTime(0, now + delay);
-        gainNode.gain.linearRampToValueAtTime(0.05, now + delay + 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + delay + 1.2);
-        osc.start(now + delay);
-        osc.stop(now + delay + 1.2);
-      };
-      playTone(261.63, 0); // C4
-      playTone(329.63, 0.04); // E4
-      playTone(392.00, 0.08); // G4
-      playTone(523.25, 0.12); // C5
-    }
-  } catch (err) {
-    console.warn("Failed to play synthesized sound:", err);
-  }
-};
+import { useNegotiationSession } from "./useNegotiationSession";
+import { useSpeechIO } from "./useSpeechIO";
+import { useTacticTracker } from "./useTacticTracker";
+import { playSynthSound } from "./playSynthSound";
 
 interface Props {
   resumeText: string;
@@ -83,42 +18,6 @@ interface Props {
   onSaveScorecard?: (scorecard: NegotiationScorecard, finalOffer: NegotiationOffer, verdict: string) => Promise<{ savedInDb: boolean; dbError: string | null }>;
 }
 
-interface Message {
-  role: "user" | "recruiter";
-  content: string;
-}
-
-const RECRUITER_ARCHETYPES: Omit<RecruiterProfile, "hiddenCeilingBudget" | "concessionLimit">[] = [
-  {
-    name: "Stan Stubborn",
-    avatar: "👨‍💼",
-    personality: "Stubborn",
-    description: "Stan is highly rigid, prefers adhering strictly to corporate benchmarks, and gets offended if you request too much above the base range.",
-    flexibility: 0.08,
-  },
-  {
-    name: "Fiona Friendly",
-    avatar: "👩‍💼",
-    personality: "Friendly",
-    description: "Fiona is empathetic, collaborative, and wants you to succeed. She has a high budget limit and is easier to negotiate concessions with.",
-    flexibility: 0.20,
-  },
-  {
-    name: "Alan Analytical",
-    avatar: "👨‍💻",
-    personality: "Highly Analytical",
-    description: "Alan respects precision and details. He makes granular concessions (precise dollars) and evaluates metrics and facts from your resume closely.",
-    flexibility: 0.14,
-  },
-  {
-    name: "Tina Tough",
-    avatar: "👩‍🎤",
-    personality: "Tough",
-    description: "Tina is an aggressive negotiator with a strict stance. Pushing her too hard will immediately cause her to warn you or withdraw the offer entirely.",
-    flexibility: 0.05,
-  },
-];
-
 export default function SalaryNegotiatorBoard({
   resumeText,
   roleTitle,
@@ -128,475 +27,54 @@ export default function SalaryNegotiatorBoard({
   onClose,
   onSaveScorecard,
 }: Props) {
-  const [recruiter, setRecruiter] = useState<RecruiterProfile | null>(null);
-  const [messageHistory, setMessageHistory] = useState<Message[]>([]);
+  const session = useNegotiationSession({ resumeText, roleTitle, companyName, scenario, initialOffer });
+  const {
+    recruiter, messageHistory, currentOffer, sentiment, leverage,
+    coachFeedback, inputText, setInputText, isSubmitting, errorMsg,
+    isConcluded, verdict, scorecard, savingStatus, savingError, savedMethod,
+    isInitializing, initializingStep, INITIALIZING_STEPS, chatEndRef,
+    initialTotal, currentTotal, netGain, proximityPct,
+    handleSubmitMessage, handleConcludeNegotiation,
+  } = session;
 
-  const [currentOffer, setCurrentOffer] = useState<NegotiationOffer>({ ...initialOffer });
-  const [sentiment, setSentiment] = useState<"open" | "impressed" | "resistant" | "offended">("open");
-  const [leverage, setLeverage] = useState<number>(50);
-  const [coachFeedback, setCoachFeedback] = useState<string>(
-    "Keep your tone collaborative, professional, and confident. Try to anchor your numbers using achievements or market research from your resume."
-  );
-  
-  const [inputText, setInputText] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { isListening, useVoiceFeedback, setUseVoiceFeedback, handleToggleListening, speakText } =
+    useSpeechIO();
 
-  const [isConcluded, setIsConcluded] = useState(false);
-  const [verdict, setVerdict] = useState<"accepted" | "rejected" | "walk_away" | "ongoing">("ongoing");
-  const [scorecard, setScorecard] = useState<NegotiationScorecard | null>(null);
-  
-  const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [savingError, setSavingError] = useState<string | null>(null);
-  const [savedMethod, setSavedMethod] = useState<"db" | "local" | null>(null);
-  const [completedTactics, setCompletedTactics] = useState<string[]>([]);
+  const { completedTactics } = useTacticTracker(messageHistory);
 
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Initialization/Convening Loader States
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [initializingStep, setInitializingStep] = useState(0);
-
-  const INITIALIZING_STEPS = [
-    "Reviewing candidate qualifications...",
-    "Analyzing baseline resume achievements...",
-    "Determining budget ceilings and flexibility...",
-    "Opening salary negotiation simulator...",
-  ];
-
-  // Cycle through initializing steps
-  useEffect(() => {
-    if (!isInitializing) return;
-    const interval = setInterval(() => {
-      setInitializingStep((prev) => {
-        if (prev >= INITIALIZING_STEPS.length - 1) {
-          clearInterval(interval);
-          setIsInitializing(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 600);
-    return () => clearInterval(interval);
-  }, [isInitializing]);
-
-  // Scan conversation history for tactics
-  useEffect(() => {
-    const userMessages = messageHistory
-      .filter((m) => m.role === "user")
-      .map((m) => m.content.toLowerCase());
-
-    const activeTactics: string[] = [];
-
-    // Tactic 1: Resume Anchoring
-    const hasResumeAnchoring = userMessages.some((msg) =>
-      /\b(\d+%|\d+\s*percent|increased|reduced|saved|launched|led|achieved|revenue|metrics|stats)\b/.test(msg)
-    );
-    if (hasResumeAnchoring) activeTactics.push("Resume Anchoring");
-
-    // Tactic 2: Alternative Offer
-    const hasAlternativeLeverage = userMessages.some((msg) =>
-      /\b(competing|other offer|another offer|competing process|interviewing with|parallel process|timeline)\b/.test(msg)
-    );
-    if (hasAlternativeLeverage) activeTactics.push("Alternative Offer");
-
-    // Tactic 3: Total Comp Focus
-    const hasTotalCompFocus = userMessages.some((msg) =>
-      /\b(total compensation|total comp|equity|options|rsu|sign-on|sign on|bonus|package)\b/.test(msg)
-    );
-    if (hasTotalCompFocus) activeTactics.push("Total Comp Focus");
-
-    // Tactic 4: Collaborative Tone
-    const hasCollaborativeTone = userMessages.some((msg) =>
-      /\b(excited|thrilled|appreciate|thank you|glad|collaborate|partnership|looking forward|excited to)\b/.test(msg)
-    );
-    if (hasCollaborativeTone) activeTactics.push("Collaborative Tone");
-
-    // Tactic 5: Market Research
-    const hasMarketResearch = userMessages.some((msg) =>
-      /\b(market rate|market average|industry standard|salary research|salary survey|paysa|levels\.fyi|glassdoor|data suggests)\b/.test(msg)
-    );
-    if (hasMarketResearch) activeTactics.push("Market Research");
-
-    setCompletedTactics(activeTactics);
-  }, [messageHistory]);
-
-  // Speech States
-  const [isListening, setIsListening] = useState(false);
-  const [useVoiceFeedback, setUseVoiceFeedback] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
-
-  // Initialize Speech Recognition
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const rec = new SpeechRecognition();
-        rec.continuous = false;
-        rec.interimResults = false;
-        rec.lang = "en-US";
-
-        rec.onstart = () => setIsListening(true);
-        rec.onend = () => setIsListening(false);
-        rec.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInputText((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        };
-        rec.onerror = (event: any) => {
-          console.error("Speech recognition error:", event.error);
-          setIsListening(false);
-        };
-        setRecognition(rec);
-      }
-    }
-  }, []);
-
-  // Pre-load speech synthesis voices
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    const handleVoicesChanged = () => {};
-    window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
-    window.speechSynthesis.getVoices();
-    return () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
-    };
-  }, []);
-
-  const handleToggleListening = () => {
-    if (!recognition) {
-      alert("Speech recognition is not supported in this browser. Please try Chrome or Edge.");
-      return;
-    }
-    if (isListening) {
-      recognition.stop();
-    } else {
-      recognition.start();
-    }
-  };
-
-  const getRecruiterVoice = () => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return null;
-    const voices = window.speechSynthesis.getVoices();
-    const enVoices = voices.filter((v) => v.lang.startsWith("en"));
-    if (enVoices.length === 0) return null;
-
-    // 1. Google English US (often high quality Chrome native TTS)
-    let voice = enVoices.find((v) => v.name.includes("Google") && v.lang.includes("US"));
-    if (voice) return voice;
-
-    // 2. Google English general
-    voice = enVoices.find((v) => v.name.includes("Google"));
-    if (voice) return voice;
-
-    // 3. Look for Microsoft Zira / David or premium Windows TTS voices
-    voice = enVoices.find((v) => v.name.includes("Microsoft") && v.lang.includes("US"));
-    if (voice) return voice;
-
-    // 4. Any voice containing "natural" or "premium"
-    voice = enVoices.find(
-      (v) =>
-        v.name.toLowerCase().includes("natural") ||
-        v.name.toLowerCase().includes("premium")
-    );
-    if (voice) return voice;
-
-    // 5. Fallback en-US
-    voice = enVoices.find((v) => v.lang.startsWith("en-US"));
-    if (voice) return voice;
-
-    return enVoices[0];
-  };
-
-  const speakText = (text: string, force = false) => {
-    if ((!useVoiceFeedback && !force) || typeof window === "undefined" || !window.speechSynthesis) return;
-    try {
-      window.speechSynthesis.cancel(); // Stop any ongoing speech
-      const utterance = new SpeechSynthesisUtterance(text);
-      
-      const bestVoice = getRecruiterVoice();
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-      }
-      
-      // Slightly slower rate sounds more professional and natural
-      utterance.rate = 0.98;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.error("Speech synthesis failed:", err);
-    }
-  };
-
-  // Initialize Recruiter Profile and initial greeting on mount
-  useEffect(() => {
-    if (recruiter) return;
-
-    const archetype = RECRUITER_ARCHETYPES[Math.floor(Math.random() * RECRUITER_ARCHETYPES.length)];
-    const hiddenCeilingBudget = Math.round(initialOffer.base * (1 + archetype.flexibility));
-    
-    let concessionLimit = 5000;
-    if (archetype.personality === "Friendly") concessionLimit = 12000;
-    else if (archetype.personality === "Highly Analytical") concessionLimit = 7500;
-    else if (archetype.personality === "Tough") concessionLimit = 4000;
-
-    const fullProfile: RecruiterProfile = {
-      ...archetype,
-      hiddenCeilingBudget,
-      concessionLimit,
-    };
-    setRecruiter(fullProfile);
-
-    setMessageHistory([
-      {
-        role: "recruiter",
-        content: `Hello! I'm ${fullProfile.name}. I'm glad we could connect to discuss your compensation details for the ${roleTitle} position at ${companyName}. Based on our current budget, we'd like to extend an initial offer: a base salary of $${initialOffer.base.toLocaleString()} per year, a ${initialOffer.bonus}% target bonus, $${initialOffer.equity.toLocaleString()} in equity, and a sign-on bonus of $${initialOffer.signOn.toLocaleString()}. Let me know how this aligns with your expectations.`,
-      },
-    ]);
-  }, [initialOffer, roleTitle, companyName, recruiter]);
-
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messageHistory, isSubmitting]);
-
-  // Financial calculations
-  const calculateTotalValue = (off: NegotiationOffer) => {
-    return off.base + (off.base * (off.bonus / 100)) + off.equity + off.signOn;
-  };
-
-  const initialTotal = calculateTotalValue(initialOffer);
-  const currentTotal = calculateTotalValue(currentOffer);
-  const netGain = Math.max(0, currentTotal - initialTotal);
-
-  const baseRange = recruiter ? recruiter.hiddenCeilingBudget - initialOffer.base : 0;
-  const currentDiff = currentOffer.base - initialOffer.base;
-  const proximityPct = baseRange > 0 ? Math.min(100, Math.max(0, (currentDiff / baseRange) * 100)) : 0;
-
-  // Play sound on concession increase
   const prevTotalRef = useRef(currentTotal);
+  const prevSentimentRef = useRef(sentiment);
+  const prevProximityRef = useRef(proximityPct);
+  const prevConcludedRef = useRef(isConcluded);
+
   useEffect(() => {
-    if (currentTotal > prevTotalRef.current && prevTotalRef.current > 0) {
-      playSynthSound("concession");
-    }
+    if (currentTotal > prevTotalRef.current && prevTotalRef.current > 0) playSynthSound("concession");
     prevTotalRef.current = currentTotal;
   }, [currentTotal]);
 
-  // Play sound on critical proximity or offended sentiment
-  const prevSentimentRef = useRef(sentiment);
-  const prevProximityRef = useRef(proximityPct);
   useEffect(() => {
     const isCriticalNow = proximityPct >= 80 || sentiment === "offended";
     const wasCriticalBefore = prevProximityRef.current >= 80 || prevSentimentRef.current === "offended";
-
-    if (isCriticalNow && !wasCriticalBefore) {
-      playSynthSound("warning");
-    }
+    if (isCriticalNow && !wasCriticalBefore) playSynthSound("warning");
     prevSentimentRef.current = sentiment;
     prevProximityRef.current = proximityPct;
   }, [sentiment, proximityPct]);
 
-  // Play sound on simulation conclusion
-  const prevConcludedRef = useRef(isConcluded);
   useEffect(() => {
-    if (isConcluded && !prevConcludedRef.current) {
-      playSynthSound("outcome");
-    }
+    if (isConcluded && !prevConcludedRef.current) playSynthSound("outcome");
     prevConcludedRef.current = isConcluded;
   }, [isConcluded]);
-
-  // Conclude negotiation flow
-  const handleConcludeNegotiation = async (finalVerdict: "accepted" | "rejected" | "walk_away", finalPkg?: NegotiationOffer) => {
-    setIsSubmitting(true);
-    setErrorMsg(null);
-    setSavingStatus("saving");
-
-    const resolvedPkg = finalPkg || currentOffer;
-    
-    // Add local closure text in chat feed
-    let userCloseText = "";
-    let recruiterCloseText = "";
-    
-    if (finalVerdict === "accepted") {
-      userCloseText = "I accept this package. Thank you! I am looking forward to joining the team.";
-      recruiterCloseText = "Fantastic! We are absolutely thrilled to welcome you on board. We will send over the formal paperwork shortly.";
-    } else if (finalVerdict === "rejected") {
-      userCloseText = "Unfortunately, I must decline this package. I appreciate the offer but the compensation does not match my expectations.";
-      recruiterCloseText = "I understand. We are sorry we couldn't make this work. We wish you the best in your search.";
-    } else {
-      userCloseText = "[Walked Away]";
-      recruiterCloseText = "Since we cannot bridge the gap on expectations, we will go ahead and withdraw our offer. Thank you for your time.";
-    }
-
-    const updatedHistory = [
-      ...messageHistory,
-      { role: "user", content: userCloseText } as Message,
-      { role: "recruiter", content: recruiterCloseText } as Message
-    ];
-
-    setMessageHistory(updatedHistory);
-    setIsConcluded(true);
-    setVerdict(finalVerdict);
-
-    try {
-      // 1. Fetch scorecard from AI endpoint
-      const res = await fetch("/api/negotiation/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resumeText,
-          roleTitle,
-          companyName,
-          scenario,
-          initialOffer,
-          finalOffer: resolvedPkg,
-          messageHistory: updatedHistory,
-          verdict: finalVerdict,
-          recruiterProfile: recruiter,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to compile scorecard");
-      }
-
-      setScorecard(data.scorecard);
-
-      // Check DB save status
-      if (data.savedInDb) {
-        setSavingStatus("saved");
-        setSavedMethod("db");
-      } else {
-        // Fallback to local storage
-        saveToLocalStorage(data.scorecard, resolvedPkg, finalVerdict);
-        setSavingStatus("saved");
-        setSavedMethod("local");
-      }
-    } catch (err: any) {
-      console.error("Scorecard evaluation error:", err);
-      // Local evaluation fallback if network/API dies
-      const mockScorecard: NegotiationScorecard = {
-        score: finalVerdict === "accepted" ? Math.min(100, Math.round(leverage)) : 40,
-        tacticsUsed: ["Polite Advocacy", "Package Structuring"],
-        strengths: ["Highlighted interest in team collaboration.", "Advocated for personal compensation value."],
-        weaknesses: [
-          "Could have cited more hard metrics from achievements.",
-          ...(recruiter && resolvedPkg.base < recruiter.hiddenCeilingBudget - 10000
-            ? ["Left money on the table: accepted an offer significantly below the recruiter's budget range."]
-            : [])
-        ],
-        financialGain: netGain,
-        coachesNote: recruiter && resolvedPkg.base < recruiter.hiddenCeilingBudget - 10000
-          ? `The simulator encountered a network error compiling detailed AI metrics, but your mock session has been logged locally. You left some money on the table: your final base salary of $${resolvedPkg.base.toLocaleString()} is below the recruiter's budget of $${recruiter.hiddenCeilingBudget.toLocaleString()}. Try anchoring higher next time!`
-          : "The simulator encountered a network error compiling detailed AI metrics, but your mock session has been logged locally. Practice anchoring your values around concrete projects next time!",
-      };
-      
-      setScorecard(mockScorecard);
-      saveToLocalStorage(mockScorecard, resolvedPkg, finalVerdict);
-      setSavingStatus("saved");
-      setSavedMethod("local");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Save to local storage helper
-  const saveToLocalStorage = (card: NegotiationScorecard, pkg: NegotiationOffer, finalVerdict: string) => {
-    try {
-      const localHistory = JSON.parse(localStorage.getItem("salary_negotiations_local") || "[]");
-      const newItem = {
-        id: "local_" + Date.now(),
-        role_title: roleTitle,
-        company_name: companyName,
-        scenario,
-        initial_offer: initialOffer,
-        final_offer: pkg,
-        score: card.score,
-        verdict: finalVerdict,
-        feedback: {
-          ...card,
-          transcript: messageHistory,
-        },
-        created_at: new Date().toISOString(),
-      };
-      localStorage.setItem("salary_negotiations_local", JSON.stringify([newItem, ...localHistory]));
-    } catch (e) {
-      console.error("Failed to save to localStorage:", e);
-    }
-  };
-
-  // Submit User Message
-  const handleSubmitMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim() || isSubmitting || isConcluded || !recruiter) return;
-
-    const userMsg = inputText.trim();
-    setInputText("");
-    setErrorMsg(null);
-    setIsSubmitting(true);
-
-    const updatedHistory: Message[] = [...messageHistory, { role: "user", content: userMsg }];
-    setMessageHistory(updatedHistory);
-
-    try {
-      const res = await fetch("/api/negotiation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resumeText,
-          roleTitle,
-          companyName,
-          scenario,
-          initialOffer,
-          currentOffer,
-          messageHistory: updatedHistory.slice(0, -1), // feed preceding history
-          userResponse: userMsg,
-          recruiterProfile: recruiter,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Negotiation turn error");
-      }
-
-      const turn: NegotiationTurnResponse = data.turn;
-
-      // Update state from turn details
-      setMessageHistory((prev) => [...prev, { role: "recruiter", content: turn.recruiterMessage }]);
-      setCurrentOffer(turn.currentOffer);
-      setSentiment(turn.sentiment);
-      setLeverage(turn.leverage);
-      setCoachFeedback(turn.coachFeedback);
-
-      // Trigger TTS
-      speakText(turn.recruiterMessage);
-
-      if (turn.isConcluded && turn.conclusionVerdict !== "ongoing") {
-        handleConcludeNegotiation(turn.conclusionVerdict, turn.currentOffer);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "Failed to reach recruiter. Make sure server is online.");
-      // Rollback last user message if API failed to process it
-      setMessageHistory((prev) => prev.slice(0, -1));
-      setInputText(userMsg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Helper color mappings
   const getSentimentBadge = (sent: string) => {
     switch (sent) {
       case "impressed":
-        return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🌟 Impressed</span>;
+        return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸŒŸ Impressed</span>;
       case "resistant":
-        return <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🤨 Resistant</span>;
+        return <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ¤¨ Resistant</span>;
       case "offended":
-        return <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😡 Offended</span>;
+        return <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ˜¡ Offended</span>;
       default:
-        return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😊 Open</span>;
+        return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ˜Š Open</span>;
     }
   };
 
@@ -626,7 +104,7 @@ export default function SalaryNegotiatorBoard({
       case "resistant":
         return `${name} is pushing back, arguing standard benchmark constraints. Emphasize achievements to build leverage.`;
       case "offended":
-        return `⚠️ ${name} is offended by your demand. Proceed with caution — further aggressive demands could lose the offer.`;
+        return `âš ï¸ ${name} is offended by your demand. Proceed with caution â€” further aggressive demands could lose the offer.`;
       default:
         return `${name} is currently open to hearing your feedback. Present your case collaboratively.`;
     }
@@ -672,7 +150,7 @@ export default function SalaryNegotiatorBoard({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-paper-card">
           <div className="flex items-center gap-3">
             <span className="bg-accent/15 text-accent border border-accent/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-              💰 Salary Negotiator Simulator
+              ðŸ’° Salary Negotiator Simulator
             </span>
             <h2 className="hidden md:inline-block font-display text-lg font-bold text-ink">
               {roleTitle} @ {companyName}
@@ -694,14 +172,14 @@ export default function SalaryNegotiatorBoard({
                   : "bg-paper border-border text-ink-muted hover:text-ink"
               }`}
             >
-              <span>{useVoiceFeedback ? "🔊 Voice On" : "🔇 Voice Off"}</span>
+              <span>{useVoiceFeedback ? "ðŸ”Š Voice On" : "ðŸ”‡ Voice Off"}</span>
             </button>
             <button
               onClick={onClose}
               className="text-ink-muted hover:text-ink hover:bg-paper-warm border border-border p-2 rounded-xl text-sm transition"
               title="Quit simulator"
             >
-              ✕ Quit
+              âœ• Quit
             </button>
           </div>
         </div>
@@ -748,7 +226,7 @@ export default function SalaryNegotiatorBoard({
                             className="opacity-0 group-hover:opacity-100 transition text-[10px] bg-paper border border-border px-1.5 py-0.5 rounded ml-2 text-ink-muted hover:text-ink cursor-pointer"
                             title="Speak message"
                           >
-                            🔊 Read
+                            ðŸ”Š Read
                           </button>
                         )}
                       </div>
@@ -774,7 +252,7 @@ export default function SalaryNegotiatorBoard({
               {/* Input Bar */}
               <div className="px-6 py-4 border-t border-border bg-paper-card">
                 {!isConcluded ? (
-                  <form onSubmit={handleSubmitMessage} className="flex flex-col gap-3">
+                  <form onSubmit={(e) => handleSubmitMessage(e, speakText)} className="flex flex-col gap-3">
                     <style dangerouslySetInnerHTML={{ __html: `
                       @keyframes eqPulse {
                         0% { transform: scaleY(0.3); }
@@ -784,7 +262,7 @@ export default function SalaryNegotiatorBoard({
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={handleToggleListening}
+                        onClick={() => handleToggleListening(setInputText)}
                         className={`px-4 rounded-xl border transition flex items-center justify-center gap-2.5 cursor-pointer ${
                           isListening
                             ? "bg-rose-500/20 border-rose-500 text-rose-400 font-bold"
@@ -808,7 +286,7 @@ export default function SalaryNegotiatorBoard({
                           </>
                         ) : (
                           <>
-                            <span>🎤 Speak</span>
+                            <span>ðŸŽ¤ Speak</span>
                           </>
                         )}
                       </button>
@@ -828,13 +306,13 @@ export default function SalaryNegotiatorBoard({
                         {isSubmitting ? (
                           <span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                          "🚀 Send"
+                          "ðŸš€ Send"
                         )}
                       </button>
                     </div>
                     
                     {errorMsg && (
-                      <div className="text-rose-400 text-xs mt-1">⚠️ {errorMsg}</div>
+                      <div className="text-rose-400 text-xs mt-1">âš ï¸ {errorMsg}</div>
                     )}
 
                     {/* Immediate Action Buttons */}
@@ -845,7 +323,7 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting}
                         className="bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-600/20 transition cursor-pointer"
                       >
-                        🤝 Accept Offer
+                        ðŸ¤ Accept Offer
                       </button>
                       <button
                         type="button"
@@ -853,13 +331,13 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting}
                         className="bg-rose-600/10 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-rose-600/20 transition cursor-pointer"
                       >
-                        🛑 Decline Offer
+                        ðŸ›‘ Decline Offer
                       </button>
                     </div>
                   </form>
                 ) : (
                   <div className="text-center py-2 text-sm text-ink-muted flex items-center justify-center gap-2">
-                    <span>🏁 Simulator finished:</span>
+                    <span>ðŸ Simulator finished:</span>
                     <span className="font-bold capitalize text-ink">{verdict.replace("_", " ")}</span>
                   </div>
                 )}
@@ -932,7 +410,7 @@ export default function SalaryNegotiatorBoard({
                     <div className="flex justify-between text-xs">
                       <span className="text-ink-muted">Corporate Budget Cap Proximity</span>
                       <span className="font-bold text-ink text-[10px] uppercase tracking-wider">
-                        {proximityPct >= 100 ? "⚠️ Cap Reached" : proximityPct >= 80 ? "Critical" : proximityPct >= 50 ? "Moderate" : "Safe Range"}
+                        {proximityPct >= 100 ? "âš ï¸ Cap Reached" : proximityPct >= 80 ? "Critical" : proximityPct >= 50 ? "Moderate" : "Safe Range"}
                       </span>
                     </div>
                     <div className="w-full bg-paper h-2 rounded-full overflow-hidden relative">
@@ -951,7 +429,7 @@ export default function SalaryNegotiatorBoard({
                     </div>
                     {proximityPct >= 80 && (
                       <div className="text-[10px] text-rose-400 font-medium leading-normal animate-pulse">
-                        ⚠️ Recruiter is resisting further base salary increases. Pushing harder risks losing the offer!
+                        âš ï¸ Recruiter is resisting further base salary increases. Pushing harder risks losing the offer!
                       </div>
                     )}
                   </div>
@@ -961,7 +439,7 @@ export default function SalaryNegotiatorBoard({
               {/* Tactics Checklist */}
               <SpotlightCard className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center justify-between">
-                  <span>🎯 Tactic Checklist</span>
+                  <span>ðŸŽ¯ Tactic Checklist</span>
                   <span className="text-[10px] text-accent font-semibold">{completedTactics.length}/5 Used</span>
                 </h3>
                 <div className="space-y-2 text-xs">
@@ -975,7 +453,7 @@ export default function SalaryNegotiatorBoard({
                     const isDone = completedTactics.includes(t.name);
                     return (
                       <div key={t.name} className={`flex items-start gap-2.5 p-2 rounded-xl border transition ${isDone ? 'bg-emerald-500/5 border-emerald-500/20 text-ink' : 'bg-paper/30 border-border/40 text-ink-muted'}`}>
-                        <span className="text-sm select-none">{isDone ? "✅" : "⭕"}</span>
+                        <span className="text-sm select-none">{isDone ? "âœ…" : "â­•"}</span>
                         <div>
                           <div className={`font-bold text-[11px] ${isDone ? 'text-emerald-500/80 line-through opacity-85' : 'text-ink'}`}>
                             {t.name}
@@ -1130,7 +608,7 @@ export default function SalaryNegotiatorBoard({
               {/* Live AI Coach */}
               <SpotlightCard className="p-5 mb-4 space-y-4 bg-paper/50 border border-border/60 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
-                  <span>💡 Live AI Coach</span>
+                  <span>ðŸ’¡ Live AI Coach</span>
                 </h3>
                 <div className="bg-accent/5 border border-accent/10 p-3 rounded-xl text-xs leading-relaxed text-ink-muted italic">
                   "{coachFeedback}"
@@ -1148,7 +626,7 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting || isConcluded}
                         className="text-left text-[10px] p-2 bg-paper hover:bg-paper-warm border border-border text-ink rounded-lg font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer leading-normal"
                       >
-                        🗣️ "{sug}"
+                        ðŸ—£ï¸ "{sug}"
                       </button>
                     ))}
                   </div>
@@ -1178,7 +656,7 @@ export default function SalaryNegotiatorBoard({
               
               {/* Header */}
               <div className="text-center border-b border-border pb-5">
-                <div className="text-4xl mb-2">🏁</div>
+                <div className="text-4xl mb-2">ðŸ</div>
                 <h3 className="font-display text-2xl font-bold text-ink">Salary Negotiation Scorecard</h3>
                 <p className="text-ink-muted text-sm mt-1">
                   Outcome: <span className="font-semibold uppercase tracking-wider text-accent">{verdict}</span>
@@ -1230,15 +708,15 @@ export default function SalaryNegotiatorBoard({
                   <div className="border-t border-border/50 pt-2.5 mt-2.5">
                     {currentOffer.base >= recruiter.hiddenCeilingBudget ? (
                       <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-                        🏆 Outstanding! You maxed out the recruiter's budget ceiling of ${recruiter.hiddenCeilingBudget.toLocaleString()}!
+                        ðŸ† Outstanding! You maxed out the recruiter's budget ceiling of ${recruiter.hiddenCeilingBudget.toLocaleString()}!
                       </div>
                     ) : recruiter.hiddenCeilingBudget - currentOffer.base <= 5000 ? (
                       <div className="text-xs text-emerald-400/80 font-medium flex items-center gap-1.5">
-                        ⭐ Great job! You got extremely close to their corporate budget limit (within $5,000).
+                        â­ Great job! You got extremely close to their corporate budget limit (within $5,000).
                       </div>
                     ) : (
                       <div className="text-xs text-amber-400 font-medium flex flex-col gap-1">
-                        <span className="flex items-center gap-1.5 font-bold">💸 Money Left on the Table: ${Math.max(0, recruiter.hiddenCeilingBudget - currentOffer.base).toLocaleString()}</span>
+                        <span className="flex items-center gap-1.5 font-bold">ðŸ’¸ Money Left on the Table: ${Math.max(0, recruiter.hiddenCeilingBudget - currentOffer.base).toLocaleString()}</span>
                         <span className="text-[11px] text-ink-muted font-normal leading-relaxed">
                           The corporate limit was ${recruiter.hiddenCeilingBudget.toLocaleString()}. You could have pushed for a higher base salary. See the coach evaluation note below to improve your anchoring.
                         </span>
@@ -1299,18 +777,18 @@ export default function SalaryNegotiatorBoard({
                   {savingStatus === "saving" && <span>Saving simulation data...</span>}
                   {savingStatus === "saved" && (
                     <span className="text-emerald-400 font-medium">
-                      ✓ Scorecard logged successfully to {savedMethod === "db" ? "user dashboard history" : "local storage fallback"}!
+                      âœ“ Scorecard logged successfully to {savedMethod === "db" ? "user dashboard history" : "local storage fallback"}!
                     </span>
                   )}
                   {savingStatus === "error" && (
-                    <span className="text-rose-400">⚠️ Failed to save: {savingError}</span>
+                    <span className="text-rose-400">âš ï¸ Failed to save: {savingError}</span>
                   )}
                 </div>
                 <button
                   onClick={onClose}
                   className="bg-accent hover:bg-accent/90 text-white font-semibold px-6 py-2 rounded-xl text-xs transition cursor-pointer"
                 >
-                  Return to Negotiator Page ➔
+                  Return to Negotiator Page âž”
                 </button>
               </div>
 
