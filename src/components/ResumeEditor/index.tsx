@@ -13,6 +13,9 @@ import ToolbarButton from "./ToolbarButton";
 import ScoreTrendChart from "./ScoreTrendChart";
 import VersionDiffModal from "./VersionDiffModal";
 import { TemplateId, ResumeVersion, type ResumeCustomStyle } from "./types";
+import { useSmartEnhance } from "./useSmartEnhance";
+import { useSelectionOptimizer } from "./useSelectionOptimizer";
+import { useDesignCustomizer } from "./useDesignCustomizer";
 
 interface Props {
   initialText: string;
@@ -46,28 +49,48 @@ export default function ResumeEditor({
   const [editorOpen, setEditorOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [parsedData, setParsedData] = useState<ParsedResume | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isEnhanced, setIsEnhanced] = useState(false);
   const [smartError, setSmartError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-
-  // Design customizer
-  const [showCustomizer, setShowCustomizer] = useState(false);
-  const [customStyle, setCustomStyle] = useState<ResumeCustomStyle>({
-    fontFamily: "serif",
-    fontSize: "11pt",
-    lineHeight: "1.6",
-    padding: "56px 48px",
-    primaryColor: "#1e3a8a",
-  });
 
   // Version History States
   const [showHistory, setShowHistory] = useState(false);
   const [newVersionName, setNewVersionName] = useState("");
   const [compareVersion, setCompareVersion] = useState<ResumeVersion | null>(null);
 
-  // Version History Hook
+  // ATS Plain-Text Sandbox
+  const [showAtsView, setShowAtsView] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // ── Extracted hooks ──────────────────────────────────────
+  const { showCustomizer, setShowCustomizer, customStyle, setCustomStyle } =
+    useDesignCustomizer();
+
+  const { isGenerating, handleSmartGenerate } = useSmartEnhance({
+    text,
+    targetRole,
+    setText,
+    setParsedData,
+    setIsEnhanced,
+    setSelectedTemplate,
+    setSmartError,
+  });
+
+  const {
+    selectedText,
+    bubbleCoords,
+    showOptimizerBubble, setShowOptimizerBubble,
+    isOptimizing,
+    optimizedAlternatives,
+    optimizeError,
+    handleTextareaSelect,
+    handleOptimizeBullet,
+    handleApplyAlternative,
+    closeOptimizer,
+  } = useSelectionOptimizer({ text, targetRole, jobDescription, setText, setParsedData, setIsEnhanced });
+
+  // ── Version History Hook ─────────────────────────────────
   const {
     versions,
     isLoadingVersions,
@@ -78,105 +101,7 @@ export default function ResumeEditor({
     deleteVersion,
   } = useResumeVersions(analysisId, showHistory, text, resultScore);
 
-  // AI Selection Bullet Optimizer states
-  const [selectedText, setSelectedText] = useState("");
-  const [selectionRange, setSelectionRange] = useState<{ start: number; end: number } | null>(null);
-  const [bubbleCoords, setBubbleCoords] = useState<{ top: number; left: number } | null>(null);
-  const [showOptimizerBubble, setShowOptimizerBubble] = useState(false);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizedAlternatives, setOptimizedAlternatives] = useState<{
-    metricDriven: string;
-    actionFocused: string;
-    skillsTargeted: string;
-  } | null>(null);
-  const [optimizeError, setOptimizeError] = useState<string | null>(null);
-
-  // ATS Plain-Text Sandbox
-  const [showAtsView, setShowAtsView] = useState(false);
-
-
-  const handleTextareaSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    const el = e.currentTarget;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    
-    if (start !== end) {
-      const selected = el.value.slice(start, end).trim();
-      if (selected.length > 3 && selected.length < 500) {
-        setSelectedText(selected);
-        setSelectionRange({ start, end });
-        
-        // Compute approximate top line offset coordinate relative to text length
-        const linesBefore = el.value.slice(0, start).split("\n").length;
-        const totalLines = el.value.split("\n").length || 1;
-        const textareaHeight = el.offsetHeight || 400;
-        const calculatedTop = Math.max(10, Math.min(textareaHeight - 120, (linesBefore / totalLines) * textareaHeight));
-        
-        setBubbleCoords({
-          top: calculatedTop,
-          left: el.offsetWidth - 230, // Float at the right edge
-        });
-        
-        if (!isOptimizing) {
-          setOptimizedAlternatives(null);
-          setOptimizeError(null);
-          setShowOptimizerBubble(true);
-        }
-        return;
-      }
-    }
-    
-    if (!isOptimizing && !optimizedAlternatives) {
-      setShowOptimizerBubble(false);
-    }
-  };
-
-  const handleOptimizeBullet = async () => {
-    if (!selectedText.trim()) return;
-    setIsOptimizing(true);
-    setOptimizeError(null);
-    setOptimizedAlternatives(null);
-    
-    try {
-      const res = await fetch("/api/optimize-bullet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: selectedText,
-          targetRole,
-          jobDescription,
-        }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || "Failed to generate alternatives");
-      }
-      setOptimizedAlternatives(data.alternatives);
-    } catch (err: any) {
-      setOptimizeError(err.message || "Something went wrong optimizing");
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
-
-  const handleApplyAlternative = (alternative: string) => {
-    if (!selectionRange) return;
-    
-    const newText = text.slice(0, selectionRange.start) + alternative + text.slice(selectionRange.end);
-    setText(newText);
-    
-    // Clear selection state
-    setShowOptimizerBubble(false);
-    setOptimizedAlternatives(null);
-    setSelectedText("");
-    setSelectionRange(null);
-    
-    if (parsedData) {
-      setParsedData(null);
-      setIsEnhanced(false);
-    }
-  };
-
+  // ── Handlers ─────────────────────────────────────────────
   const handleSaveVersion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!analysisId || !newVersionName.trim()) return;
@@ -184,7 +109,7 @@ export default function ResumeEditor({
       await saveVersion(newVersionName.trim());
       setNewVersionName("");
     } catch (err: any) {
-      // Error handled by hook state, but we can log it
+      // Error handled by hook state
     }
   };
 
@@ -193,9 +118,7 @@ export default function ResumeEditor({
     if (!confirm("Are you sure you want to delete this version snapshot?")) return;
     try {
       await deleteVersion(versionId);
-      if (compareVersion?.id === versionId) {
-        setCompareVersion(null);
-      }
+      if (compareVersion?.id === versionId) setCompareVersion(null);
     } catch (err: any) {
       // Error handled by hook state
     }
@@ -255,8 +178,6 @@ export default function ResumeEditor({
       window.removeEventListener("apply-tailored-resume", handleApplyTailored);
     };
   }, []);
-
-  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
@@ -318,39 +239,6 @@ export default function ResumeEditor({
     setParsedData(null);
     setIsEnhanced(false);
     setSmartError(null);
-  };
-
-  const handleSmartGenerate = async () => {
-    setIsGenerating(true);
-    setSmartError(null);
-    try {
-      const res = await fetch("/api/smart-resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText: text, targetRole }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Generation failed");
-
-      setParsedData(data.parsedResume);
-      setIsEnhanced(true);
-
-      // Update text in the editor with the enhanced plain-text version
-      if (data.enhancedText) setText(data.enhancedText);
-
-      // Auto-switch to recommended template
-      if (data.recommendedTemplate) {
-        const valid: TemplateId[] = ["professional", "modern", "creative", "minimal", "executive"];
-        if (valid.includes(data.recommendedTemplate as TemplateId)) {
-          setSelectedTemplate(data.recommendedTemplate as TemplateId);
-        }
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Smart generation failed";
-      setSmartError(msg);
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   // Clear parsedData when user manually edits text (so preview re-parses)
@@ -978,11 +866,7 @@ export default function ResumeEditor({
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowOptimizerBubble(false);
-                        setOptimizedAlternatives(null);
-                        setSelectionRange(null);
-                      }}
+                      onClick={() => closeOptimizer()}
                       style={{ background: "transparent", border: "none", color: "var(--ink-faint)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
                     >
                       ✕
