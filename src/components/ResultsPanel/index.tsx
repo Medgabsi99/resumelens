@@ -231,13 +231,13 @@ export default function ResultsPanel({
   return (
     <div ref={componentRef} className={`${styles.container} fade-up`}>
       {resumeText && resumeText.length > 16000 && (
-        <div style={{ margin: "16px 30px 0", padding: "12px 16px", borderRadius: 10, border: "1px solid #f59e0b", background: "#fffbeb", color: "#b45309", fontSize: "12.5px" }} className="print:hidden">
+        <div style={{ margin: "12px 16px 0", padding: "10px 14px", borderRadius: 10, border: "1px solid #f59e0b", background: "#fffbeb", color: "#b45309", fontSize: "12px" }} className="print:hidden sm:[margin:16px_30px_0]">
           ⚠️ <strong>Note:</strong> Your resume text was shortened for analysis. Some older experience might not be fully evaluated.
         </div>
       )}
 
       {result.ats_breakdown && result.ats_breakdown.impact < 70 && (
-        <div style={{ margin: "16px 30px 0", padding: "16px", borderRadius: 12, border: "1px solid #c084fc", background: "#faf5ff", color: "#581c87", display: "flex", flexDirection: "column", gap: 10 }} className="print:hidden">
+        <div style={{ margin: "12px 16px 0", padding: "14px", borderRadius: 12, border: "1px solid #c084fc", background: "#faf5ff", color: "#581c87", display: "flex", flexDirection: "column", gap: 10 }} className="print:hidden">
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: "bold", fontSize: "13px" }}>
             <span>⚡</span> Critical Priority: Add Quantified Achievements
           </div>
@@ -297,7 +297,7 @@ export default function ResultsPanel({
 
       {/* ATS Breakdown */}
       {result.ats_breakdown && (
-        <div style={{ padding: "24px 30px 0", marginBottom: 24 }}>
+        <div style={{ padding: "20px 16px 0", marginBottom: 20 }} className="sm:[padding:24px_30px_0] sm:[margin-bottom:24px]">
           <div
             style={{
               fontSize: 11,
@@ -314,13 +314,7 @@ export default function ResultsPanel({
             ATS Score Breakdown
             <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-            }}
-          >
+          <div className={styles.atsBarsGrid}>
             <AtsBar
               label="Format"
               value={result.ats_breakdown.format}
@@ -345,15 +339,15 @@ export default function ResultsPanel({
 
           {/* Launch ATS Structural Scanner & Heatmap */}
           {analysisId && (
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }} className="print:hidden">
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-start", gap: 10, flexWrap: "wrap" }} className="print:hidden">
               <a
                 href={`/dashboard/scanner?analysisId=${analysisId}`}
                 style={{
                   background: "linear-gradient(135deg, var(--accent), #4f46e5)",
                   color: "white",
-                  padding: "10px 18px",
+                  padding: "10px 14px",
                   borderRadius: 10,
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: 700,
                   textDecoration: "none",
                   display: "inline-flex",
@@ -361,6 +355,7 @@ export default function ResultsPanel({
                   gap: 6,
                   boxShadow: "0 4px 12px rgba(139, 92, 246, 0.25)",
                   transition: "transform 0.15s",
+                  minHeight: 44,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "scale(1.02)";
@@ -369,16 +364,16 @@ export default function ResultsPanel({
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                🔥 Open ATS Structural Scanner & Heatmap ➔
+                🔥 ATS Scanner ➔
               </a>
               <a
                 href={`/dashboard/committee?analysisId=${analysisId}`}
                 style={{
                   background: "linear-gradient(135deg, #a855f7, #ec4899)",
                   color: "white",
-                  padding: "10px 18px",
+                  padding: "10px 14px",
                   borderRadius: 10,
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: 700,
                   textDecoration: "none",
                   display: "inline-flex",
@@ -386,6 +381,7 @@ export default function ResultsPanel({
                   gap: 6,
                   boxShadow: "0 4px 12px rgba(236, 72, 153, 0.25)",
                   transition: "transform 0.15s",
+                  minHeight: 44,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "scale(1.02)";
@@ -394,7 +390,7 @@ export default function ResultsPanel({
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                👥 Consult AI Peer Review Committee ➔
+                👥 AI Peer Review ➔
               </a>
             </div>
           )}
@@ -403,7 +399,7 @@ export default function ResultsPanel({
 
       {/* Active Verb Strength Auditor — client-side, no API needed */}
       {resumeText && resumeText.length > 50 && (
-        <div style={{ padding: "0 30px 24px" }} className="print:hidden">
+        <div style={{ padding: "0 16px 20px" }} className="sm:[padding:0_30px_24px] print:hidden">
           <div
             style={{
               fontSize: 11,
@@ -452,11 +448,11 @@ export default function ResultsPanel({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              padding: "8px 0 28px",
+              padding: "8px 0 20px",
               gap: 16,
             }}
           >
-            <ScoreRing score={result.score} size={220} />
+            <ScoreRing score={result.score} size={180} />
 
             {/* Thin divider below ring */}
             <div

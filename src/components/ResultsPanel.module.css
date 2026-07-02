@@ -9,14 +9,21 @@
 }
 
 .header {
-  padding: 24px 30px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--paper-warm);
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .header {
+    padding: 24px 30px;
+    gap: 16px;
+  }
 }
 
 .headerLeft {
@@ -28,9 +35,15 @@
 
 .headerTitle {
   font-family: "DM Serif Display", Georgia, serif;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.5px;
+}
+
+@media (min-width: 640px) {
+  .headerTitle {
+    font-size: 26px;
+  }
 }
 
 .actions {
@@ -63,12 +76,13 @@
   color: var(--accent);
   border: 1.5px solid var(--accent-border);
   border-radius: var(--radius);
-  padding: 8px 16px;
+  padding: 9px 14px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: "Instrument Sans", sans-serif;
   transition: all 0.2s;
+  min-height: 44px; /* touch target */
 }
 
 .btn:hover {
@@ -81,12 +95,13 @@
   color: white;
   border: none;
   border-radius: var(--radius);
-  padding: 8px 16px;
+  padding: 9px 14px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 12px var(--brand-glow);
   transition: all 0.2s;
+  min-height: 44px; /* touch target */
 }
 
 .btnPrimary:hover {
@@ -95,10 +110,17 @@
 }
 
 .previewSection {
-  padding: 30px;
+  padding: 16px;
   display: grid;
-  gap: 30px;
+  gap: 24px;
   min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .previewSection {
+    padding: 30px;
+    gap: 30px;
+  }
 }
 
 .previewSection > * {
@@ -136,9 +158,9 @@
   background: var(--accent-bg);
   border: 1px solid var(--accent-border);
   border-radius: var(--radius);
-  padding: 18px 24px;
+  padding: 14px 16px;
   font-family: "Instrument Sans", sans-serif;
-  font-size: 14.5px;
+  font-size: 13.5px;
   line-height: 1.65;
   color: var(--ink);
   font-style: italic;
@@ -146,6 +168,13 @@
   overflow-wrap: break-word;
   word-break: break-word;
   min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .assessment {
+    padding: 18px 24px;
+    font-size: 14.5px;
+  }
 }
 
 
@@ -240,15 +269,24 @@
   background: var(--paper-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 30px 40px;
+  padding: 18px 20px;
   font-family: "Instrument Sans", sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.75;
   color: var(--ink);
   white-space: pre-wrap;
   box-shadow: 0 10px 30px -10px var(--shadow-color);
   position: relative;
   overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .coverBox {
+    padding: 30px 40px;
+    font-size: 15px;
+  }
 }
 
 .chatBox {
@@ -263,14 +301,22 @@
 }
 
 .chatScroll {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
-  padding: 24px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background: var(--paper);
   position: relative;
+}
+
+@media (min-width: 640px) {
+  .chatScroll {
+    max-height: 400px;
+    padding: 24px;
+    gap: 16px;
+  }
 }
 
 .chatInputRow {
@@ -325,15 +371,24 @@
   align-self: flex-end;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: white;
-  padding: 12px 18px;
+  padding: 10px 14px;
   border-radius: 16px 16px 4px 16px;
-  max-width: 80%;
-  font-size: 13.5px;
+  max-width: 90%;
+  font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
+  word-break: break-word;
   box-shadow: 0 4px 12px var(--brand-glow);
   border: none;
   animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .userBubble {
+    padding: 12px 18px;
+    max-width: 80%;
+    font-size: 13.5px;
+  }
 }
 
 .aiBubble {
@@ -341,14 +396,23 @@
   background: var(--paper-card);
   color: var(--ink);
   border: 1px solid var(--border);
-  padding: 12px 18px;
+  padding: 10px 14px;
   border-radius: 16px 16px 16px 4px;
-  max-width: 80%;
-  font-size: 13.5px;
+  max-width: 90%;
+  font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
+  word-break: break-word;
   box-shadow: 0 4px 12px var(--shadow-color);
   animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .aiBubble {
+    padding: 12px 18px;
+    max-width: 80%;
+    font-size: 13.5px;
+  }
 }
 
 .typingIndicator {
@@ -425,8 +489,29 @@
 .exportLinkGroup {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-left: 12px;
+  gap: 8px;
+  margin-left: 0;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .exportLinkGroup {
+    gap: 10px;
+    margin-left: 12px;
+  }
+}
+
+/* ── Mobile utility class for the ATS bars grid ── */
+.atsBarsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .atsBarsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .openLink {

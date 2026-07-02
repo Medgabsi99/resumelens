@@ -197,7 +197,7 @@ function LoginForm() {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden flex items-center justify-center p-6"
+      className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6"
       style={{ background: "var(--paper)" }}
     >
       {/* Background glow blobs */}
@@ -222,11 +222,11 @@ function LoginForm() {
           </p>
         </div>
 
-        <div className="glass-card bg-paper-card border border-border p-8 rounded-2xl shadow-premium">
+        <div className="glass-card bg-paper-card border border-border p-5 sm:p-8 rounded-2xl shadow-premium">
           {/* Google */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-paper hover:bg-paper-warm border border-border-strong rounded-xl py-3 px-4 text-sm font-medium text-ink cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full flex items-center justify-center gap-3 bg-paper hover:bg-paper-warm border border-border-strong rounded-xl py-3 px-4 text-sm font-medium text-ink cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] min-h-[44px]"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
               <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.3-.2-2.7-.5-4z" fill="#FFC107"/>
@@ -331,7 +331,7 @@ function LoginForm() {
             id="login-submit"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold cursor-pointer mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold cursor-pointer mt-6 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           >
             {loading ? "Processing..." : mode === "login" ? "Sign In" : "Create Account"}
           </button>
