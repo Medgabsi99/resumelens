@@ -532,6 +532,7 @@ export default function ResumeEditor({
                         type="button"
                         onClick={() => setCustomStyle(prev => ({ ...prev, primaryColor: col.hex }))}
                         title={col.label}
+                        aria-label={`Select ${col.label} theme color`}
                         style={{
                           width: 16,
                           height: 16,
@@ -868,6 +869,7 @@ export default function ResumeEditor({
                     <button
                       type="button"
                       onClick={() => closeOptimizer()}
+                      aria-label="Close optimizer panel"
                       style={{ background: "transparent", border: "none", color: "var(--ink-faint)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
                     >
                       ✕
@@ -977,6 +979,7 @@ export default function ResumeEditor({
                     <button
                       type="button"
                       onClick={() => setShowHistory(false)}
+                      aria-label="Close history panel"
                       style={{
                         background: "transparent",
                         border: "none",
@@ -1150,6 +1153,7 @@ export default function ResumeEditor({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteVersion(v.id)}
+                                aria-label="Delete saved version"
                                 style={{
                                   background: "transparent",
                                   color: "#dc2626",

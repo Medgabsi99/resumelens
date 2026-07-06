@@ -43,6 +43,7 @@ export default function UpgradeModal({ preview, onClose }: Props) {
       >
         <button
           onClick={onClose}
+          aria-label="Close upgrade modal"
           className="absolute top-4 right-4 bg-transparent border-none text-xl font-bold cursor-pointer text-ink-faint hover:text-ink transition-colors duration-150"
         >
           ×

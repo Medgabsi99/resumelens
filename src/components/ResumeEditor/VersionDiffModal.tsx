@@ -77,6 +77,7 @@ export default function VersionDiffModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close version diff modal"
             style={{
               background: "transparent",
               border: "none",

@@ -197,6 +197,7 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
         {open && (
           <button
             onClick={() => setOpen(false)}
+            aria-label="Collapse rewriter panel"
             style={{
               padding: "5px 8px",
               borderRadius: 7,

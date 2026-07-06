@@ -89,6 +89,7 @@ export default function SaveResumeModal({
       >
         <button
           onClick={onClose}
+          aria-label="Close save modal"
           style={{
             position: "absolute",
             top: 14,
