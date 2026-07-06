@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 const styles = StyleSheet.create({
   container: {
@@ -133,13 +134,20 @@ interface Props {
 }
 
 export default function CreativePdfTemplate({ data, targetRole }: Props) {
+  const tokens = DESIGN_TOKENS.creative;
+  const containerStyle = [styles.container, { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }];
+  const headerStyle = [styles.header, { borderBottomColor: tokens.primaryColor }];
+  const nameStyle = [styles.name, { color: tokens.primaryColor }];
+  const roleStyle = [styles.role, { color: tokens.primaryColor }];
+  const sectionTitleStyle = [styles.sectionTitle, { color: tokens.primaryColor }];
+
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.name}>{data.contact.name || "Your Name"}</Text>
+      <View style={headerStyle}>
+        <Text style={nameStyle}>{data.contact.name || "Your Name"}</Text>
         {targetRole && (
-          <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
+          <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>
         )}
         <Text style={styles.contact}>
           {[
@@ -155,7 +163,7 @@ export default function CreativePdfTemplate({ data, targetRole }: Props) {
       {/* Summary */}
       {data.summary && (
         <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>ABOUT ME</Text>
+          <Text style={sectionTitleStyle}>ABOUT ME</Text>
           <Text style={styles.projectDesc}>{data.summary}</Text>
         </View>
       )}

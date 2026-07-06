@@ -2,6 +2,7 @@
 
 import React from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   resumeText: string;
@@ -11,23 +12,24 @@ interface Props {
 
 export default function CreativeTemplate({ resumeText, targetRole, parsedData }: Props) {
   const data = parsedData || parseResume(resumeText);
+  const tokens = DESIGN_TOKENS.creative;
 
   return (
     <div style={{
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      fontFamily: tokens.fontFamily,
       maxWidth: "800px",
       margin: "0 auto",
-      padding: "56px 48px",
+      padding: tokens.padding,
       background: "#ffffff",
-      color: "#374151",
-      lineHeight: 1.6,
-      fontSize: "10pt",
+      color: tokens.textColor,
+      lineHeight: parseFloat(tokens.lineHeight),
+      fontSize: tokens.fontSize,
     }}>
       {/* Header with single thin geometric divider */}
       <div style={{ 
         marginBottom: "28px",
         paddingBottom: "18px",
-        borderBottom: "1px solid #4f46e5", // Single geometric divider
+        borderBottom: `1px solid ${tokens.primaryColor}`, // Single geometric divider
       }}>
         <h1 style={{ 
           fontSize: "26pt", 

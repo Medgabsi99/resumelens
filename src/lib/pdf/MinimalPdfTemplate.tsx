@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "../../components/ResumeEditor/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 const styles = StyleSheet.create({
   container: {
@@ -130,15 +131,16 @@ interface Props {
 }
 
 export default function MinimalPdfTemplate({ data, targetRole, customStyle }: Props) {
+  const tokens = DESIGN_TOKENS.minimal;
   const style = customStyle || {
     fontFamily: "sans",
-    fontSize: "10pt",
-    lineHeight: "1.5",
-    padding: "56px 48px",
-    primaryColor: "#09090b",
+    fontSize: tokens.fontSize,
+    lineHeight: tokens.lineHeight,
+    padding: tokens.padding,
+    primaryColor: tokens.primaryColor,
   };
 
-  const resolvedFont = style.fontFamily === "serif" ? "Lora" : style.fontFamily === "mono" ? "Courier" : "Inter";
+  const resolvedFont = style.fontFamily === "serif" ? "Lora" : style.fontFamily === "mono" ? "Courier" : tokens.fontFamilyPdf;
   const resolvedFontSize = parseFloat(style.fontSize) || 9.5;
   const resolvedLineHeight = parseFloat(style.lineHeight) || 1.4;
   const resolvedColor = style.primaryColor || "#09090b";

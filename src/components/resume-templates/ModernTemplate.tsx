@@ -2,6 +2,7 @@
 
 import React from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   resumeText: string;
@@ -11,16 +12,17 @@ interface Props {
 
 export default function ModernTemplate({ resumeText, targetRole, parsedData }: Props) {
   const data = parsedData || parseResume(resumeText);
+  const tokens = DESIGN_TOKENS.modern;
 
   return (
     <div style={{
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      fontFamily: tokens.fontFamily,
       maxWidth: "800px",
       margin: "0 auto",
       background: "white",
-      color: "#1e293b",
-      lineHeight: 1.55,
-      fontSize: "10pt",
+      color: tokens.textColor,
+      lineHeight: parseFloat(tokens.lineHeight),
+      fontSize: tokens.fontSize,
       display: "flex",
       alignItems: "stretch",
     }}>

@@ -7,7 +7,7 @@ A production-ready Next.js app that gives honest, structured AI feedback on resu
 | Layer | Tech |
 |---|---|
 | Framework | Next.js 14 (App Router) |
-| AI | Google Gemini 2.5 Flash (via `@google/generative-ai`) |
+| AI | Google Gemini 3.5 Flash (via `@google/generative-ai`) |
 | Auth | Supabase Auth (email + Google OAuth) |
 | Database | Supabase (Postgres + RLS) |
 | Payments | Stripe Checkout + Webhooks |

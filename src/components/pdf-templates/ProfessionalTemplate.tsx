@@ -2,6 +2,7 @@
 
 import React from "react";
 import { AnalysisResult } from "@/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 import styles from "./pdfTemplates.module.css";
 
 interface Props {
@@ -11,17 +12,19 @@ interface Props {
   result: AnalysisResult;
 }
 
-export default function ClassicTemplate({
+export default function ProfessionalTemplate({
   resumeText,
   jobDescription,
   targetRole,
   result,
 }: Props) {
+  const tokens = DESIGN_TOKENS.professional;
+
   return (
-    <div className={styles.classicContainer}>
+    <div className={styles.professionalContainer} style={{ fontFamily: tokens.fontFamily, color: tokens.textColor }}>
       <header className={styles.header}>
         <div>
-          <div className={styles.headerTitle}>
+          <div className={styles.headerTitle} style={{ color: tokens.primaryColor }}>
             {targetRole || "Resume Review"}
           </div>
           <div className={styles.headerMeta}>
@@ -47,13 +50,13 @@ export default function ClassicTemplate({
       </header>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionH2}>Summary</h2>
+        <h2 className={styles.sectionH2} style={{ color: tokens.primaryColor }}>Summary</h2>
         <p className={styles.sectionP}>{result.summary}</p>
       </section>
 
       <section className={styles.twoCol}>
         <div className={styles.col}>
-          <h3 style={{ fontSize: 13, marginBottom: 8 }}>Strengths</h3>
+          <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Strengths</h3>
           <ul className={styles.list}>
             {result.strengths.map((s, i) => (
               <li key={i} className={styles.listItem}>
@@ -63,7 +66,7 @@ export default function ClassicTemplate({
           </ul>
         </div>
         <div className={styles.col}>
-          <h3 style={{ fontSize: 13, marginBottom: 8 }}>Areas to Improve</h3>
+          <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Areas to Improve</h3>
           <ul className={styles.list}>
             {result.weaknesses.map((w, i) => (
               <li key={i} className={styles.listItem}>
@@ -75,7 +78,7 @@ export default function ClassicTemplate({
       </section>
 
       <section className={styles.section}>
-        <h3 style={{ fontSize: 13, marginBottom: 8 }}>Top Suggestions</h3>
+        <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Top Suggestions</h3>
         <div>
           {result.suggestions.slice(0, 6).map((s, i) => (
             <div key={i} className={styles.suggestion}>

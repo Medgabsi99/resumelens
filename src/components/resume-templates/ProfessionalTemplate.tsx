@@ -3,6 +3,7 @@
 import React from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "../ResumeEditor/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   resumeText: string;
@@ -18,19 +19,20 @@ export default function ProfessionalTemplate({
   customStyle,
 }: Props) {
   const data = parsedData || parseResume(resumeText);
+  const tokens = DESIGN_TOKENS.professional;
 
   const style = customStyle || {
     fontFamily: "serif",
-    fontSize: "11pt",
-    lineHeight: "1.6",
-    padding: "56px 48px",
-    primaryColor: "#1e3a8a",
+    fontSize: tokens.fontSize,
+    lineHeight: tokens.lineHeight,
+    padding: tokens.padding,
+    primaryColor: tokens.primaryColor,
   };
 
   const getFontFamily = (fam: string) => {
     if (fam === "sans") return "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     if (fam === "mono") return "DM Mono, Courier New, Courier, monospace";
-    return "Georgia, 'Times New Roman', serif";
+    return tokens.fontFamily;
   };
 
   return (

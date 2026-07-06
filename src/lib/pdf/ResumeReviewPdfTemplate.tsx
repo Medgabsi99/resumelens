@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type AnalysisResult } from "@/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   result: AnalysisResult;
@@ -10,12 +11,14 @@ interface Props {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. CLASSIC / RESULTS TEMPLATE
+// 1. PROFESSIONAL / RESULTS TEMPLATE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const classicStyles = StyleSheet.create({
+const tokens = DESIGN_TOKENS.professional;
+
+const professionalStyles = StyleSheet.create({
   container: {
-    fontFamily: "Lora",
+    fontFamily: tokens.fontFamilyPdf,
     fontSize: 10,
     lineHeight: 1.5,
     color: "#111111",
@@ -36,7 +39,7 @@ const classicStyles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#111111",
+    color: tokens.primaryColor,
   },
   subtitle: {
     fontSize: 10,
@@ -61,6 +64,7 @@ const classicStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "bold",
     marginBottom: 8,
+    color: tokens.primaryColor,
   },
   sectionP: {
     fontSize: 10,
@@ -79,6 +83,7 @@ const classicStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "bold",
     marginBottom: 8,
+    color: tokens.primaryColor,
   },
   list: {
     marginTop: 6,
@@ -100,17 +105,17 @@ const classicStyles = StyleSheet.create({
     marginBottom: 12,
   },
   suggestionHeader: {
+    fontSize: 10.5,
     fontWeight: "bold",
     color: "#0f172a",
-    fontSize: 10,
+    marginBottom: 4,
   },
   suggestionBefore: {
-    color: "#6b7280",
+    color: "#cf222e",
     fontSize: 9.5,
-    marginTop: 4,
   },
   suggestionAfter: {
-    color: "#111111",
+    color: "#1a7f37",
     fontSize: 9.5,
     marginTop: 2,
   },
@@ -121,7 +126,7 @@ const classicStyles = StyleSheet.create({
   },
 });
 
-function ClassicReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "templateId">) {
+function ProfessionalReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "templateId">) {
   const scoreColor =
     result.score >= 75
       ? "#115e59"
@@ -130,60 +135,60 @@ function ClassicReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "t
       : "#7a2020";
 
   return (
-    <View style={classicStyles.container}>
-      <View style={classicStyles.header}>
-        <View style={classicStyles.headerLeft}>
-          <Text style={classicStyles.title}>{targetRole || "Resume Review"}</Text>
-          <Text style={classicStyles.subtitle}>
+    <View style={professionalStyles.container}>
+      <View style={professionalStyles.header}>
+        <View style={professionalStyles.headerLeft}>
+          <Text style={professionalStyles.title}>{targetRole || "Resume Review"}</Text>
+          <Text style={professionalStyles.subtitle}>
             {jobDescription ? "Tailored to job description" : "General review"}
           </Text>
         </View>
-        <View style={classicStyles.headerRight}>
-          <Text style={{ ...classicStyles.score, color: scoreColor }}>{result.score}</Text>
-          <Text style={classicStyles.small}>Overall Score</Text>
+        <View style={professionalStyles.headerRight}>
+          <Text style={{ ...professionalStyles.score, color: scoreColor }}>{result.score}</Text>
+          <Text style={professionalStyles.small}>Overall Score</Text>
         </View>
       </View>
 
-      <View style={classicStyles.section} wrap={false}>
-        <Text style={classicStyles.sectionH2}>Summary</Text>
-        <Text style={classicStyles.sectionP}>{result.summary}</Text>
+      <View style={professionalStyles.section} wrap={false}>
+        <Text style={professionalStyles.sectionH2}>Summary</Text>
+        <Text style={professionalStyles.sectionP}>{result.summary}</Text>
       </View>
 
-      <View style={classicStyles.twoCol} wrap={false}>
-        <View style={classicStyles.col}>
-          <Text style={classicStyles.colTitle}>Strengths</Text>
-          <View style={classicStyles.list}>
+      <View style={professionalStyles.twoCol} wrap={false}>
+        <View style={professionalStyles.col}>
+          <Text style={professionalStyles.colTitle}>Strengths</Text>
+          <View style={professionalStyles.list}>
             {result.strengths.map((s, i) => (
-              <View key={i} style={classicStyles.listItem}>
-                <Text style={classicStyles.bullet}>✓</Text>
-                <Text style={classicStyles.listText}>{s}</Text>
+              <View key={i} style={professionalStyles.listItem}>
+                <Text style={professionalStyles.bullet}>✓</Text>
+                <Text style={professionalStyles.listText}>{s}</Text>
               </View>
             ))}
           </View>
         </View>
-        <View style={classicStyles.col}>
-          <Text style={classicStyles.colTitle}>Areas to Improve</Text>
-          <View style={classicStyles.list}>
+        <View style={professionalStyles.col}>
+          <Text style={professionalStyles.colTitle}>Areas to Improve</Text>
+          <View style={professionalStyles.list}>
             {result.weaknesses.map((w, i) => (
-              <View key={i} style={classicStyles.listItem}>
-                <Text style={{ ...classicStyles.bullet, color: "#7a2020" }}>✗</Text>
-                <Text style={classicStyles.listText}>{w}</Text>
+              <View key={i} style={professionalStyles.listItem}>
+                <Text style={{ ...professionalStyles.bullet, color: "#7a2020" }}>✗</Text>
+                <Text style={professionalStyles.listText}>{w}</Text>
               </View>
             ))}
           </View>
         </View>
       </View>
 
-      <View style={classicStyles.section}>
-        <Text style={classicStyles.sectionH2}>Top Suggestions</Text>
+      <View style={professionalStyles.section}>
+        <Text style={professionalStyles.sectionH2}>Top Suggestions</Text>
         <View>
           {result.suggestions.slice(0, 6).map((s, i) => (
-            <View key={i} style={classicStyles.suggestion} wrap={false}>
-              <Text style={classicStyles.suggestionHeader}>{s.section}</Text>
-              <Text style={classicStyles.suggestionBefore}>
+            <View key={i} style={professionalStyles.suggestion} wrap={false}>
+              <Text style={professionalStyles.suggestionHeader}>{s.section}</Text>
+              <Text style={professionalStyles.suggestionBefore}>
                 <Text style={{ fontWeight: "bold" }}>Before: </Text>{s.before}
               </Text>
-              <Text style={classicStyles.suggestionAfter}>
+              <Text style={professionalStyles.suggestionAfter}>
                 <Text style={{ fontWeight: "bold" }}>After: </Text>{s.after}
               </Text>
             </View>
@@ -191,7 +196,7 @@ function ClassicReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "t
         </View>
       </View>
 
-      <Text style={classicStyles.footer}>Generated by ResumeLens</Text>
+      <Text style={professionalStyles.footer}>Generated by ResumeLens</Text>
     </View>
   );
 }
@@ -908,10 +913,11 @@ export default function ResumeReviewPdfTemplate({
       return <CreativeReviewPdf {...props} />;
     case "executive":
       return <ExecutiveReviewPdf {...props} />;
+    case "professional":
     case "classic":
     case "results":
     default:
-      return <ClassicReviewPdf {...props} />;
+      return <ProfessionalReviewPdf {...props} />;
   }
 }
 

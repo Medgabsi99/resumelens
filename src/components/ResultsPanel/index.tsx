@@ -181,7 +181,7 @@ export default function ResultsPanel({
               className={styles.select}
             >
               <option value="results">Results View</option>
-              <option value="classic">Classic Template</option>
+              <option value="professional">Professional Template</option>
               <option value="modern">Modern Template</option>
               <option value="minimal">Minimal Template</option>
               <option value="creative">Creative Template</option>

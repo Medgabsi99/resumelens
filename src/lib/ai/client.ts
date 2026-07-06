@@ -246,7 +246,7 @@ export async function extractTextFromBuffer(
 
   if (
     mimeType ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     mimeType === "application/msword"
   ) {
     const mammoth = await import("mammoth");

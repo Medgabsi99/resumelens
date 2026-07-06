@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 const styles = StyleSheet.create({
   container: {
@@ -134,11 +135,15 @@ interface Props {
 }
 
 export default function ExecutivePdfTemplate({ data, targetRole }: Props) {
+  const tokens = DESIGN_TOKENS.executive;
+  const containerStyle = [styles.container, { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }];
+  const nameStyle = [styles.name, { color: tokens.primaryColor || "#7a1c1c" }];
+
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.name}>{(data.contact.name || "Your Name").toUpperCase()}</Text>
+        <Text style={nameStyle}>{(data.contact.name || "Your Name").toUpperCase()}</Text>
         {targetRole && (
           <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
         )}

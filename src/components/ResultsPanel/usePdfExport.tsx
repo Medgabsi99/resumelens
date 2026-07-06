@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import type { AnalysisResult } from "@/types";
-import ClassicTemplate from "@/components/pdf-templates/ClassicTemplate";
+import ProfessionalTemplate from "@/components/pdf-templates/ProfessionalTemplate";
 import ModernTemplate from "@/components/pdf-templates/ModernTemplate";
 import MinimalTemplate from "@/components/pdf-templates/MinimalTemplate";
 import CreativeTemplate from "@/components/pdf-templates/CreativeTemplate";
 import ExecutiveTemplate from "@/components/pdf-templates/ExecutiveTemplate";
 
-export type PdfTemplate = "results" | "classic" | "modern" | "minimal" | "creative" | "executive";
+export type PdfTemplate = "results" | "professional" | "classic" | "modern" | "minimal" | "creative" | "executive";
 
 interface UsePdfExportArgs {
   result: AnalysisResult;
@@ -84,7 +84,8 @@ export function usePdfExport({
 
     const templateProps = { resumeText, jobDescription, targetRole, result };
     switch (pdfTemplate) {
-      case "classic":  return <ClassicTemplate {...templateProps} />;
+      case "professional":
+      case "classic":  return <ProfessionalTemplate {...templateProps} />;
       case "modern":   return <ModernTemplate {...templateProps} />;
       case "minimal":  return <MinimalTemplate {...templateProps} />;
       case "executive": return <ExecutiveTemplate {...templateProps} />;

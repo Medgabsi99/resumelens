@@ -921,7 +921,7 @@ export default function JobMatchPanel({
             width: "100%",
           }}
         >
-          {isMatching ? "Analyzing match..." : "Match My Resume ðŸŽ¯"}
+          {isMatching ? "Analyzing match..." : "Match My Resume 🎯"}
         </button>
       </div>
 

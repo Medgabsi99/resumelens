@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "../../components/ResumeEditor/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 const styles = StyleSheet.create({
   container: {
@@ -139,20 +140,21 @@ interface Props {
 }
 
 export default function ProfessionalPdfTemplate({ data, targetRole, customStyle }: Props) {
+  const tokens = DESIGN_TOKENS.professional;
   const style = customStyle || {
     fontFamily: "serif",
-    fontSize: "11pt",
-    lineHeight: "1.6",
-    padding: "56px 48px",
-    primaryColor: "#1e3a8a",
+    fontSize: tokens.fontSize,
+    lineHeight: tokens.lineHeight,
+    padding: tokens.padding,
+    primaryColor: tokens.primaryColor,
   };
 
-  const resolvedFont = style.fontFamily === "sans" ? "Inter" : style.fontFamily === "mono" ? "Courier" : "Lora";
+  const resolvedFont = style.fontFamily === "sans" ? "Inter" : style.fontFamily === "mono" ? "Courier" : tokens.fontFamilyPdf;
   
   // Convert pt/em strings to raw numbers for React-PDF StyleSheet overrides
   const resolvedFontSize = parseFloat(style.fontSize) || 10;
   const resolvedLineHeight = parseFloat(style.lineHeight) || 1.5;
-  const resolvedColor = style.primaryColor || "#1e3a8a";
+  const resolvedColor = style.primaryColor || tokens.primaryColor;
 
   const containerStyle = [styles.container, { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight }];
   const headerStyle = [styles.header, { borderBottomColor: resolvedColor }];

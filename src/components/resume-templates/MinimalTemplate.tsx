@@ -3,6 +3,7 @@
 import React from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "../ResumeEditor/types";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   resumeText: string;
@@ -13,19 +14,20 @@ interface Props {
 
 export default function MinimalTemplate({ resumeText, targetRole, parsedData, customStyle }: Props) {
   const data = parsedData || parseResume(resumeText);
+  const tokens = DESIGN_TOKENS.minimal;
 
   const style = customStyle || {
     fontFamily: "sans",
-    fontSize: "10.5pt",
-    lineHeight: "1.6",
-    padding: "56px 48px",
-    primaryColor: "#18181b",
+    fontSize: tokens.fontSize,
+    lineHeight: tokens.lineHeight,
+    padding: tokens.padding,
+    primaryColor: tokens.primaryColor,
   };
 
   const getFontFamily = (fam: string) => {
     if (fam === "serif") return "Georgia, 'Times New Roman', serif";
     if (fam === "mono") return "DM Mono, Courier New, Courier, monospace";
-    return "'Helvetica Neue', Helvetica, Arial, sans-serif";
+    return tokens.fontFamily;
   };
 
   return (

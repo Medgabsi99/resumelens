@@ -2,6 +2,7 @@
 
 import React from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 interface Props {
   resumeText: string;
@@ -11,17 +12,18 @@ interface Props {
 
 export default function ExecutiveTemplate({ resumeText, targetRole, parsedData }: Props) {
   const data = parsedData || parseResume(resumeText);
+  const tokens = DESIGN_TOKENS.executive;
 
   return (
     <div style={{
-      fontFamily: "'Times New Roman', Times, Georgia, serif",
+      fontFamily: tokens.fontFamily,
       maxWidth: "800px",
       margin: "0 auto",
-      padding: "56px 48px",
+      padding: tokens.padding,
       background: "#ffffff",
-      color: "#111827",
-      lineHeight: 1.45,
-      fontSize: "11pt",
+      color: tokens.textColor,
+      lineHeight: parseFloat(tokens.lineHeight),
+      fontSize: tokens.fontSize,
     }}>
       {/* Centered Name Block */}
       <div style={{ 

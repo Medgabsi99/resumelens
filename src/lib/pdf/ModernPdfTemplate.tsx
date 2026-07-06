@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { type ParsedResume } from "@/lib/parseResume";
+import { DESIGN_TOKENS } from "@/lib/designTokens";
 
 const styles = StyleSheet.create({
   container: {
@@ -156,8 +157,14 @@ interface Props {
 }
 
 export default function ModernPdfTemplate({ data, targetRole }: Props) {
+  const tokens = DESIGN_TOKENS.modern;
+  const containerStyle = [
+    styles.container,
+    { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }
+  ];
+
   return (
-    <View style={styles.container}>
+    <View style={containerStyle}>
       {/* Sidebar */}
       <View style={styles.sidebar}>
         {/* Contact section */}
