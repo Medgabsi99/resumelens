@@ -207,7 +207,7 @@ function LoginForm() {
         style={{ animationDelay: "-1.5s" }}
       />
 
-      <div className="relative z-10 w-full max-w-[400px] fade-up">
+      <main className="relative z-10 w-full max-w-[400px] fade-up">
         <div className="text-center mb-8">
           <a
             href="/"
@@ -346,7 +346,7 @@ function LoginForm() {
             </button>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -91,7 +91,7 @@ function ForgotPasswordForm() {
         padding: 20,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 380 }}>
+      <main style={{ width: "100%", maxWidth: 380 }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <a
@@ -238,7 +238,7 @@ function ForgotPasswordForm() {
             </a>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

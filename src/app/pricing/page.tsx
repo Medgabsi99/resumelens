@@ -133,7 +133,7 @@ export default function PricingPage() {
         )}
       </nav>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
+      <main className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
         <div className="text-center max-w-xl mx-auto mb-16 fade-up">
           <h1 className="font-display tracking-tight leading-tight mb-4" style={{ fontSize: "clamp(32px, 5vw, 48px)" }}>
             Simple, honest pricing
@@ -236,7 +236,7 @@ export default function PricingPage() {
         <p className="text-center text-xs text-ink-faint mt-10">
           Secure checkout and billing handled via Stripe. Cancel subscription anytime with one click in your settings.
         </p>
-      </div>
+      </main>
     </div>
   );
 }

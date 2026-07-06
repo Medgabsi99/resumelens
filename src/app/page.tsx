@@ -301,7 +301,7 @@ export default function HomePage() {
         )}
       </nav>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
+      <main className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
         {/* Hero */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h1
@@ -480,7 +480,7 @@ export default function HomePage() {
             </button>
           </div>
         )}
-      </div>
+      </main>
 
       {showUpgradeModal && (
         <UpgradeModal preview={preview} onClose={() => setShowUpgradeModal(false)} />

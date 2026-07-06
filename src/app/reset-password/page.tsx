@@ -159,7 +159,7 @@ function ResetPasswordForm() {
         padding: 20,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 380 }}>
+      <main style={{ width: "100%", maxWidth: 380 }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <a
@@ -308,7 +308,7 @@ function ResetPasswordForm() {
             </button>
           </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
