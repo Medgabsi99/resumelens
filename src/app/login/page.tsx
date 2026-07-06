@@ -13,7 +13,7 @@ import {
   checkPasswordStrength,
   validateForm,
   hasErrors,
-} from "@/lib/validate";
+} from "@/lib/formValidation";
 
 // ─── Inline error label ───────────────────────────────────────────────────
 

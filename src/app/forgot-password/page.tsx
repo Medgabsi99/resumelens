@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase";
-import { compose, required, isEmail, noScript } from "@/lib/validate";
+import { compose, required, isEmail, noScript } from "@/lib/formValidation";
 
 const emailRules = compose(required("Email"), isEmail(), noScript());
 

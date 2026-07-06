@@ -10,7 +10,7 @@ import {
   noScript,
   matchesField,
   checkPasswordStrength,
-} from "@/lib/validate";
+} from "@/lib/formValidation";
 
 // ─── Shared UI pieces ─────────────────────────────────────────────────────
 
