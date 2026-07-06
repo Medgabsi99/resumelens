@@ -4,6 +4,33 @@ import { redirect } from "next/navigation";
 import ResultsPanel from "@/components/ResultsPanel";
 import { AnalysisResult } from "@/types";
 import PrintButton from "@/components/PrintButton";
+import { type Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { title: "Review Analysis" };
+
+  const { data: analysis } = await supabase
+    .from("analyses")
+    .select("target_role")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .single();
+
+  const title = analysis?.target_role 
+    ? `${analysis.target_role} Review` 
+    : "Review Analysis";
+
+  return { title };
+}
 
 export default async function PastAnalysisPage({
   params,
