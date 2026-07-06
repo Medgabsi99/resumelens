@@ -1,6 +1,6 @@
 # ResumeLens — AI Resume Reviewer
 
-A production-ready Next.js app that gives honest, structured AI feedback on resumes. Built with Google Gemini, Supabase Auth, and Stripe payments.
+A feature-rich Next.js workspace that gives honest, structured AI feedback on resumes. Built with Google Gemini, Supabase Auth, and Stripe payments.
 
 ## Stack
 
@@ -146,3 +146,15 @@ Update price IDs in `.env.local` and the display amounts in `src/app/pricing/pag
 4. Offer free lifetime access to the first 10 users in exchange for feedback
 
 The single best thing you can do: film a 60-second Loom of the product in action and post it.
+
+---
+
+## Security & Dependency Notice
+
+> [!WARNING]
+> This application currently pins its framework resolution to `next@^14.2.0` (Next.js 14 App Router). `npm audit` reports active high-severity security advisories against this Next.js 14 range, including:
+> - **High**: HTTP request smuggling in rewrites, Server-Side Request Forgery (SSRF) via WebSocket upgrades, Denial of Service (DoS) in Server Components and the Image Optimization API, and Cross-Site Scripting (XSS) via CSP nonces.
+> - **Moderate**: PostCSS cross-site scripting via unescaped `<style>` tag outputs.
+>
+> **Production Deployment Recommendation**: Due to these package-level vulnerabilities in Next.js 14, **this workspace should not be deployed to a public production environment as-is**. A major upgrade to **Next.js 16.2.10+** (or higher) is recommended to fully resolve these dependency-level vulnerabilities.
+
