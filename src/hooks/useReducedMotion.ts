@@ -28,10 +28,8 @@ export function useReducedMotion(): boolean {
       mql.addEventListener("change", handler);
       return () => mql.removeEventListener("change", handler);
     } else {
-      // @ts-ignore — legacy API
       mql.addListener(handler);
       return () => {
-        // @ts-ignore
         mql.removeListener(handler);
       };
     }

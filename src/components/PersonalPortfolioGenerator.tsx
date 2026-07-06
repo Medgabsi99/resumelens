@@ -1,7 +1,7 @@
 "use client";
 import { logger } from "@/lib/logger";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PortfolioData } from "@/lib/ai";
 import { generatePortfolioHtml } from "@/lib/portfolioTemplate";
 

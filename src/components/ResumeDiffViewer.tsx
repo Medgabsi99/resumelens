@@ -537,7 +537,7 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
               Select two analyses to compare
             </div>
             <div style={{ fontSize: 12, color: "var(--ink-faint)" }}>
-              Choose a "Before" and an "After" analysis from the dropdowns above
+              Choose a &quot;Before&quot; and an &quot;After&quot; analysis from the dropdowns above
             </div>
           </div>
         ) : loadingLeft || loadingRight ? (

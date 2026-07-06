@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnalysisResult } from "@/types";
-import { parseResume } from "@/lib/parseResume";
 import ResumeTemplateSelector from "@/components/ResumeTemplateSelector";
 import SaveResumeModal from "@/components/SaveResumeModal";
 import styles from "../ResultsPanel.module.css";
@@ -65,23 +64,15 @@ export default function ResultsPanel({
   resumeText,
   jobDescription,
   targetRole,
-  analysisId,
 }: Props) {
   const componentRef = useRef<HTMLDivElement>(null);
-  const pdfPrintRef = useRef<HTMLDivElement>(null);
-  const clRef = useRef<HTMLDivElement>(null);
-
   const [showSaveModal, setShowSaveModal] = useState(false);
-
-  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
 
   // ── PDF / Score-bar hook ─────────────────────────────────
   const {
     pdfTemplate, setPdfTemplate,
-    barWidth,
     isDownloading,
-    scoreColor,
-    radius, strokeWidth, circumference, strokeDashoffset,
     handleDownloadPdf,
     renderSelectedTemplate,
   } = usePdfExport({
@@ -468,7 +459,7 @@ export default function ResultsPanel({
               }}
             >
               🔬 The <strong>Google XYZ formula</strong> rewrites each weak point using:{" "}
-              <em>"Accomplished [X] as measured by [Y] by doing [Z]"</em>. Click{" "}
+              <em>&quot;Accomplished [X] as measured by [Y] by doing [Z]&quot;</em>. Click{" "}
               <strong>⚡ XYZ Audit</strong> on any bullet to get an AI-powered breakdown and 3
               recruiter-ready rewrites.
             </p>

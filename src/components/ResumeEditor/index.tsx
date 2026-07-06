@@ -13,7 +13,7 @@ import { useResumeVersions } from "./useResumeVersions";
 import ToolbarButton from "./ToolbarButton";
 import ScoreTrendChart from "./ScoreTrendChart";
 import VersionDiffModal from "./VersionDiffModal";
-import { TemplateId, ResumeVersion, type ResumeCustomStyle } from "./types";
+import { TemplateId, ResumeVersion } from "./types";
 import { useSmartEnhance } from "./useSmartEnhance";
 import { useSelectionOptimizer } from "./useSelectionOptimizer";
 import { useDesignCustomizer } from "./useDesignCustomizer";
@@ -79,9 +79,8 @@ export default function ResumeEditor({
   });
 
   const {
-    selectedText,
     bubbleCoords,
-    showOptimizerBubble, setShowOptimizerBubble,
+    showOptimizerBubble,
     isOptimizing,
     optimizedAlternatives,
     optimizeError,
@@ -97,7 +96,6 @@ export default function ResumeEditor({
     isLoadingVersions,
     isSavingVersion,
     versionError,
-    setVersionError,
     saveVersion,
     deleteVersion,
   } = useResumeVersions(analysisId, showHistory, text, resultScore);

@@ -51,7 +51,7 @@ export default function UpgradeModal({ preview, onClose }: Props) {
 
         <div className="text-center mb-8">
           <div className="font-display text-2xl font-bold mb-2">
-            You've used your free analyses
+            You&apos;ve used your free analyses
           </div>
           {preview && (
             <div className="mt-4">

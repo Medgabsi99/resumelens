@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   useEffect,
-  ReactNode,
 } from "react";
 import { getReducedMotion } from "@/hooks/useReducedMotion";
 

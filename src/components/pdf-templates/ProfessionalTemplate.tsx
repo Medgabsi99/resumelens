@@ -13,7 +13,6 @@ interface Props {
 }
 
 export default function ProfessionalTemplate({
-  resumeText,
   jobDescription,
   targetRole,
   result,

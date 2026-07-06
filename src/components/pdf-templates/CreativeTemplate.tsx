@@ -12,7 +12,6 @@ interface Props {
 }
 
 export default function CreativeTemplate({
-  resumeText,
   jobDescription,
   targetRole,
   result,

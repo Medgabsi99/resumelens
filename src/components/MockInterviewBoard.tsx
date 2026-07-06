@@ -697,7 +697,7 @@ const toggleRecording = async () => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {summary && Object.entries(summary.fillerCounts).map(([word, count]) => (
                     <div key={word} style={{ display: "flex", justifyItems: "center", justifyContent: "space-between", fontSize: 12 }}>
-                      <span style={{ color: "#9ca3af" }}>"{word}"</span>
+                      <span style={{ color: "#9ca3af" }}>&quot;{word}&quot;</span>
                       <span style={{ fontWeight: 700, color: count > 2 ? "#f87171" : "#34d399" }}>
                         {count} {count === 1 ? "time" : "times"}
                       </span>
@@ -727,7 +727,7 @@ const toggleRecording = async () => {
                       Q{idx + 1}: {s.question}
                     </div>
                     <div style={{ fontSize: 12.5, color: "#d1d5db", background: "#1b1b24", padding: 10, borderRadius: 6, marginBottom: 8, border: "1px solid #23232d", whiteSpace: "pre-wrap" }}>
-                      <strong>Your Answer:</strong> "{s.answer}"
+                      <strong>Your Answer:</strong> &quot;{s.answer}&quot;
                     </div>
                     {s.evaluation && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#9ca3af" }}>

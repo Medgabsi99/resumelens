@@ -227,6 +227,7 @@ export function useNegotiationSession({
       }
     } catch (err: any) {
       logger.error("Scorecard evaluation error:", err);
+      setSavingError(err.message || String(err));
       const mockScorecard: NegotiationScorecard = {
         score: finalVerdict === "accepted" ? Math.min(100, Math.round(leverage)) : 40,
         tacticsUsed: ["Polite Advocacy", "Package Structuring"],

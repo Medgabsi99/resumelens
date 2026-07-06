@@ -25,7 +25,6 @@ export default function SalaryNegotiatorBoard({
   scenario,
   initialOffer,
   onClose,
-  onSaveScorecard,
 }: Props) {
   const session = useNegotiationSession({ resumeText, roleTitle, companyName, scenario, initialOffer });
   const {
@@ -365,7 +364,7 @@ export default function SalaryNegotiatorBoard({
                   <div className="space-y-1.5 border-t border-border/50 pt-2.5">
                     <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">Profile Description</div>
                     <p className="text-xs text-ink-muted leading-relaxed italic">
-                      "{recruiter.description}"
+                      &quot;{recruiter.description}&quot;
                     </p>
                   </div>
 
@@ -611,7 +610,7 @@ export default function SalaryNegotiatorBoard({
                   <span>ðŸ’¡ Live AI Coach</span>
                 </h3>
                 <div className="bg-accent/5 border border-accent/10 p-3 rounded-xl text-xs leading-relaxed text-ink-muted italic">
-                  "{coachFeedback}"
+                  &quot;{coachFeedback}&quot;
                 </div>
                 
                 {/* Suggestions List */}
@@ -626,7 +625,7 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting || isConcluded}
                         className="text-left text-[10px] p-2 bg-paper hover:bg-paper-warm border border-border text-ink rounded-lg font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer leading-normal"
                       >
-                        ðŸ—£ï¸ "{sug}"
+                        🗣️ &quot;{sug}&quot;
                       </button>
                     ))}
                   </div>
@@ -656,7 +655,7 @@ export default function SalaryNegotiatorBoard({
               
               {/* Header */}
               <div className="text-center border-b border-border pb-5">
-                <div className="text-4xl mb-2">ðŸ</div>
+                <div className="text-4xl mb-2">🏆</div>
                 <h3 className="font-display text-2xl font-bold text-ink">Salary Negotiation Scorecard</h3>
                 <p className="text-ink-muted text-sm mt-1">
                   Outcome: <span className="font-semibold uppercase tracking-wider text-accent">{verdict}</span>
@@ -708,11 +707,11 @@ export default function SalaryNegotiatorBoard({
                   <div className="border-t border-border/50 pt-2.5 mt-2.5">
                     {currentOffer.base >= recruiter.hiddenCeilingBudget ? (
                       <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-                        ðŸ† Outstanding! You maxed out the recruiter's budget ceiling of ${recruiter.hiddenCeilingBudget.toLocaleString()}!
+                        🏆 Outstanding! You maxed out the recruiter&apos;s budget ceiling of ${recruiter.hiddenCeilingBudget.toLocaleString()}!
                       </div>
                     ) : recruiter.hiddenCeilingBudget - currentOffer.base <= 5000 ? (
                       <div className="text-xs text-emerald-400/80 font-medium flex items-center gap-1.5">
-                        â­ Great job! You got extremely close to their corporate budget limit (within $5,000).
+                        ⭐ Great job! You got extremely close to their corporate budget limit (within $5,000).
                       </div>
                     ) : (
                       <div className="text-xs text-amber-400 font-medium flex flex-col gap-1">

@@ -12,7 +12,6 @@ interface Props {
 }
 
 export default function ExecutiveTemplate({
-  resumeText,
   jobDescription,
   targetRole,
   result,

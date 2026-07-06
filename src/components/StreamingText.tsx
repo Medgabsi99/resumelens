@@ -26,7 +26,7 @@ function markdownToHtml(raw: string): string {
   let inOL = false;
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+    const line = lines[i];
 
     // Close any open list if the current line is not a list item
     const isListItem = /^(\s*[-*+]|\s*\d+\.)\s/.test(line);

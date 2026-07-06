@@ -416,7 +416,6 @@ Rules for tailoring:
   // Use codified template recommendation logic
   parsed.recommendedTemplate = getRecommendedTemplate(
     targetRole || "",
-    resumeText || "",
     parsed.experience || []
   );
 
@@ -425,7 +424,6 @@ Rules for tailoring:
 
 function getRecommendedTemplate(
   targetRole: string = "",
-  resumeText: string = "",
   experience: any[] = []
 ): string {
   const role = targetRole.toLowerCase();

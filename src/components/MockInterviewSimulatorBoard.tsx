@@ -616,7 +616,7 @@ export default function MockInterviewSimulatorBoard({
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   {Object.entries(currentFillerCounts).map(([word, count]) => (
                     <div key={word} className="flex justify-between p-1.5 bg-[#121216] border border-border/50 rounded-lg">
-                      <span className="text-ink-muted font-mono">"{word}"</span>
+                      <span className="text-ink-muted font-mono">&quot;{word}&quot;</span>
                       <span className={`font-extrabold ${count > 1 ? 'text-amber-400' : 'text-emerald-400'}`}>{count}</span>
                     </div>
                   ))}
@@ -811,7 +811,7 @@ export default function MockInterviewSimulatorBoard({
                           Q{idx + 1}: {entry.question}
                         </div>
                         <div className="text-xs text-ink-muted bg-[#121216] p-3 rounded-lg border border-border/50 leading-relaxed italic">
-                          " {entry.answer} "
+                          &quot; {entry.answer} &quot;
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#2c2c38]/50 pt-2.5 text-xs">
@@ -821,7 +821,7 @@ export default function MockInterviewSimulatorBoard({
                           </div>
                           <div>
                             <span className="text-[10px] text-ink-faint font-bold block uppercase tracking-wider mb-1">Optimized Response Suggestion</span>
-                            <p className="text-emerald-400 leading-relaxed italic">"{entry.sampleAnswer}"</p>
+                            <p className="text-emerald-400 leading-relaxed italic">&quot;{entry.sampleAnswer}&quot;</p>
                           </div>
                         </div>
                       </div>

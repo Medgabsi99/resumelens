@@ -40,7 +40,8 @@ export function renderResumePdf(
   const component = getPdfTemplateComponent(templateId, data, targetRole, customStyle);
   return React.createElement(
     DocumentWrapper,
-    { title: `Resume - ${data.contact.name || "CV"}`, children: component }
+    { title: `Resume - ${data.contact.name || "CV"}` },
+    component
   );
 }
 
@@ -62,6 +63,7 @@ export function renderReviewPdf(
   const backgroundColor = templateId === "creative" ? "#fffaf6" : "#ffffff";
   return React.createElement(
     DocumentWrapper,
-    { title: `Resume Review - ${targetRole || "Analysis"}`, backgroundColor, children: component }
+    { title: `Resume Review - ${targetRole || "Analysis"}`, backgroundColor },
+    component
   );
 }

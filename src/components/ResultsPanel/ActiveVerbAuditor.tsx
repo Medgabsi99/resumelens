@@ -261,7 +261,7 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                           textTransform: "capitalize",
                         }}
                       >
-                        "{m.verb}"
+                        &quot;{m.verb}&quot;
                       </span>
                       <span
                         style={{
@@ -331,7 +331,7 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                               fontStyle: "italic",
                             }}
                           >
-                            "{line}"
+                            &quot;{line}&quot;
                           </div>
                         ))}
                       </div>

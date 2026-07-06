@@ -171,7 +171,7 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
               whiteSpace: "nowrap",
             }}
           >
-            "{bullet}"
+            &quot;{bullet}&quot;
           </div>
         </div>
         <button

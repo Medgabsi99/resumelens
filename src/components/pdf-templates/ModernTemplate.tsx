@@ -12,7 +12,6 @@ interface Props {
 }
 
 export default function ModernTemplate({
-  resumeText,
   jobDescription,
   targetRole,
   result,

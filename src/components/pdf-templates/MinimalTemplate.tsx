@@ -12,8 +12,6 @@ interface Props {
 }
 
 export default function MinimalTemplate({
-  resumeText,
-  jobDescription,
   targetRole,
   result,
 }: Props) {
