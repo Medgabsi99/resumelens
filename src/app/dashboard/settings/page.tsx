@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -67,7 +68,7 @@ export default function SettingsPage() {
           setProfile(profileData as UserProfile);
         }
       } catch (err) {
-        console.error("Failed to load settings:", err);
+        logger.error("Failed to load settings:", err);
       } finally {
         setLoading(false);
       }

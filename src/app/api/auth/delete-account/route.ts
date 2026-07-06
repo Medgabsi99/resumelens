@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase";
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
       try {
         await stripe.customers.del(profile.stripe_customer_id);
       } catch (stripeErr) {
-        console.error("Failed to delete Stripe customer:", stripeErr);
+        logger.error("Failed to delete Stripe customer:", stripeErr);
         // Continue deleting the auth user even if Stripe deletion fails
       }
     }
@@ -25,13 +26,13 @@ export async function POST(req: NextRequest) {
     const { error } = await admin.auth.admin.deleteUser(user.id);
 
     if (error) {
-      console.error("Supabase Admin deleteUser error:", error);
+      logger.error("Supabase Admin deleteUser error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error("Delete account API error:", err);
+    logger.error("Delete account API error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to delete account" },
       { status: 500 }

@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { JobApplication } from "@/types";
@@ -57,7 +58,7 @@ export function useDashboardData() {
         setAnalyses(analysesData.data || []);
         setApplications(appsData.data || []);
       } catch (e: any) {
-        console.error(e);
+        logger.error(e);
         setError(e.message || "Failed to fetch dashboard data");
       } finally {
         setLoading(false);
@@ -104,7 +105,7 @@ export function useDashboardData() {
       setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
       setDeleteTargetId(null);
     } catch (e) {
-      console.error(e);
+      logger.error("Delete analysis failed", e);
       setError("Network error: could not delete analysis.");
     } finally {
       setIsDeleting(false);

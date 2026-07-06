@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import {
   withRetryAndTimeout,
   negotiationResponseModel,
@@ -121,7 +122,7 @@ Return ONLY a JSON object with this exact structure:
   try {
     return JSON.parse(clean) as NegotiationTurnResponse;
   } catch (err) {
-    console.error("Failed to parse negotiation response:", raw);
+    logger.error("Failed to parse negotiation response:", raw);
     throw new Error("AI returned malformed negotiation response.");
   }
 }
@@ -187,7 +188,7 @@ Return ONLY a JSON object with this exact structure:
   try {
     return JSON.parse(clean) as NegotiationScorecard;
   } catch (err) {
-    console.error("Failed to parse negotiation evaluation:", raw);
+    logger.error("Failed to parse negotiation evaluation:", raw);
     throw new Error("AI returned malformed negotiation evaluation scorecard.");
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import React, { useState } from "react";
 import {
   ApplicationStatus,
@@ -54,7 +55,7 @@ export default function EditApplicationModal({
       }
       onUpdated(data.data);
     } catch (err) {
-      console.error(err);
+      logger.error("Update application failed", err);
       setError("Network error");
     } finally {
       setIsSubmitting(false);

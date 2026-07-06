@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { PortfolioData } from "@/lib/ai";
@@ -44,7 +45,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
           setSelectedTheme(data.data.theme as ThemeType);
         }
       } catch (err: any) {
-        console.error("Failed to load portfolio:", err);
+        logger.error("Failed to load portfolio:", err);
       } finally {
         setIsLoading(false);
       }

@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
@@ -80,7 +81,7 @@ export default function ScannerPage() {
 
       setScannerData(scanData.data);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to run PDF structural scanner.");
     } finally {
       clearInterval(interval);
@@ -119,7 +120,7 @@ export default function ScannerPage() {
 
       setScannerData(data.data);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to analyze document structure.");
     } finally {
       clearInterval(interval);

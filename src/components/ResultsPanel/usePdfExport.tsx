@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 import type { AnalysisResult } from "@/types";
 import ProfessionalTemplate from "@/components/pdf-templates/ProfessionalTemplate";
@@ -56,7 +57,7 @@ export function usePdfExport({
       await downloadReviewPdf(pdfTemplate, result, targetRole, jobDescription);
       onSuccess("PDF generated successfully.", "Download complete");
     } catch (err: any) {
-      console.error("PDF export error:", err);
+      logger.error("PDF export error:", err);
       onError(err.message || "Failed to download PDF.", "Download error");
     } finally {
       setIsDownloading(false);

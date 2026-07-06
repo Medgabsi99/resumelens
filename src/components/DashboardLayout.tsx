@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -281,7 +282,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/");
       router.refresh();
     } catch (e) {
-      console.error(e);
+      logger.error("Sign out failed", e);
     } finally {
       setSigningOut(false);
     }

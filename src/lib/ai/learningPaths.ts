@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { withRetryAndTimeout, skillGapModel } from "./client";
 
 export interface ProjectPhase {
@@ -111,7 +112,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
   try {
     return JSON.parse(clean) as SkillGapPathResult;
   } catch (err) {
-    console.error("Failed to parse skill gap learning path:", raw);
+    logger.error("Failed to parse skill gap learning path:", raw);
     throw new Error("AI returned malformed skill gap project JSON.");
   }
 }

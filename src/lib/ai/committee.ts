@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { withRetryAndTimeout, getSecureModel } from "./client";
 import { CommitteeDebriefResult } from "@/types";
 
@@ -70,7 +71,7 @@ Return ONLY a JSON object matching this exact schema (no markdown, no preambles)
     data.isCommittee = true; // Hard-enforce
     return data;
   } catch (err) {
-    console.error("Failed to parse Hiring Committee debrief JSON:", raw);
+    logger.error("Failed to parse Hiring Committee debrief JSON:", raw);
     throw new Error("AI returned malformed hiring committee data.");
   }
 }

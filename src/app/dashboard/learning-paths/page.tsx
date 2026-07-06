@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -94,7 +95,7 @@ export default function LearningPathsPage() {
           localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
-        console.warn("Failed to load local storage learning paths:", err);
+        logger.warn("Failed to load local storage learning paths:", err);
       }
 
       const mergedHistory = [...dbHistory, ...localHistory].sort(
@@ -103,7 +104,7 @@ export default function LearningPathsPage() {
 
       setHistory(mergedHistory);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to load page history.");
     } finally {
       setLoading(false);
@@ -181,7 +182,7 @@ export default function LearningPathsPage() {
       setActivePathData(generated);
       setActivePathId(newId);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "An error occurred while compiling your learning path.");
     } finally {
       clearInterval(interval);
@@ -204,7 +205,7 @@ export default function LearningPathsPage() {
       };
       localStorage.setItem("learning_paths_local", JSON.stringify([newItem, ...localHistory]));
     } catch (e) {
-      console.error("Local save exception:", e);
+      logger.error("Local save exception:", e);
     }
   };
 
@@ -222,7 +223,7 @@ export default function LearningPathsPage() {
           toastSuccess("Learning path deleted successfully.", "Deleted");
         }
       } catch (err) {
-        console.error("Local delete error:", err);
+        logger.error("Local delete error:", err);
         toastError("Failed to delete local learning path.");
       }
     } else {

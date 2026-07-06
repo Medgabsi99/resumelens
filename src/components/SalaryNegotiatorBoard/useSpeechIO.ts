@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 
 export function useSpeechIO() {
@@ -18,7 +19,7 @@ export function useSpeechIO() {
         rec.onstart = () => setIsListening(true);
         rec.onend = () => setIsListening(false);
         rec.onerror = (event: any) => {
-          console.error("Speech recognition error:", event.error);
+          logger.error("Speech recognition error:", event.error);
           setIsListening(false);
         };
         setRecognition(rec);
@@ -82,7 +83,7 @@ export function useSpeechIO() {
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     } catch (err) {
-      console.error("Speech synthesis failed:", err);
+      logger.error("Speech synthesis failed:", err);
     }
   };
 

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 
 export function useCoverLetter(
@@ -52,7 +53,7 @@ export function useCoverLetter(
         }
       }
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       setClError(e.message || "Network error while generating cover letter.");
     } finally {
       setIsGeneratingCL(false);

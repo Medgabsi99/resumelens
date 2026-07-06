@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -97,7 +98,7 @@ export default function CommitteeSimulationPage() {
         setResumes(data.data || []);
       }
     } catch (err) {
-      console.error("Failed to load resumes", err);
+      logger.error("Failed to load resumes", err);
     } finally {
       setLoadingResumes(false);
     }
@@ -162,7 +163,7 @@ export default function CommitteeSimulationPage() {
           setIsPlayingDebrief(true);
           toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
         } catch (err: any) {
-          console.error(err);
+          logger.error(err);
           toastError(err.message || "Failed to compile panel debrief.");
         } finally {
           clearInterval(stepInterval);
@@ -179,7 +180,7 @@ export default function CommitteeSimulationPage() {
       setVisibleMessageCount(1);
       setIsPlayingDebrief(true);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       toastError(err.message || "Failed to load past committee simulation.");
       // Clear URL params
       window.history.replaceState({}, "", "/dashboard/committee");
@@ -234,7 +235,7 @@ export default function CommitteeSimulationPage() {
       setIsPlayingDebrief(true);
       toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       toastError(err.message || "Failed to compile panel debrief.");
     } finally {
       clearInterval(stepInterval);

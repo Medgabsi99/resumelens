@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -97,7 +98,7 @@ export default function NegotiatorPage() {
           localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
-        console.warn("Failed to load local storage fallback history:", err);
+        logger.warn("Failed to load local storage fallback history:", err);
       }
 
       // Merge both list (sorted by date desc)
@@ -107,7 +108,7 @@ export default function NegotiatorPage() {
 
       setHistory(mergedHistory);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to fetch page data");
     } finally {
       setLoading(false);
@@ -179,7 +180,7 @@ export default function NegotiatorPage() {
           toastSuccess("Scorecard deleted successfully.", "Deleted");
         }
       } catch (err) {
-        console.error("Local delete error:", err);
+        logger.error("Local delete error:", err);
         toastError("Failed to delete local scorecard.");
       }
     } else {

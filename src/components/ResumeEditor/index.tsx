@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { RewriteSuggestion } from "@/types";
@@ -186,7 +187,7 @@ export default function ResumeEditor({
       const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
       await downloadResumePdf(selectedTemplate, data, targetRole, customStyle);
     } catch (err: any) {
-      console.error("PDF download error:", err);
+      logger.error("PDF download error:", err);
       alert("Failed to download PDF. Please try again.");
     } finally {
       setIsDownloading(false);

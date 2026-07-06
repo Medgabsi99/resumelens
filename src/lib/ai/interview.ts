@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import {
   withRetryAndTimeout,
   interviewModel,
@@ -246,7 +247,7 @@ export async function generateSimulatorQuestions(
   try {
     return JSON.parse(clean) as string[];
   } catch (err) {
-    console.error("Failed to parse simulator questions:", raw);
+    logger.error("Failed to parse simulator questions:", raw);
     if (interviewType === "technical") {
       return [
         "Explain how you design scalable system architectures for microservices.",
@@ -306,7 +307,7 @@ export async function compileFinalInterviewScorecard(
   try {
     return JSON.parse(clean) as MockInterviewScorecard;
   } catch (err) {
-    console.error("Failed to parse compiled final scorecard:", raw);
+    logger.error("Failed to parse compiled final scorecard:", raw);
     const totalScore = transcripts.reduce((acc, t) => acc + t.score, 0);
     const avgScore = transcripts.length ? Math.round((totalScore / (transcripts.length * 10)) * 100) : 0;
     return {

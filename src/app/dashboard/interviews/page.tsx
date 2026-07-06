@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -102,7 +103,7 @@ export default function InterviewsPage() {
           localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
-        console.warn("Failed to load local storage mock interviews:", err);
+        logger.warn("Failed to load local storage mock interviews:", err);
       }
 
       const mergedHistory = [...dbHistory, ...localHistory].sort(
@@ -111,7 +112,7 @@ export default function InterviewsPage() {
 
       setHistory(mergedHistory);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to load history data");
     } finally {
       setLoading(false);
@@ -165,7 +166,7 @@ export default function InterviewsPage() {
       setActiveResumeText(selected.resume_text);
       setActiveQuestions(data.questions);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Failed to compile custom questions set. Please retry.");
     } finally {
       clearInterval(interval);
@@ -187,7 +188,7 @@ export default function InterviewsPage() {
           toastSuccess("Mock interview deleted successfully.", "Deleted");
         }
       } catch (err) {
-        console.error("Local delete error:", err);
+        logger.error("Local delete error:", err);
         toastError("Failed to delete local mock interview.");
       }
     } else {

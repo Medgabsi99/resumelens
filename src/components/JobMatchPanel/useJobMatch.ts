@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 import { JobMatchResult } from "@/types";
 
@@ -54,7 +55,7 @@ export function useJobMatch({
 
       setResult(data.data);
     } catch (e) {
-      console.error(e);
+      logger.error("Job match failed", e);
       setError("Network error during job match.");
     } finally {
       setIsMatching(false);

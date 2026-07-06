@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 
 export function useInterviewPrep(
@@ -56,7 +57,7 @@ export function useInterviewPrep(
         }
       }
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       setIqError(e.message || "Network error while generating interview questions.");
     } finally {
       setIsGeneratingIQ(false);
@@ -89,7 +90,7 @@ export function useInterviewPrep(
       setMockQuestions(data.questions || []);
       setShowMockInterview(true);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setIqError(err.message || "Failed to start mock interview.");
     } finally {
       setIsFetchingMock(false);

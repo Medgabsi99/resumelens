@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { createRouteHandlerClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
   if (error) {
-    console.error("Supabase OAuth callback error:", error, errorDescription);
+    logger.error("Supabase OAuth callback error", { error, errorDescription });
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(errorDescription || error)}`
     );
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error("Exchange code error:", exchangeError.message);
+      logger.error("Exchange code error:", exchangeError.message);
       return NextResponse.redirect(
         `${origin}/login?error=${encodeURIComponent(exchangeError.message)}`
       );

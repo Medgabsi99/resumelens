@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import React, { useState, useRef } from "react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
@@ -80,7 +81,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
       const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
       await downloadResumePdf(selectedTemplate, data, targetRole);
     } catch (err: any) {
-      console.error("PDF download error:", err);
+      logger.error("PDF download error:", err);
       alert("Failed to download PDF. Please try again.");
     } finally {
       setIsDownloading(false);

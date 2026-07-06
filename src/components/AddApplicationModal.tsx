@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState } from "react";
 import {
@@ -94,7 +95,7 @@ export default function AddApplicationModal({
       onCreated(data.data);
       handleClose();
     } catch (err) {
-      console.error(err);
+      logger.error("Add application failed", err);
       setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);

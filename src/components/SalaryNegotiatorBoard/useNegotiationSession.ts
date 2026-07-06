@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState, useEffect, useRef } from "react";
 import {
   type NegotiationOffer,
@@ -158,7 +159,7 @@ export function useNegotiationSession({
       };
       localStorage.setItem("salary_negotiations_local", JSON.stringify([newItem, ...localHistory]));
     } catch (e) {
-      console.error("Failed to save to localStorage:", e);
+      logger.error("Failed to save to localStorage:", e);
     }
   };
 
@@ -225,7 +226,7 @@ export function useNegotiationSession({
         setSavedMethod("local");
       }
     } catch (err: any) {
-      console.error("Scorecard evaluation error:", err);
+      logger.error("Scorecard evaluation error:", err);
       const mockScorecard: NegotiationScorecard = {
         score: finalVerdict === "accepted" ? Math.min(100, Math.round(leverage)) : 40,
         tacticsUsed: ["Polite Advocacy", "Package Structuring"],
@@ -298,7 +299,7 @@ export function useNegotiationSession({
         handleConcludeNegotiation(turn.conclusionVerdict, turn.currentOffer);
       }
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setErrorMsg(err.message || "Failed to reach recruiter. Make sure server is online.");
       setMessageHistory((prev) => prev.slice(0, -1));
       setInputText(userMsg);

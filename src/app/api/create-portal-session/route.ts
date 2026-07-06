@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: portalSession.url });
   } catch (err: any) {
-    console.error("Portal session error:", err);
+    logger.error("Portal session error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to create portal session" },
       { status: 500 }

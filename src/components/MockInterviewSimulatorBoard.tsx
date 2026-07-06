@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import SpotlightCard from "./SpotlightCard";
@@ -132,7 +133,7 @@ export default function MockInterviewSimulatorBoard({
         };
 
         rec.onerror = (err: any) => {
-          console.error("Speech recognition error:", err);
+          logger.error("Speech recognition error:", err);
           stopTimer();
           setIsRecording(false);
           if (err.error === "network") {
@@ -262,7 +263,7 @@ export default function MockInterviewSimulatorBoard({
         startTimer();
         recognitionRef.current.start();
       } catch (err) {
-        console.error("Microphone permission denied:", err);
+        logger.error("Microphone permission denied:", err);
         setEvalError("Microphone access was denied. Please allow microphone access in your browser settings and try again.");
       }
     }
@@ -315,7 +316,7 @@ export default function MockInterviewSimulatorBoard({
       setAnswerText("");
       setCurrentIdx((prev) => prev + 1);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setEvalError(err.message || "An error occurred during response grading.");
     } finally {
       setIsEvaluating(false);
@@ -364,7 +365,7 @@ export default function MockInterviewSimulatorBoard({
         saveToLocalStorage(data.scorecard, transcripts);
       }
     } catch (err: any) {
-      console.error("Scorecard compilation error:", err);
+      logger.error("Scorecard compilation error:", err);
       setEvalError(err.message || "Failed to finalize interview report.");
     } finally {
       setIsSaving(false);
@@ -401,7 +402,7 @@ export default function MockInterviewSimulatorBoard({
       
       localStorage.setItem("mock_interviews_local", JSON.stringify([newItem, ...localHistory]));
     } catch (e) {
-      console.error("Failed to fallback save local interview:", e);
+      logger.error("Failed to fallback save local interview:", e);
     }
   };
 

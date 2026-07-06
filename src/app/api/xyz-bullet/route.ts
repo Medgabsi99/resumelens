@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getSecureModel, withRetryAndTimeout } from "@/lib/ai/client";
@@ -75,7 +76,7 @@ Respond ONLY with a valid JSON object — no preamble, no markdown fences:
 
     return NextResponse.json({ success: true, data: parsed });
   } catch (err: any) {
-    console.error("XYZ bullet error:", err);
+    logger.error("XYZ bullet error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to generate XYZ bullet rewrite" },
       { status: 500 }

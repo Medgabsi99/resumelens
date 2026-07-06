@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { withRetryAndTimeout, pdfStructureModel } from "./client";
 
 export interface AtsStructureCheck {
@@ -89,7 +90,7 @@ Return ONLY a JSON object with this exact structure (no markdown fences, no prea
   try {
     return JSON.parse(clean) as AtsStructureResult;
   } catch (err) {
-    console.error("Failed to parse ATS structure scan:", raw);
+    logger.error("Failed to parse ATS structure scan:", raw);
     throw new Error("AI returned malformed ATS structure result.");
   }
 }

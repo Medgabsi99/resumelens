@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 
 export function useOutreach(
@@ -44,7 +45,7 @@ export function useOutreach(
 
       setOutreachMessage(data.data);
     } catch (e: any) {
-      console.error(e);
+      logger.error(e);
       setError(e.message || "Network error while generating outreach message.");
     } finally {
       setIsGenerating(false);

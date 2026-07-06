@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect } from "react";
 import { type SkillGapPathResult } from "@/lib/ai";
@@ -24,7 +25,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         setCompletedWeeks(JSON.parse(progress));
       }
     } catch (err) {
-      console.warn("Failed to load progress states:", err);
+      logger.warn("Failed to load progress states:", err);
     }
   }, [pathId]);
 
@@ -35,7 +36,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
     try {
       localStorage.setItem(`learning_path_progress_${pathId}`, JSON.stringify(updated));
     } catch (err) {
-      console.warn("Failed to save progress state:", err);
+      logger.warn("Failed to save progress state:", err);
     }
   };
 

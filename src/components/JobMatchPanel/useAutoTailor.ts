@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 
 interface UseAutoTailorArgs {
@@ -34,7 +35,7 @@ export function useAutoTailor({ resumeText, jobDescription, jobTitle }: UseAutoT
       setTailoredResult(data);
       setShowDiff(true);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setTailorError(err.message || "Failed to auto-tailor resume.");
     } finally {
       setIsTailoring(false);

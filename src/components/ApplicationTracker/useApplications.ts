@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState, useEffect, useMemo } from "react";
 import { JobApplication, ApplicationStatus } from "@/types";
 import { daysUntil } from "./utils";
@@ -23,7 +24,7 @@ export function useApplications() {
       }
       setApplications(data.data || []);
     } catch (e) {
-      console.error(e);
+      logger.error("Failed to load applications", e);
       setError("Network error");
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export function useApplications() {
         await loadApplications();
       }
     } catch (e) {
-      console.error(e);
+      logger.error("Failed to update status", e);
       await loadApplications();
     }
   }
@@ -66,7 +67,7 @@ export function useApplications() {
         alert(data?.error || "Failed to delete");
       }
     } catch (e) {
-      console.error(e);
+      logger.error("Failed to delete application", e);
       alert("Network error");
     }
   }

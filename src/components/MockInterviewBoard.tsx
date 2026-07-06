@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef } from "react";
 import SpotlightCard from "./SpotlightCard";
@@ -72,7 +73,7 @@ export default function MockInterviewBoard({
         };
 
         rec.onerror = (err: any) => {
-          console.error("Speech recognition error:", err);
+          logger.error("Speech recognition error:", err);
           setIsRecording(false);
         };
 
@@ -130,7 +131,7 @@ const toggleRecording = async () => {
       setIsRecording(true);
       recognitionRef.current.start();
     } catch (err) {
-      console.error("Microphone permission denied:", err);
+      logger.error("Microphone permission denied:", err);
       setEvalError("Microphone access was denied. Please allow microphone access in your browser settings and try again.");
     }
   }
@@ -174,7 +175,7 @@ const toggleRecording = async () => {
         )
       );
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       setEvalError(err.message || "An error occurred during evaluation.");
     } finally {
       setIsEvaluating(false);

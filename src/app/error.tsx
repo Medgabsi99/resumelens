@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -11,7 +12,7 @@ interface ErrorProps {
 export default function ErrorBoundary({ error, reset }: ErrorProps) {
   useEffect(() => {
     // Log the error for tracking purposes
-    console.error("Unhandled Application Error Boundary:", error);
+    logger.error("Unhandled Application Error Boundary:", error);
   }, [error]);
 
   return (

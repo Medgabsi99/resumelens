@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 // Synthesized audio feedback for negotiation events
 export const playSynthSound = (type: "concession" | "warning" | "outcome") => {
   if (typeof window === "undefined") return;
@@ -66,7 +67,7 @@ export const playSynthSound = (type: "concession" | "warning" | "outcome") => {
       playTone(523.25, 0.12); // C5
     }
   } catch (err) {
-    console.warn("Failed to play synthesized sound:", err);
+    logger.warn("Failed to play synthesized sound:", err);
   }
 };
 

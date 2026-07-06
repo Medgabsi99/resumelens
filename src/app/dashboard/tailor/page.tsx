@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -79,7 +80,7 @@ export default function TailorSandboxPage() {
         setResumes(data.data || []);
       }
     } catch (err) {
-      console.error("Failed to load resumes", err);
+      logger.error("Failed to load resumes", err);
     } finally {
       setLoadingResumes(false);
     }
@@ -154,7 +155,7 @@ export default function TailorSandboxPage() {
       setActiveSandbox(true);
       toastSuccess("Playground initialized. Start editing!", "Sandbox Ready");
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       toastError(err.message || "Failed to launch sandbox.");
     } finally {
       clearInterval(stepInterval);
@@ -257,7 +258,7 @@ export default function TailorSandboxPage() {
       toastSuccess("PDF generated successfully.", "Download Complete");
       setShowExportModal(false);
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       toastError("Failed to compile vector PDF template.");
     }
   };

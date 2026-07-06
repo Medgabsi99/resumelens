@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient, createAdminClient } from "@/lib/supabase";
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   ]);
 
   if (insertResult.error) {
-    console.error("[analyze] DB insert failed:", insertResult.error.message);
+    logger.error("[analyze] DB insert failed:", insertResult.error.message);
   }
 
   // ── 7. Fire-and-forget: embed resume chunks into pgvector ─
@@ -150,7 +151,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       },
       body: JSON.stringify({ resumeText, analysisId: insertedId }),
     }).catch((err) => {
-      console.warn("[analyze] Background embed failed (non-fatal):", err?.message);
+      logger.warn("[analyze] Background embed failed (non-fatal):", err?.message);
     });
   }
 
