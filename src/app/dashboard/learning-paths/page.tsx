@@ -3,10 +3,15 @@ import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import LearningPathBoard from "@/components/LearningPathBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type SkillGapPathResult } from "@/lib/ai";
 import { useToast } from "@/components/ToastProvider";
+import dynamic from "next/dynamic";
+
+const LearningPathBoard = dynamic(() => import("@/components/LearningPathBoard"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Learning Path...</div>,
+});
 
 interface ResumeItem {
   id: string;

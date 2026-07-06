@@ -4,8 +4,13 @@ import { logger } from "@/lib/logger";
 import { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import DashboardLayout from "@/components/DashboardLayout";
-import AtsScannerBoard from "@/components/AtsScannerBoard";
 import { type AtsStructureResult } from "@/lib/ai";
+import dynamic from "next/dynamic";
+
+const AtsScannerBoard = dynamic(() => import("@/components/AtsScannerBoard"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading ATS Scanner...</div>,
+});
 
 const SCANNING_STEPS = [
   "Reading document structure...",

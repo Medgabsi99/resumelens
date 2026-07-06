@@ -3,9 +3,14 @@ import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import MockInterviewSimulatorBoard from "@/components/MockInterviewSimulatorBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
+import dynamic from "next/dynamic";
+
+const MockInterviewSimulatorBoard = dynamic(() => import("@/components/MockInterviewSimulatorBoard"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Interview Simulator...</div>,
+});
 
 interface ResumeItem {
   id: string;

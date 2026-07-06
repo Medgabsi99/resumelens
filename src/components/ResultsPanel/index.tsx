@@ -3,15 +3,32 @@
 import { useEffect, useRef, useState } from "react";
 import { AnalysisResult } from "@/types";
 import { parseResume } from "@/lib/parseResume";
-import ResumeEditor from "@/components/ResumeEditor";
 import ResumeTemplateSelector from "@/components/ResumeTemplateSelector";
 import SaveResumeModal from "@/components/SaveResumeModal";
-import JobMatchPanel from "@/components/JobMatchPanel";
-import MockInterviewBoard from "@/components/MockInterviewBoard";
-import PersonalPortfolioGenerator from "@/components/PersonalPortfolioGenerator";
 import styles from "../ResultsPanel.module.css";
 import { useToast } from "../ToastProvider";
 import { usePdfExport, type PdfTemplate } from "./usePdfExport";
+import dynamic from "next/dynamic";
+
+const ResumeEditor = dynamic(() => import("@/components/ResumeEditor"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Editor...</div>,
+});
+
+const JobMatchPanel = dynamic(() => import("@/components/JobMatchPanel"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Match Panel...</div>,
+});
+
+const MockInterviewBoard = dynamic(() => import("@/components/MockInterviewBoard"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Interview Prep...</div>,
+});
+
+const PersonalPortfolioGenerator = dynamic(() => import("@/components/PersonalPortfolioGenerator"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Portfolio Generator...</div>,
+});
 
 // Extracted Subcomponents
 import Section from "./Section";

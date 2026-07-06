@@ -3,11 +3,16 @@ import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import SalaryNegotiatorBoard from "@/components/SalaryNegotiatorBoard";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";
 import { useToast } from "@/components/ToastProvider";
 import EmptyState from "@/components/EmptyState";
+import dynamic from "next/dynamic";
+
+const SalaryNegotiatorBoard = dynamic(() => import("@/components/SalaryNegotiatorBoard"), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center text-muted">Loading Negotiator Board...</div>,
+});
 
 interface ResumeItem {
   id: string;
