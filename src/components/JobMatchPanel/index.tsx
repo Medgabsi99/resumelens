@@ -332,7 +332,7 @@ export default function JobMatchPanel({
                 marginBottom: 10,
               }}
             >
-              âœ“ Why you're a good fit
+              ✓ Why you're a good fit
             </div>
             <ul style={{ margin: 0, paddingLeft: 18, listStyle: "none" }}>
               {result.strengths.map((s, i) => (
@@ -372,7 +372,7 @@ export default function JobMatchPanel({
                 marginBottom: 10,
               }}
             >
-              âœ— Gaps to address
+              ✗ Gaps to address
             </div>
             <ul style={{ margin: 0, paddingLeft: 18, listStyle: "none" }}>
               {result.gaps.map((g, i) => (
@@ -387,7 +387,7 @@ export default function JobMatchPanel({
                     paddingLeft: 4,
                   }}
                 >
-                  <span style={{ color: "#7a2020", fontWeight: 700, marginRight: 6 }}>âˆ’</span>
+                  <span style={{ color: "#7a2020", fontWeight: 700, marginRight: 6 }}>−</span>
                   {g}
                 </li>
               ))}
@@ -432,7 +432,7 @@ export default function JobMatchPanel({
                       fontFamily: "DM Mono, monospace",
                     }}
                   >
-                    âœ“ {s}
+                    ✓ {s}
                   </span>
                 ))
               )}
@@ -454,7 +454,7 @@ export default function JobMatchPanel({
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {result.missingSkills.length === 0 ? (
                 <span style={{ fontSize: 12, color: "var(--ink-faint)", fontStyle: "italic" }}>
-                  None â€” you have everything they want!
+                  None — you have everything they want!
                 </span>
               ) : (
                 result.missingSkills.map((s, i) => (
@@ -470,7 +470,7 @@ export default function JobMatchPanel({
                       fontFamily: "DM Mono, monospace",
                     }}
                   >
-                    âœ— {s}
+                    ✗ {s}
                   </span>
                 ))
               )}
@@ -499,7 +499,7 @@ export default function JobMatchPanel({
               marginBottom: 12,
             }}
           >
-            ðŸ’¡ Top recommendations to improve your match
+            💡 Top recommendations to improve your match
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>
             {result.topRecommendations.map((r, i) => (
@@ -535,7 +535,7 @@ export default function JobMatchPanel({
           >
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#1e5c3a", marginBottom: 2 }}>
-                âœ“ Tailored Resume Applied!
+                ✓ Tailored Resume Applied!
               </div>
               <div style={{ fontSize: 12, color: "#2d6a4f", lineHeight: 1.4 }}>
                 The optimized text has been loaded into your editor. Scroll up to review, preview template options, and export your PDF.
@@ -561,7 +561,7 @@ export default function JobMatchPanel({
                 whiteSpace: "nowrap",
               }}
             >
-              Go to Editor âœï¸
+              Go to Editor ✏️
             </button>
           </div>
         )}
@@ -628,16 +628,16 @@ export default function JobMatchPanel({
             >
               {isTailoring ? (
                 <>
-                  <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>âš™ï¸</span>
+                  <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⚙️</span>
                   Tailoring Resume points...
                 </>
               ) : (
-                <>âœ¨ Auto-Tailor Resume</>
+                <>✨ Auto-Tailor Resume</>
               )}
             </button>
             {tailorError && (
               <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 500 }}>
-                âš  {tailorError}
+                ⚠  {tailorError}
               </div>
             )}
           </SpotlightCard>
@@ -691,7 +691,7 @@ export default function JobMatchPanel({
                     boxShadow: "0 2px 6px rgba(16, 185, 129, 0.2)",
                   }}
                 >
-                  âœ“ Apply changes
+                  ✓ Apply changes
                 </button>
                 <button
                   onClick={() => setShowDiff(false)}
@@ -719,7 +719,7 @@ export default function JobMatchPanel({
               {tailoredResult.tailoredResume.summary && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
                   <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 8, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    âœ Professional Summary
+                    ✍ Professional Summary
                   </h5>
                   <div style={{ padding: "10px 14px", background: "var(--paper-warm)", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <DiffText 
@@ -734,7 +734,7 @@ export default function JobMatchPanel({
               {tailoredResult.tailoredResume.experience.length > 0 && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
                   <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 12, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    ðŸ’¼ Work Experience Bullets
+                    💼 Work Experience Bullets
                   </h5>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {tailoredResult.tailoredResume.experience.map((exp: any, expIdx: number) => {
@@ -753,7 +753,7 @@ export default function JobMatchPanel({
                               const origBullet = origExp?.bullets[bulletIdx] || "";
                               return (
                                 <div key={bulletIdx} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                                  <span style={{ color: "var(--ink-faint)", userSelect: "none" }}>â€¢</span>
+                                  <span style={{ color: "var(--ink-faint)", userSelect: "none" }}>•</span>
                                   <div style={{ flex: 1 }}>
                                     <DiffText original={origBullet} tailored={bullet} />
                                   </div>
@@ -772,7 +772,7 @@ export default function JobMatchPanel({
               {tailoredResult.tailoredResume.skills.length > 0 && (
                 <div>
                   <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 10, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    ðŸ›  Skills & Keywords
+                    🛠 Skills & Keywords
                   </h5>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {(() => {
@@ -823,7 +823,7 @@ export default function JobMatchPanel({
               fontFamily: "Instrument Sans, sans-serif",
             }}
           >
-            â†» Match against a different job
+            ↻ Match against a different job
           </button>
         </div>
       </div>

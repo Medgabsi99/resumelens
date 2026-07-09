@@ -67,13 +67,13 @@ export default function SalaryNegotiatorBoard({
   const getSentimentBadge = (sent: string) => {
     switch (sent) {
       case "impressed":
-        return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸŒŸ Impressed</span>;
+        return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🌟 Impressed</span>;
       case "resistant":
-        return <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ¤¨ Resistant</span>;
+        return <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🤨 Resistant</span>;
       case "offended":
-        return <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ˜¡ Offended</span>;
+        return <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😡 Offended</span>;
       default:
-        return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">ðŸ˜Š Open</span>;
+        return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😊 Open</span>;
     }
   };
 
@@ -103,7 +103,7 @@ export default function SalaryNegotiatorBoard({
       case "resistant":
         return `${name} is pushing back, arguing standard benchmark constraints. Emphasize achievements to build leverage.`;
       case "offended":
-        return `âš ï¸ ${name} is offended by your demand. Proceed with caution â€” further aggressive demands could lose the offer.`;
+        return `${name} is offended by your demand. Proceed with caution â€” further aggressive demands could lose the offer.`;
       default:
         return `${name} is currently open to hearing your feedback. Present your case collaboratively.`;
     }
@@ -149,7 +149,7 @@ export default function SalaryNegotiatorBoard({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-paper-card">
           <div className="flex items-center gap-3">
             <span className="bg-accent/15 text-accent border border-accent/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-              ðŸ’° Salary Negotiator Simulator
+              💰 Salary Negotiator Simulator
             </span>
             <h2 className="hidden md:inline-block font-display text-lg font-bold text-ink">
               {roleTitle} @ {companyName}
@@ -171,14 +171,14 @@ export default function SalaryNegotiatorBoard({
                   : "bg-paper border-border text-ink-muted hover:text-ink"
               }`}
             >
-              <span>{useVoiceFeedback ? "ðŸ”Š Voice On" : "ðŸ”‡ Voice Off"}</span>
+              <span>{useVoiceFeedback ? "🔊 Voice On" : "🔇 Voice Off"}</span>
             </button>
             <button
               onClick={onClose}
               className="text-ink-muted hover:text-ink hover:bg-paper-warm border border-border p-2 rounded-xl text-sm transition"
               title="Quit simulator"
             >
-              âœ• Quit
+              ✕ Quit
             </button>
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function SalaryNegotiatorBoard({
                             className="opacity-0 group-hover:opacity-100 transition text-[10px] bg-paper border border-border px-1.5 py-0.5 rounded ml-2 text-ink-muted hover:text-ink cursor-pointer"
                             title="Speak message"
                           >
-                            ðŸ”Š Read
+                            🔊 Read
                           </button>
                         )}
                       </div>
@@ -285,7 +285,7 @@ export default function SalaryNegotiatorBoard({
                           </>
                         ) : (
                           <>
-                            <span>ðŸŽ¤ Speak</span>
+                            <span>🎤 Speak</span>
                           </>
                         )}
                       </button>
@@ -305,13 +305,13 @@ export default function SalaryNegotiatorBoard({
                         {isSubmitting ? (
                           <span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                          "ðŸš€ Send"
+                          "🚀 Send"
                         )}
                       </button>
                     </div>
                     
                     {errorMsg && (
-                      <div className="text-rose-400 text-xs mt-1">âš ï¸ {errorMsg}</div>
+                      <div className="text-rose-400 text-xs mt-1">⚠️ {errorMsg}</div>
                     )}
 
                     {/* Immediate Action Buttons */}
@@ -322,7 +322,7 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting}
                         className="bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-600/20 transition cursor-pointer"
                       >
-                        ðŸ¤ Accept Offer
+                        🤝 Accept Offer
                       </button>
                       <button
                         type="button"
@@ -330,13 +330,13 @@ export default function SalaryNegotiatorBoard({
                         disabled={isSubmitting}
                         className="bg-rose-600/10 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-rose-600/20 transition cursor-pointer"
                       >
-                        ðŸ›‘ Decline Offer
+                        🛑 Decline Offer
                       </button>
                     </div>
                   </form>
                 ) : (
                   <div className="text-center py-2 text-sm text-ink-muted flex items-center justify-center gap-2">
-                    <span>ðŸ Simulator finished:</span>
+                    <span>🏁 Simulator finished:</span>
                     <span className="font-bold capitalize text-ink">{verdict.replace("_", " ")}</span>
                   </div>
                 )}
@@ -428,7 +428,7 @@ export default function SalaryNegotiatorBoard({
                     </div>
                     {proximityPct >= 80 && (
                       <div className="text-[10px] text-rose-400 font-medium leading-normal animate-pulse">
-                        âš ï¸ Recruiter is resisting further base salary increases. Pushing harder risks losing the offer!
+                        ⚠️ Recruiter is resisting further base salary increases. Pushing harder risks losing the offer!
                       </div>
                     )}
                   </div>
@@ -438,7 +438,7 @@ export default function SalaryNegotiatorBoard({
               {/* Tactics Checklist */}
               <SpotlightCard className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center justify-between">
-                  <span>ðŸŽ¯ Tactic Checklist</span>
+                  <span>🎯 Tactic Checklist</span>
                   <span className="text-[10px] text-accent font-semibold">{completedTactics.length}/5 Used</span>
                 </h3>
                 <div className="space-y-2 text-xs">
@@ -452,7 +452,7 @@ export default function SalaryNegotiatorBoard({
                     const isDone = completedTactics.includes(t.name);
                     return (
                       <div key={t.name} className={`flex items-start gap-2.5 p-2 rounded-xl border transition ${isDone ? 'bg-emerald-500/5 border-emerald-500/20 text-ink' : 'bg-paper/30 border-border/40 text-ink-muted'}`}>
-                        <span className="text-sm select-none">{isDone ? "âœ…" : "â­•"}</span>
+                        <span className="text-sm select-none">{isDone ? "✅" : "⭕"}</span>
                         <div>
                           <div className={`font-bold text-[11px] ${isDone ? 'text-emerald-500/80 line-through opacity-85' : 'text-ink'}`}>
                             {t.name}
@@ -607,7 +607,7 @@ export default function SalaryNegotiatorBoard({
               {/* Live AI Coach */}
               <SpotlightCard className="p-5 mb-4 space-y-4 bg-paper/50 border border-border/60 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
-                  <span>ðŸ’¡ Live AI Coach</span>
+                  <span>💡 Live AI Coach</span>
                 </h3>
                 <div className="bg-accent/5 border border-accent/10 p-3 rounded-xl text-xs leading-relaxed text-ink-muted italic">
                   &quot;{coachFeedback}&quot;
@@ -715,7 +715,7 @@ export default function SalaryNegotiatorBoard({
                       </div>
                     ) : (
                       <div className="text-xs text-amber-400 font-medium flex flex-col gap-1">
-                        <span className="flex items-center gap-1.5 font-bold">ðŸ’¸ Money Left on the Table: ${Math.max(0, recruiter.hiddenCeilingBudget - currentOffer.base).toLocaleString()}</span>
+                        <span className="flex items-center gap-1.5 font-bold">💸 Money Left on the Table: ${Math.max(0, recruiter.hiddenCeilingBudget - currentOffer.base).toLocaleString()}</span>
                         <span className="text-[11px] text-ink-muted font-normal leading-relaxed">
                           The corporate limit was ${recruiter.hiddenCeilingBudget.toLocaleString()}. You could have pushed for a higher base salary. See the coach evaluation note below to improve your anchoring.
                         </span>
@@ -776,18 +776,18 @@ export default function SalaryNegotiatorBoard({
                   {savingStatus === "saving" && <span>Saving simulation data...</span>}
                   {savingStatus === "saved" && (
                     <span className="text-emerald-400 font-medium">
-                      âœ“ Scorecard logged successfully to {savedMethod === "db" ? "user dashboard history" : "local storage fallback"}!
+                      ✓ Scorecard logged successfully to {savedMethod === "db" ? "user dashboard history" : "local storage fallback"}!
                     </span>
                   )}
                   {savingStatus === "error" && (
-                    <span className="text-rose-400">âš ï¸ Failed to save: {savingError}</span>
+                    <span className="text-rose-400">⚠️ Failed to save: {savingError}</span>
                   )}
                 </div>
                 <button
                   onClick={onClose}
                   className="bg-accent hover:bg-accent/90 text-white font-semibold px-6 py-2 rounded-xl text-xs transition cursor-pointer"
                 >
-                  Return to Negotiator Page âž”
+                  Return to Negotiator Page ➔
                 </button>
               </div>
 

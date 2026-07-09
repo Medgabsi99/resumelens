@@ -309,7 +309,6 @@ Template recommendation guide:
   // Use codified template recommendation logic
   parsed.recommendedTemplate = getRecommendedTemplate(
     targetRole || "",
-    resumeText || "",
     parsed.experience || []
   );
 

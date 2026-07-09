@@ -64,6 +64,7 @@ export default function ResultsPanel({
   resumeText,
   jobDescription,
   targetRole,
+  analysisId,
 }: Props) {
   const componentRef = useRef<HTMLDivElement>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
