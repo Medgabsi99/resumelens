@@ -415,7 +415,7 @@ export default function MockInterviewSimulatorBoard({
   // ── Render ────────────────────────────────────────────────
   return (
     <div
-     className="z-[9999] flex items-center justify-center p-4 backdrop-blur-md font-body text-slate-100"
+     className="fixed inset-0 overflow-y-auto z-[9999] flex items-center justify-center p-4 backdrop-blur-md font-body text-slate-100"
       style={{
         background: "rgba(10, 10, 12, 0.96)",
       }}
