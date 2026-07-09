@@ -6,12 +6,13 @@ import CreativePdfTemplate from "./CreativePdfTemplate";
 import MinimalPdfTemplate from "./MinimalPdfTemplate";
 import ExecutivePdfTemplate from "./ExecutivePdfTemplate";
 import { type ParsedResume } from "@/lib/parseResume";
+import { type ResumeCustomStyle } from "@/components/ResumeEditor/types";
 
 export function getPdfTemplateComponent(
   templateId: string,
   data: ParsedResume,
   targetRole?: string,
-  customStyle?: Record<string, unknown>
+  customStyle?: ResumeCustomStyle
 ) {
   const props = { data, targetRole, customStyle };
   switch (templateId) {
@@ -35,7 +36,7 @@ export function renderResumePdf(
   templateId: string,
   data: ParsedResume,
   targetRole?: string,
-  customStyle?: Record<string, unknown>
+  customStyle?: ResumeCustomStyle
 ): React.ReactElement {
   const component = getPdfTemplateComponent(templateId, data, targetRole, customStyle);
   return React.createElement(

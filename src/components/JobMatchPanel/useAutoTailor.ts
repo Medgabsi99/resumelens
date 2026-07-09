@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import { useState } from "react";
+import { type ParsedResume } from "@/lib/parseResume";
 
 interface UseAutoTailorArgs {
   resumeText: string;
@@ -7,10 +8,18 @@ interface UseAutoTailorArgs {
   jobTitle?: string;
 }
 
+interface TailoredResumeResult {
+  success: boolean;
+  tailoredResume: ParsedResume;
+  tailoredText: string;
+  recommendedTemplate?: string;
+  error?: string;
+}
+
 export function useAutoTailor({ resumeText, jobDescription, jobTitle }: UseAutoTailorArgs) {
   const [isTailoring, setIsTailoring] = useState(false);
   const [tailorError, setTailorError] = useState<string | null>(null);
-  const [tailoredResult, setTailoredResult] = useState<Record<string, unknown> | null>(null);
+  const [tailoredResult, setTailoredResult] = useState<TailoredResumeResult | null>(null);
   const [showDiff, setShowDiff] = useState(false);
   const [appliedTailored, setAppliedTailored] = useState(false);
 
@@ -35,7 +44,7 @@ export function useAutoTailor({ resumeText, jobDescription, jobTitle }: UseAutoT
       setTailoredResult(data);
       setShowDiff(true);
     } catch (err: unknown) {
-      logger.error(err);
+      logger.error("Auto-tailor error:", err);
       setTailorError((err as Error).message || "Failed to auto-tailor resume.");
     } finally {
       setIsTailoring(false);

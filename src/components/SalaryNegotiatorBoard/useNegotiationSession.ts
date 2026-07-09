@@ -301,7 +301,7 @@ export function useNegotiationSession({
         handleConcludeNegotiation(turn.conclusionVerdict, turn.currentOffer);
       }
     } catch (err: unknown) {
-      logger.error(err);
+      logger.error("Negotiation turn error:", err);
       setErrorMsg((err as Error).message || "Failed to reach recruiter. Make sure server is online.");
       setMessageHistory((prev) => prev.slice(0, -1));
       setInputText(userMsg);

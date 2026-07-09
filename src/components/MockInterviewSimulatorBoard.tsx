@@ -322,7 +322,7 @@ export default function MockInterviewSimulatorBoard({
       setAnswerText("");
       setCurrentIdx((prev) => prev + 1);
     } catch (err: unknown) {
-      logger.error(err);
+      logger.error("Response grading error:", err);
       setEvalError((err as Error).message || "An error occurred during response grading.");
     } finally {
       setIsEvaluating(false);

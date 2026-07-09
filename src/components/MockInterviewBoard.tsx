@@ -180,7 +180,7 @@ const toggleRecording = async () => {
         )
       );
     } catch (err: unknown) {
-      logger.error(err);
+      logger.error("Answer evaluation error:", err);
       setEvalError((err as Error).message || "An error occurred during evaluation.");
     } finally {
       setIsEvaluating(false);

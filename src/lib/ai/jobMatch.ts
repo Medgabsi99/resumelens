@@ -437,16 +437,15 @@ function getRecommendedTemplate(
     let maxYear = 1970;
     let foundDates = false;
     for (const exp of experience) {
-      if (exp.dates) {
-        const years = exp.dates.match(/\b\d{4}\b/g);
-        if (years && years.length > 0) {
-          foundDates = true;
-          const numYears = years.map(Number);
-          const expMin = Math.min(...numYears);
-          const expMax = Math.max(...numYears);
-          if (expMin < minYear) minYear = expMin;
-          if (expMax > maxYear) maxYear = expMax;
-        }
+      const dates = typeof exp.dates === "string" ? exp.dates : "";
+      const years = dates.match(/\b\d{4}\b/g);
+      if (years && years.length > 0) {
+        foundDates = true;
+        const numYears = years.map(Number);
+        const expMin = Math.min(...numYears);
+        const expMax = Math.max(...numYears);
+        if (expMin < minYear) minYear = expMin;
+        if (expMax > maxYear) maxYear = expMax;
       }
     }
     if (foundDates && maxYear >= minYear) {
