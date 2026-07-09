@@ -125,6 +125,16 @@ const STREAMING_CSS = `
 export default function StreamingText({ text, isStreaming, className, style }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Inject styles into <head> once — avoids HMR removeChild errors caused
+  // by rendering a bare <style> tag in the React tree.
+  useEffect(() => {
+    if (document.querySelector("style[data-sl-styles]")) return;
+    const tag = document.createElement("style");
+    tag.setAttribute("data-sl-styles", "1");
+    tag.textContent = STREAMING_CSS;
+    document.head.appendChild(tag);
+  }, []);
+
   // Keep container scrolled as content grows
   useEffect(() => {
     if (isStreaming && containerRef.current) {
@@ -140,18 +150,14 @@ export default function StreamingText({ text, isStreaming, className, style }: P
   const renderedHtml = markdownToHtml(text);
 
   return (
-    <>
-      {/* Inject styles once — they're tiny and scoped with sl- prefix */}
-      <style dangerouslySetInnerHTML={{ __html: STREAMING_CSS }} />
-      <div
-        ref={containerRef}
-        className={`sl-streaming-container ${className || ""}`}
-        style={style}
-        // Safe: we control the markdown renderer and escape raw HTML
-        dangerouslySetInnerHTML={{
-          __html: renderedHtml + (isStreaming ? '<span class="sl-cursor" aria-hidden="true"></span>' : ""),
-        }}
-      />
-    </>
+    <div
+      ref={containerRef}
+      className={`sl-streaming-container ${className || ""}`}
+      style={style}
+      // Safe: we control the markdown renderer and escape raw HTML
+      dangerouslySetInnerHTML={{
+        __html: renderedHtml + (isStreaming ? '<span class="sl-cursor" aria-hidden="true"></span>' : ""),
+      }}
+    />
   );
 }
