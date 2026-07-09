@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { SavedResume } from "@/types";
@@ -7,7 +6,7 @@ import { SavedResume } from "@/types";
 // GET /api/resumes — list all saved resumes
 export async function GET() {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   const { data, error } = await supabase
     .from("resumes")
@@ -27,7 +26,7 @@ export async function GET() {
 // POST /api/resumes — save a new resume
 export async function POST(req: NextRequest) {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   const body = await req.json();
   const { name, resumeText, targetRole, targetCompany, jobDescription, lastScore } = body;

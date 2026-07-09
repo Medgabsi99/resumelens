@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-server";
 import { analyzeResume, extractTextFromBuffer } from "@/lib/ai";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
 import { AnalyzeResponse } from "@/types";

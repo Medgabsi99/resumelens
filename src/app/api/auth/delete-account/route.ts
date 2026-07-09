@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { requireUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 

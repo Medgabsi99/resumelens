@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -24,13 +23,13 @@ const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
-  const applicationId = params.id;
+  const { id: applicationId } = await params;
   if (!applicationId) {
     return NextResponse.json(
       { success: false, error: "Application ID is required" },
@@ -102,13 +101,13 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
-  const applicationId = params.id;
+  const { id: applicationId } = await params;
   if (!applicationId) {
     return NextResponse.json(
       { success: false, error: "Application ID is required" },

@@ -1,7 +1,7 @@
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { createAdminClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-server";
 import { PLAN_LIMITS } from "@/lib/stripe";
 import Stripe from "stripe";
 

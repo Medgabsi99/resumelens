@@ -1,12 +1,11 @@
-import { createServerComponentClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
-import { createAdminClient } from "./supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
+import { createAdminClient } from "./supabase-server";
 import { UserProfile } from "@/types";
 import { PLAN_LIMITS } from "./stripe";
 
 // Get current authenticated user from Supabase Auth server (verifies JWT, not just cookies)
 export async function getServerSession() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
   const {
     data: { user },
     error,
@@ -18,7 +17,7 @@ export async function getServerSession() {
 
 // Authenticates user and returns the user object, or throws Error if not authenticated
 export async function requireUser() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
   const {
     data: { user },
     error,
@@ -45,7 +44,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return cached.profile;
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")

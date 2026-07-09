@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
@@ -12,7 +11,7 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   // ── 2. Load user profile & check quota ───────────────────
   const profile = await getUserProfile(_user.id);

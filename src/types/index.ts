@@ -22,6 +22,8 @@ export interface AnalysisResult {
   keywords_missing?: string[];
   suggestions: RewriteSuggestion[];
   ats_breakdown?: AtsBreakdown;
+  /** Set to true when the saved JSON is actually a CommitteeDebriefResult wrapped in an analysis row */
+  isCommittee?: true;
 }
 
 // ─── API Request/Response ─────────────────────────────────
@@ -253,4 +255,18 @@ export interface CommitteeDebriefResult {
   weaknessesDebated: string[];
   recommendedRemedies: string[];
   isCommittee: true;
+}
+
+// ─── Salary Negotiation ──────────────────────────────────
+
+export interface SavedNegotiationItem {
+  id: string;
+  user_id?: string;
+  role_title: string;
+  company_name: string;
+  scenario: string;
+  initial_offer: Record<string, unknown>;
+  final_scorecard: Record<string, unknown>;
+  created_at: string;
+  isLocal?: boolean;
 }

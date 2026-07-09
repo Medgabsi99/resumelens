@@ -1,6 +1,5 @@
 import { logger } from "@/lib/logger";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 import { createProfile } from "@/lib/auth";
 
@@ -20,7 +19,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createRouteHandlerClient();
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {

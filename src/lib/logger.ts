@@ -50,8 +50,15 @@ class StructuredLogger {
     console.warn(this.format("warn", message, context));
   }
 
-  error(message: string, context?: unknown) {
-    console.error(this.format("error", message, context));
+  error(message: string | unknown, context?: unknown) {
+    const msg =
+      typeof message === "string"
+        ? message
+        : message instanceof Error
+          ? message.message
+          : String(message);
+    const ctx = context ?? (message instanceof Error || typeof message !== "string" ? message : undefined);
+    console.error(this.format("error", msg, ctx));
   }
 }
 

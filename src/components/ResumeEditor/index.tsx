@@ -13,7 +13,7 @@ import { useResumeVersions } from "./useResumeVersions";
 import ToolbarButton from "./ToolbarButton";
 import ScoreTrendChart from "./ScoreTrendChart";
 import VersionDiffModal from "./VersionDiffModal";
-import { TemplateId, ResumeVersion } from "./types";
+import { TemplateId, ResumeVersion, ResumeCustomStyle } from "./types";
 import { useSmartEnhance } from "./useSmartEnhance";
 import { useSelectionOptimizer } from "./useSelectionOptimizer";
 import { useDesignCustomizer } from "./useDesignCustomizer";

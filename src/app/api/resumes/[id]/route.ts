@@ -1,20 +1,20 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // DELETE /api/resumes/<id>
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+  const { id } = await params;
 
   const { error } = await supabase
     .from("resumes")
     .delete()
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", _user.id);
 
   if (error) {
@@ -28,10 +28,11 @@ export async function DELETE(
 // PUT /api/resumes/<id> — update name/role/company/jd/text
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+  const { id } = await params;
 
   const body = await req.json();
 
@@ -57,7 +58,7 @@ export async function PUT(
   const { data, error } = await supabase
     .from("resumes")
     .update(update)
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", _user.id)
     .select()
     .single();

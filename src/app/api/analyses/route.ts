@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   // ── 2. Fetch analyses summary ────────────────────────────
   // Exclude result_json and resume_text to keep payload lightweight and fast

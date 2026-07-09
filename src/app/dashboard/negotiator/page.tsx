@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";
+import { type SavedNegotiationItem } from "@/types";
 import { useToast } from "@/components/ToastProvider";
 import EmptyState from "@/components/EmptyState";
 import dynamic from "next/dynamic";

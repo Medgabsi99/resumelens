@@ -1,5 +1,4 @@
-import { createServerComponentClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import ResultsPanel from "@/components/ResultsPanel";
 import PrintButton from "@/components/PrintButton";
@@ -8,9 +7,10 @@ import { type Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const supabase = createServerComponentClient({ cookies });
+  const { id } = await params;
+  const supabase = await createServerComponentClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { data: analysis } = await supabase
     .from("analyses")
     .select("target_role")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
@@ -34,20 +34,21 @@ export async function generateMetadata({
 export default async function PastAnalysisPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const supabase = createServerComponentClient({ cookies });
+  const { id } = await params;
+  const supabase = await createServerComponentClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login?next=/dashboard/" + params.id);
+  if (!user) redirect("/login?next=/dashboard/" + id);
 
   // Fetch the analysis
   const { data: analysis, error } = await supabase
     .from("analyses")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single();
 

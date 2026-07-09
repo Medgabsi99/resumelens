@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -25,7 +24,7 @@ const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   // ── 2. Fetch applications ────────────────────────────────
   const { data, error } = await supabase
@@ -45,7 +44,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
   // ── 2. Parse and validate request ────────────────────────
   const body = (await req.json()) as CreateApplicationRequest;

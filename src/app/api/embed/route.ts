@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 /**
  * POST /api/embed
  *
@@ -30,7 +29,7 @@ import logger from "@/lib/logger";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
   // ── 1. Auth ───────────────────────────────────────────────
   const user = await requireUser();
   const userId = user.id;

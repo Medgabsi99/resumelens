@@ -2,7 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, PRICES } from "@/lib/stripe";
 import { getUserProfile } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────

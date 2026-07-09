@@ -1,10 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import dynamic from "next/dynamic";
-
-const ApplicationTracker = dynamic(() => import("@/components/ApplicationTracker"), {
-  ssr: false,
-  loading: () => <div className="p-8 text-center text-muted">Loading Applications...</div>,
-});
+import ClientApplicationTracker from "@/components/ClientApplicationTracker";
 
 export const metadata = {
   title: "Job Applications · ResumeLens",
@@ -13,7 +8,7 @@ export const metadata = {
 export default function ApplicationsPage() {
   return (
     <DashboardLayout>
-      <ApplicationTracker />
+      <ClientApplicationTracker />
     </DashboardLayout>
   );
 }

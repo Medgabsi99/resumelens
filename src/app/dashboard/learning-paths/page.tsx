@@ -254,8 +254,8 @@ export default function LearningPathsPage() {
       roleTitle: item.role_title,
       companyName: item.company_name,
       missingSkills: item.missing_skills,
-      project: item.project_details,
-      milestones: item.learning_path,
+      project: item.project_details as SkillGapPathResult["project"],
+      milestones: item.learning_path as unknown as SkillGapPathResult["milestones"],
     };
     setActivePathData(formatted);
     setActivePathId(item.id);

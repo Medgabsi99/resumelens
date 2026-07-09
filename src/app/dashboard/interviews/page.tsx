@@ -28,7 +28,7 @@ interface SavedInterviewItem {
   interview_type: string;
   difficulty: string;
   questions: string[];
-  transcripts: Array<{ question: string; answer: string; score?: number; feedback?: string }>;
+  transcripts: Array<{ question: string; answer: string; score?: number; feedback?: string; sampleAnswer?: string }>;
   overall_score: number;
   star_mastery: number;
   filler_words: Record<string, number>;

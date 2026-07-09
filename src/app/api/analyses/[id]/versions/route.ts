@@ -1,21 +1,21 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/analyses/[id]/versions — list all versions for this analysis
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+    const { id } = await params;
 
     const { data, error } = await supabase
       .from("resume_versions")
       .select("*")
-      .eq("analysis_id", params.id)
+      .eq("analysis_id", id)
       .eq("user_id", _user.id)
       .order("created_at", { ascending: false });
 
@@ -34,11 +34,12 @@ export async function GET(
 // POST /api/analyses/[id]/versions — create a new version snapshot
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+    const { id } = await params;
 
     const body = await req.json();
     const { versionName, resumeText, score } = body;
@@ -51,7 +52,7 @@ export async function POST(
       .from("resume_versions")
       .insert({
         user_id: _user.id,
-        analysis_id: params.id,
+        analysis_id: id,
         version_name: versionName.trim(),
         resume_text: resumeText,
         score: score ?? null,
@@ -74,11 +75,12 @@ export async function POST(
 // DELETE /api/analyses/[id]/versions — delete a specific version
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+    const { id } = await params;
 
     const versionId = req.nextUrl.searchParams.get("versionId");
     if (!versionId) {
@@ -89,7 +91,7 @@ export async function DELETE(
       .from("resume_versions")
       .delete()
       .eq("id", versionId)
-      .eq("analysis_id", params.id)
+      .eq("analysis_id", id)
       .eq("user_id", _user.id);
 
     if (error) {

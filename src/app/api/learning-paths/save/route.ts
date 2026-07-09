@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
     const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();

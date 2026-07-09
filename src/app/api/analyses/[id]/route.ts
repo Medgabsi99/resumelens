@@ -1,19 +1,19 @@
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+  const { id } = await params;
 
   const { data: analysis, error } = await supabase
     .from("analyses")
     .select("id, resume_text, job_description, target_role, score, result_json, created_at")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", _user.id)
     .single();
 
@@ -40,15 +40,16 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const _user = await requireUser();
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerComponentClient();
+  const { id } = await params;
 
   const { error } = await supabase
     .from("analyses")
     .delete()
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", _user.id);
 
   if (error) {
