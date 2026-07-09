@@ -1,3 +1,5 @@
+const path = require("path");
+
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
@@ -13,6 +15,9 @@ const cspHeader = `
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     // Disables the /_next/image optimization endpoint (DoS surface — GHSA-h64f-5h5j-jqjh).
     // This app uses no next/image components; unoptimized: true makes the route a
