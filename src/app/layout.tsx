@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastProvider from "@/components/ToastProvider";
@@ -8,6 +8,13 @@ import { ContextMenuProvider } from "@/components/ContextMenu";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://resumelens.vercel.app";
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0e11" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -81,12 +88,6 @@ export const metadata: Metadata = {
     images: ["/icon-512.png"],
     creator: "@resumelens",
   },
-
-  /* ── Theme ── */
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e0e11" },
-  ],
 };
 
 export default function RootLayout({
