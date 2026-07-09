@@ -1,8 +1,7 @@
 import { logger } from "@/lib/logger";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient, createAdminClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
+import { createAdminClient } from "@/lib/supabase";
 import { analyzeResume, extractTextFromBuffer } from "@/lib/ai";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
 import { AnalyzeResponse } from "@/types";
@@ -11,11 +10,9 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeResponse>> {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
-  const userId = session.user.id;
+  const userId = _user.id;
 
   // ── 2. Load user profile & check quota ───────────────────
   const profile = await getUserProfile(userId);

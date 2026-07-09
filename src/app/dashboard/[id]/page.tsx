@@ -2,7 +2,6 @@ import { createServerComponentClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ResultsPanel from "@/components/ResultsPanel";
-import { AnalysisResult } from "@/types";
 import PrintButton from "@/components/PrintButton";
 import { type Metadata } from "next";
 

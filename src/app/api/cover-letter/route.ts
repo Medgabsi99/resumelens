@@ -2,8 +2,6 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { generateCoverLetterStream } from "@/lib/ai";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
@@ -11,13 +9,11 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   // ── 2. Load user profile & check quota ───────────────────
   // We require the user to have active quota to generate a cover letter
-  const profile = await getUserProfile(session.user.id);
+  const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
       { success: false, error: "Upgrade required to generate cover letter" },

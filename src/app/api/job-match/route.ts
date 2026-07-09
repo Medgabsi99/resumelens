@@ -2,8 +2,6 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { matchJobToResume } from "@/lib/ai/jobMatch";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
@@ -11,12 +9,10 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   // ── 2. Load user profile & check quota ───────────────────
-  const profile = await getUserProfile(session.user.id);
+  const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
       { success: false, error: "Upgrade required to match against a job" },
@@ -52,14 +48,14 @@ export async function POST(req: NextRequest) {
       jobDescription,
       jobTitle,
       companyName,
-      session.user.id,  // userId — enables embedding-based similarity grounding
+      _user.id,  // userId — enables embedding-based similarity grounding
       supabase,         // authenticated client — for vector search
     );
 
     // ── 5. Persist match to database (optional) ─────────────
     try {
       await supabase.from("job_matches").insert({
-        user_id: session.user.id,
+        user_id: _user.id,
         job_title: jobTitle || null,
         company_name: companyName || null,
         job_description: jobDescription,

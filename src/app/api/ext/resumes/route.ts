@@ -1,7 +1,5 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
 
 export async function OPTIONS(req: NextRequest) {
@@ -10,14 +8,12 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-    const session = { user };
+    const _user = await requireUser();
 
     const { data, error } = await supabase
       .from("resumes")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", _user.id)
       .order("updated_at", { ascending: false })
       .limit(50);
 

@@ -97,7 +97,7 @@ export function useDragAndDrop(
   );
 
   // ── Column drag-leave ─────────────────────────────────────────
-  const handleDragLeave = useCallback((_status: ApplicationStatus) => {
+  const handleDragLeave = useCallback((_unused: ApplicationStatus) => {
     // Leave column highlight until drop/end to avoid flicker
   }, []);
 

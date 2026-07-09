@@ -1,19 +1,15 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { SavedResume } from "@/types";
 
 // GET /api/resumes — list all saved resumes
 export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const { data, error } = await supabase
     .from("resumes")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", _user.id)
     .order("updated_at", { ascending: false })
     .limit(50);
 
@@ -27,9 +23,7 @@ export async function GET() {
 
 // POST /api/resumes — save a new resume
 export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const body = await req.json();
   const { name, resumeText, targetRole, targetCompany, jobDescription, lastScore } = body;
@@ -41,7 +35,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from("resumes")
     .insert({
-      user_id: session.user.id,
+      user_id: _user.id,
       name: name.trim(),
       target_role: targetRole || null,
       target_company: targetCompany || null,

@@ -1,8 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
 
 export async function OPTIONS(req: NextRequest) {
@@ -11,9 +9,7 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-    const session = { user };
+    const _user = await requireUser();
 
     const body = await req.json();
     const {
@@ -36,7 +32,7 @@ export async function POST(req: NextRequest) {
     const { error: matchError } = await supabase
       .from("job_matches")
       .insert({
-        user_id: session.user.id,
+        user_id: _user.id,
         job_title: jobTitle,
         company_name: companyName,
         job_description: jobDescription,
@@ -55,7 +51,7 @@ export async function POST(req: NextRequest) {
     const { error: appError } = await supabase
       .from("applications")
       .insert({
-        user_id: session.user.id,
+        user_id: _user.id,
         company_name: companyName,
         job_title: jobTitle,
         job_url: jobUrl || null,

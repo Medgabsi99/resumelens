@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function AtsScannerBoard({ data, fileName, onClose }: Props) {
+export default function AtsScannerBoard({ data, onClose }: Props) {
   const [activeHighlight, setActiveHighlight] = useState<AtsZoneHighlight | null>(
     data.highlightedZones.length > 0 ? data.highlightedZones[0] : null
   );

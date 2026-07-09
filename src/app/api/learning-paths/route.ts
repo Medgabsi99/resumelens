@@ -1,8 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { generateSkillGapPath } from "@/lib/ai";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -10,9 +8,7 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    await requireUser();
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();

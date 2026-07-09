@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as Diff from "diff";
 import { parseResume } from "@/lib/parseResume";
@@ -97,7 +97,7 @@ export default function JobMatchPanel({
     jobTitle, setJobTitle,
     companyName, setCompanyName,
     isMatching,
-    error, setError,
+    error,
     result,
     handleMatch,
     clearResult,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
@@ -68,7 +68,7 @@ function useFABConfig(): FABConfig | null {
           label: "Add Application",
           icon: "➕",
           description: "Track a new job",
-          onClick: (r) => {
+          onClick: (_r) => {
             // Dispatch a custom event that the ApplicationTracker listens for
             window.dispatchEvent(new CustomEvent("fab:add-application"));
           },
@@ -99,7 +99,7 @@ function useFABConfig(): FABConfig | null {
           label: "New Interview",
           icon: "🎤",
           description: "Start a mock session",
-          onClick: (r) => {
+          onClick: (_r) => {
             window.dispatchEvent(new CustomEvent("fab:start-interview"));
           },
         },

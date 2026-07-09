@@ -1,22 +1,18 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 
 // DELETE /api/resumes/<id>
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const { error } = await supabase
     .from("resumes")
     .delete()
     .eq("id", params.id)
-    .eq("user_id", session.user.id);
+    .eq("user_id", _user.id);
 
   if (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -31,9 +27,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const body = await req.json();
 
@@ -60,7 +54,7 @@ export async function PUT(
     .from("resumes")
     .update(update)
     .eq("id", params.id)
-    .eq("user_id", session.user.id)
+    .eq("user_id", _user.id)
     .select()
     .single();
 

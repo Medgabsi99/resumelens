@@ -2,17 +2,13 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { generateSmartResume } from "@/lib/ai";
 import { resumeToText } from "@/lib/parseResume";
 
 export async function POST(req: NextRequest) {
   try {
     // Auth check
-    const supabase = createServerComponentClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    await requireUser();
 
     const body = await req.json();
     let { resumeText, targetRole, jobDescription } = body;

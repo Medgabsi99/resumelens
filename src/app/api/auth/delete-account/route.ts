@@ -1,14 +1,14 @@
 import { logger } from "@/lib/logger";
 import { requireUser } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase";
 import { getUserProfile } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    const user = await requireUser();
-    const profile = await getUserProfile(user.id);
+    const _user = await requireUser();
+    const profile = await getUserProfile(_user.id);
 
     // 1. Delete customer in Stripe (this cancels all active subscriptions automatically)
     if (profile?.stripe_customer_id) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     // 2. Delete the user from Supabase Auth via the Admin client
     // Due to ON DELETE CASCADE on profiles/resumes/analyses tables, this will cascade and wipe all DB tables clean.
     const admin = createAdminClient();
-    const { error } = await admin.auth.admin.deleteUser(user.id);
+    const { error } = await admin.auth.admin.deleteUser(_user.id);
 
     if (error) {
       logger.error("Supabase Admin deleteUser error:", error);

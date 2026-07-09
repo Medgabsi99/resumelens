@@ -127,7 +127,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         {/* Timeline Tab */}
         {activeTab === "timeline" && (
           <div className="space-y-8 relative before:absolute before:top-4 before:bottom-4 before:left-6 before:w-[2px] before:bg-border/60">
-            {data.milestones.map((milestone, idx) => {
+            {data.milestones.map((milestone) => {
               const completed = completedWeeks[milestone.week] || false;
               return (
                 <div

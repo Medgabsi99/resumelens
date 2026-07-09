@@ -1,13 +1,9 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    const _user = await requireUser();
 
     const analysisId = req.nextUrl.searchParams.get("analysisId");
     if (!analysisId) {
@@ -18,7 +14,7 @@ export async function GET(req: NextRequest) {
       .from("user_portfolios")
       .select("*")
       .eq("analysis_id", analysisId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", _user.id)
       .maybeSingle();
 
     if (error) {
@@ -35,9 +31,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    const _user = await requireUser();
 
     const body = await req.json();
     const { analysisId, theme, content } = body;
@@ -51,7 +45,7 @@ export async function POST(req: NextRequest) {
       .from("user_portfolios")
       .select("id")
       .eq("analysis_id", analysisId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", _user.id)
       .maybeSingle();
 
     if (checkError) {
@@ -77,7 +71,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase
         .from("user_portfolios")
         .insert({
-          user_id: session.user.id,
+          user_id: _user.id,
           analysis_id: analysisId,
           theme,
           content,

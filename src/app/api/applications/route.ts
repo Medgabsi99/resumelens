@@ -1,7 +1,5 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import {
   CreateApplicationRequest,
   JobApplication,
@@ -24,15 +22,13 @@ const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   // ── 2. Fetch applications ────────────────────────────────
   const { data, error } = await supabase
     .from("applications")
     .select("*")
-    .eq("user_id", session.user.id)
+    .eq("user_id", _user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -45,9 +41,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   // ── 2. Parse and validate request ────────────────────────
   const body = (await req.json()) as CreateApplicationRequest;
@@ -77,7 +71,7 @@ export async function POST(req: NextRequest) {
 
   // ── 3. Insert into database ──────────────────────────────
   const insertData = {
-    user_id: session.user.id,
+    user_id: _user.id,
     company_name: body.companyName.trim(),
     job_title: body.jobTitle.trim(),
     job_url: body.jobUrl?.trim() || null,

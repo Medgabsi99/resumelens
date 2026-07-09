@@ -2,8 +2,6 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { chatWithResumeStream } from "@/lib/ai/chat";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
 
@@ -11,12 +9,10 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth ───────────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   // ── 2. Quota check ────────────────────────────────────────
-  const profile = await getUserProfile(session.user.id);
+  const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
       { success: false, error: "Upgrade required to use chat" },
@@ -49,7 +45,7 @@ export async function POST(req: NextRequest) {
   try {
     const streamResult = await chatWithResumeStream(
       message,
-      session.user.id, // userId — scopes vector search to this user
+      _user.id, // userId — scopes vector search to this user
       supabase,        // authenticated client — passed to retrieval layer
       resumeText,      // full text — fallback if no embeddings stored yet
       jobDescription,

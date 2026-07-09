@@ -1,7 +1,7 @@
 "use client";
 import { logger } from "@/lib/logger";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type NegotiationOffer, type NegotiationScorecard } from "@/lib/ai";

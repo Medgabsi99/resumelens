@@ -2,8 +2,6 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { analyzeHiringCommittee } from "@/lib/ai";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -55,7 +53,6 @@ export async function POST(req: NextRequest) {
     const score = Math.round((debrief.hrScore + debrief.techScore + debrief.productScore) / 3);
 
     // ── 4. Save to Database ──────────────────────────────────
-    const supabase = createRouteHandlerClient({ cookies });
     const { data: newRecord, error: dbErr } = await supabase
       .from("analyses")
       .insert({

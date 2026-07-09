@@ -1,7 +1,5 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 
 // GET /api/analyses/[id]/versions — list all versions for this analysis
 export async function GET(
@@ -9,15 +7,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-    const session = { user };
+    const _user = await requireUser();
 
     const { data, error } = await supabase
       .from("resume_versions")
       .select("*")
       .eq("analysis_id", params.id)
-      .eq("user_id", session.user.id)
+      .eq("user_id", _user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -38,9 +34,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-    const session = { user };
+    const _user = await requireUser();
 
     const body = await req.json();
     const { versionName, resumeText, score } = body;
@@ -52,7 +46,7 @@ export async function POST(
     const { data, error } = await supabase
       .from("resume_versions")
       .insert({
-        user_id: session.user.id,
+        user_id: _user.id,
         analysis_id: params.id,
         version_name: versionName.trim(),
         resume_text: resumeText,
@@ -79,9 +73,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-    const session = { user };
+    const _user = await requireUser();
 
     const versionId = req.nextUrl.searchParams.get("versionId");
     if (!versionId) {
@@ -93,7 +85,7 @@ export async function DELETE(
       .delete()
       .eq("id", versionId)
       .eq("analysis_id", params.id)
-      .eq("user_id", session.user.id);
+      .eq("user_id", _user.id);
 
     if (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);

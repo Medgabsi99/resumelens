@@ -2,10 +2,9 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/components/ToastProvider";
-import { type CommitteeDebriefResult, type DebriefMessage } from "@/types";
+import { type CommitteeDebriefResult } from "@/types";
 import SpotlightCard from "@/components/SpotlightCard";
 
 interface ResumeItem {
@@ -17,7 +16,6 @@ interface ResumeItem {
 }
 
 export default function CommitteeSimulationPage() {
-  const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [mounted, setMounted] = useState(false);
@@ -37,7 +35,7 @@ export default function CommitteeSimulationPage() {
   // Active Results States
   const [activeSimulation, setActiveSimulation] = useState(false);
   const [debriefData, setDebriefData] = useState<CommitteeDebriefResult | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [, setFileName] = useState<string | null>(null);
 
   // Playback Control States
   const [visibleMessageCount, setVisibleMessageCount] = useState(1);

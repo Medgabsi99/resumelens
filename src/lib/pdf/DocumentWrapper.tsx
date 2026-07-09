@@ -36,7 +36,7 @@ Font.register({
 });
 
 interface Props {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title?: string;
   backgroundColor?: string;
 }

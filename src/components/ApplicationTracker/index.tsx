@@ -5,7 +5,6 @@ import {
   ApplicationStatus,
   APPLICATION_STATUS_LABELS,
   JobApplication,
-  APPLICATION_STATUS_COLORS,
 } from "@/types";
 import AddApplicationModal from "@/components/AddApplicationModal";
 import SharedEmptyState from "@/components/EmptyState";

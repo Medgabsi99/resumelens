@@ -241,7 +241,7 @@ const ContextMenuPopup = forwardRef<HTMLDivElement, ContextMenuPopupProps>(
               "0 4px 6px -1px rgba(0,0,0,0.25), 0 16px 40px -8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04)",
           }}
         >
-          {items.map((item, globalIdx) => {
+          {items.map((item) => {
             const enabledIdx = enabledItems.indexOf(item);
             const isFocused = enabledIdx !== -1 && enabledIdx === focusedIdx;
 

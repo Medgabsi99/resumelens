@@ -8,7 +8,6 @@ import {
   CreateApplicationRequest,
   JobApplication,
   Priority,
-  PRIORITY_COLORS,
 } from "@/types";
 
 interface Props {

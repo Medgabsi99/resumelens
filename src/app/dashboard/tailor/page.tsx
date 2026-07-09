@@ -2,8 +2,6 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { parseResume } from "@/lib/parseResume";
 import { useToast } from "@/components/ToastProvider";
@@ -24,8 +22,7 @@ interface KeywordItem {
 }
 
 export default function TailorSandboxPage() {
-  const router = useRouter();
-  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
 
   const [mounted, setMounted] = useState(false);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);

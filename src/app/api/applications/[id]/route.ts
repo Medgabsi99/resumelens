@@ -1,7 +1,5 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import {
   ApplicationStatus,
   JobApplication,
@@ -27,9 +25,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const applicationId = params.id;
   if (!applicationId) {
@@ -82,7 +78,7 @@ export async function PUT(
     .from("applications")
     .update(updateData)
     .eq("id", applicationId)
-    .eq("user_id", session.user.id)
+    .eq("user_id", _user.id)
     .select()
     .single();
 
@@ -106,9 +102,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   // ── 1. Auth check ────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const applicationId = params.id;
   if (!applicationId) {
@@ -123,7 +117,7 @@ export async function DELETE(
     .from("applications")
     .delete()
     .eq("id", applicationId)
-    .eq("user_id", session.user.id);
+    .eq("user_id", _user.id);
 
   if (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);

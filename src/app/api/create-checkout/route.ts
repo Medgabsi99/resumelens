@@ -1,16 +1,12 @@
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { stripe, PRICES } from "@/lib/stripe";
 import { getUserProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
-  const user = await requireUser();
-  const session = { user };
+  const _user = await requireUser();
 
   const { plan } = await req.json();
   if (!plan || !PRICES[plan as keyof typeof PRICES]) {
@@ -18,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   const priceConfig = PRICES[plan as keyof typeof PRICES];
-  const profile = await getUserProfile(session.user.id);
+  const profile = await getUserProfile(_user.id);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
   // ── Get or create Stripe customer ─────────────────────────
@@ -26,8 +22,8 @@ export async function POST(req: NextRequest) {
 
   if (!customerId) {
     const customer = await stripe.customers.create({
-      email: session.user.email,
-      metadata: { supabase_user_id: session.user.id },
+      email: _user.email,
+      metadata: { supabase_user_id: _user.id },
     });
     customerId = customer.id;
 
@@ -36,7 +32,7 @@ export async function POST(req: NextRequest) {
     await admin
       .from("profiles")
       .update({ stripe_customer_id: customerId })
-      .eq("id", session.user.id);
+      .eq("id", _user.id);
   }
 
   // ── Create checkout session ────────────────────────────────
@@ -48,7 +44,7 @@ export async function POST(req: NextRequest) {
     success_url: `${appUrl}/dashboard?upgraded=true`,
     cancel_url: `${appUrl}/pricing`,
     metadata: {
-      supabase_user_id: session.user.id,
+      supabase_user_id: _user.id,
       plan,
     },
   });

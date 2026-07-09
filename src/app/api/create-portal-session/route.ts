@@ -1,13 +1,13 @@
 import { logger } from "@/lib/logger";
 import { requireUser } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getUserProfile } from "@/lib/auth";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    const user = await requireUser();
-    const profile = await getUserProfile(user.id);
+    const _user = await requireUser();
+    const profile = await getUserProfile(_user.id);
 
     if (!profile || !profile.stripe_customer_id) {
       return NextResponse.json(

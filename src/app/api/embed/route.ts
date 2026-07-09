@@ -19,9 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
-import { createRouteHandlerClient } from "@/lib/supabase";
 import { chunkResume } from "@/lib/ai/chunker";
 import { contextualizeChunks } from "@/lib/ai/contextual";
 import { embedBatch } from "@/lib/ai/embeddings";
@@ -31,7 +29,6 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth ───────────────────────────────────────────────
-  const supabase = createRouteHandlerClient({ cookies });
   const user = await requireUser();
   const userId = user.id;
 

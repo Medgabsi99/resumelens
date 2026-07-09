@@ -2,15 +2,11 @@ import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createServerComponentClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 import { generatePortfolio } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    await requireUser();
 
     const body = await req.json();
     let { resumeText } = body;

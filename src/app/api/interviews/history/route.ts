@@ -1,22 +1,18 @@
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@/lib/supabase";
-import { cookies } from "next/headers";
 
 export async function GET() {
   try {
     // 1. Auth check
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    const _user = await requireUser();
 
     // 2. Resiliently fetch from database
     try {
       const { data, error } = await supabase
         .from("mock_interviews")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", _user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -41,9 +37,7 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   try {
     // 1. Auth check
-    const supabase = createRouteHandlerClient({ cookies });
-    const user = await requireUser();
-  const session = { user };
+    const _user = await requireUser();
 
     // 2. Parse ID
     const { searchParams } = new URL(req.url);
@@ -62,7 +56,7 @@ export async function DELETE(req: NextRequest) {
         .from("mock_interviews")
         .delete()
         .eq("id", id)
-        .eq("user_id", session.user.id);
+        .eq("user_id", _user.id);
 
       if (error) {
         logger.warn("Supabase delete failed on mock_interviews:", (error instanceof Error ? error.message : String(error)));
