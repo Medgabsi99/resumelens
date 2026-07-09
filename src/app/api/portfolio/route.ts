@@ -1,9 +1,12 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const analysisId = req.nextUrl.searchParams.get("analysisId");
     if (!analysisId) {
@@ -32,6 +35,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const body = await req.json();
     const { analysisId, theme, content } = body;

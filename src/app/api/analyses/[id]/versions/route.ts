@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,6 +10,7 @@ export async function GET(
 ) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const { data, error } = await supabase
       .from("resume_versions")
@@ -35,6 +38,7 @@ export async function POST(
 ) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const body = await req.json();
     const { versionName, resumeText, score } = body;
@@ -74,6 +78,7 @@ export async function DELETE(
 ) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const versionId = req.nextUrl.searchParams.get("versionId");
     if (!versionId) {

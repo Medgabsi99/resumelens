@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,6 +8,7 @@ export async function GET() {
   try {
     // 1. Auth check
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     // 2. Resiliently fetch from database
     try {
@@ -38,6 +41,7 @@ export async function DELETE(req: NextRequest) {
   try {
     // 1. Auth check
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     // 2. Parse ID
     const { searchParams } = new URL(req.url);

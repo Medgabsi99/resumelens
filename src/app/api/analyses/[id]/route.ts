@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,6 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
   const { data: analysis, error } = await supabase
     .from("analyses")
@@ -40,6 +43,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
   const { error } = await supabase
     .from("analyses")

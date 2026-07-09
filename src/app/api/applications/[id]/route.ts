@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -26,6 +28,7 @@ export async function PUT(
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
   const applicationId = params.id;
   if (!applicationId) {
@@ -103,6 +106,7 @@ export async function DELETE(
 ) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
   const applicationId = params.id;
   if (!applicationId) {

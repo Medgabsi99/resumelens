@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { handleCors, handleCorsPreflight } from "@/lib/cors";
@@ -9,6 +11,7 @@ export async function OPTIONS(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const _user = await requireUser();
+  const supabase = createServerComponentClient({ cookies });
 
     const { data, error } = await supabase
       .from("resumes")
