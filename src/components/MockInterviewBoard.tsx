@@ -323,6 +323,7 @@ const toggleRecording = async () => {
                 </button>
                 <button
                   onClick={onClose}
+                  aria-label="Close interview panel"
                   style={{
                     background: "transparent",
                     border: "none",
@@ -609,6 +610,7 @@ const toggleRecording = async () => {
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close interview summary"
                 style={{
                   background: "transparent",
                   border: "none",
