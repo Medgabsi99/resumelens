@@ -44,9 +44,9 @@ export function useOutreach(
       }
 
       setOutreachMessage(data.data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error(e);
-      setError(e.message || "Network error while generating outreach message.");
+      setError((e as Error).message || "Network error while generating outreach message.");
     } finally {
       setIsGenerating(false);
     }

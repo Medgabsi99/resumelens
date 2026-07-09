@@ -57,9 +57,9 @@ export function useDashboardData() {
 
         setAnalyses(analysesData.data || []);
         setApplications(appsData.data || []);
-      } catch (e: any) {
+      } catch (e: unknown) {
         logger.error(e);
-        setError(e.message || "Failed to fetch dashboard data");
+        setError((e as Error).message || "Failed to fetch dashboard data");
       } finally {
         setLoading(false);
       }

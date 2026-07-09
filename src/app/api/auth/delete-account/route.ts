@@ -31,10 +31,10 @@ export async function POST() {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Delete account API error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to delete account" },
+      { error: (err as Error).message || "Failed to delete account" },
       { status: 500 }
     );
   }

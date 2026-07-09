@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         savedItem = data;
       }
     } catch (err: unknown) {
-      dbError = (err instanceof Error ? err.message : String(err));
+      dbError = (err instanceof Error ? (err as Error).message : String(err));
       logger.warn("Graceful DB exception caught, falling back to local storage:", err);
     }
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Scorecard save API error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to evaluate scorecard" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to evaluate scorecard" },
       { status: 500 }
     );
   }

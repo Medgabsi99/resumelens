@@ -1,8 +1,15 @@
 import { logger } from "@/lib/logger";
+
+// Extend Window for Safari vendor-prefixed AudioContext
+interface WindowWithWebkitAudio extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 // Synthesized audio feedback for negotiation events
 export const playSynthSound = (type: "concession" | "warning" | "outcome") => {
   if (typeof window === "undefined") return;
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  const win = window as WindowWithWebkitAudio;
+  const AudioContextClass = window.AudioContext || win.webkitAudioContext;
   if (!AudioContextClass) return;
 
   try {

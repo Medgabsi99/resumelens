@@ -21,8 +21,8 @@ export function useResumeVersions(
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to fetch versions");
       setVersions(data.data || []);
-    } catch (err: any) {
-      setVersionError(err.message || "Could not load version history");
+    } catch (err: unknown) {
+      setVersionError((err as Error).message || "Could not load version history");
     } finally {
       setIsLoadingVersions(false);
     }
@@ -53,8 +53,8 @@ export function useResumeVersions(
       
       setVersions((prev) => [data.data, ...prev]);
       return data.data;
-    } catch (err: any) {
-      setVersionError(err.message || "Could not save version");
+    } catch (err: unknown) {
+      setVersionError((err as Error).message || "Could not save version");
       throw err;
     } finally {
       setIsSavingVersion(false);
@@ -72,8 +72,8 @@ export function useResumeVersions(
       if (!data.success) throw new Error(data.error || "Failed to delete version");
       
       setVersions((prev) => prev.filter((v) => v.id !== versionId));
-    } catch (err: any) {
-      setVersionError(err.message || "Could not delete version");
+    } catch (err: unknown) {
+      setVersionError((err as Error).message || "Could not delete version");
       throw err;
     }
   };

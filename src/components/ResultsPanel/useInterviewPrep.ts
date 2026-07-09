@@ -56,9 +56,9 @@ export function useInterviewPrep(
           setInterviewQuestions(accumulated);
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error(e);
-      setIqError(e.message || "Network error while generating interview questions.");
+      setIqError((e as Error).message || "Network error while generating interview questions.");
     } finally {
       setIsGeneratingIQ(false);
     }
@@ -89,9 +89,9 @@ export function useInterviewPrep(
 
       setMockQuestions(data.questions || []);
       setShowMockInterview(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setIqError(err.message || "Failed to start mock interview.");
+      setIqError((err as Error).message || "Failed to start mock interview.");
     } finally {
       setIsFetchingMock(false);
     }

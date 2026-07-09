@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error("Structure scan API error:", error);
-    const message = error instanceof Error ? error.message : "Failed to scan structure";
+    const message = error instanceof Error ? (error as Error).message : "Failed to scan structure";
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

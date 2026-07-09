@@ -1,10 +1,16 @@
 "use client";
 import { logger } from "@/lib/logger";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import SpotlightCard from "./SpotlightCard";
 import { type MockInterviewTranscriptEntry, type MockInterviewScorecard } from "@/lib/ai";
 import ConfettiCannon from "@/components/ConfettiCannon";
+
+// Extend Window for vendor-prefixed Speech Recognition API
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
+}
 
 interface Props {
   questions: string[];
@@ -50,9 +56,9 @@ export default function MockInterviewSimulatorBoard({
   const [scorecard, setScorecard] = useState<MockInterviewScorecard | null>(null);
   const [confettiKey, setConfettiKey] = useState(0);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const baselineTextRef = useRef<string>("");
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const isFinished = currentIdx >= questions.length;
@@ -96,17 +102,17 @@ export default function MockInterviewSimulatorBoard({
   // ── Speech Recognition Setup ─────────────────────────────
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const win = window as WindowWithSpeechRecognition;
+      const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
       
-      if (SpeechRecognition) {
+      if (SpeechRecognitionAPI) {
         setIsSupportedSpeech(true);
-        const rec = new SpeechRecognition();
+        const rec = new SpeechRecognitionAPI();
         rec.continuous = true;
         rec.interimResults = true;
         rec.lang = "en-US";
 
-        rec.onresult = (event: any) => {
+        rec.onresult = (event: SpeechRecognitionEvent) => {
           let finalTranscript = "";
           let interimTranscript = "";
           for (let i = 0; i < event.results.length; ++i) {
@@ -132,8 +138,8 @@ export default function MockInterviewSimulatorBoard({
           setAnswerText(combined);
         };
 
-        rec.onerror = (err: any) => {
-          logger.error("Speech recognition error:", err);
+        rec.onerror = (err: SpeechRecognitionErrorEvent) => {
+          logger.error("Speech recognition error:", { error: err.error });
           stopTimer();
           setIsRecording(false);
           if (err.error === "network") {
@@ -315,9 +321,9 @@ export default function MockInterviewSimulatorBoard({
       // Clear output text area and advance questions index
       setAnswerText("");
       setCurrentIdx((prev) => prev + 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setEvalError(err.message || "An error occurred during response grading.");
+      setEvalError((err as Error).message || "An error occurred during response grading.");
     } finally {
       setIsEvaluating(false);
     }
@@ -364,9 +370,9 @@ export default function MockInterviewSimulatorBoard({
       if (!data.savedInDb) {
         saveToLocalStorage(data.scorecard, transcripts);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("Scorecard compilation error:", err);
-      setEvalError(err.message || "Failed to finalize interview report.");
+      setEvalError((err as Error).message || "Failed to finalize interview report.");
     } finally {
       setIsSaving(false);
     }

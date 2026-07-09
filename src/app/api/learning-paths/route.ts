@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Learning path generation API error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to generate learning path" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to generate learning path" },
       { status: 500 }
     );
   }

@@ -1,25 +1,31 @@
 import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 
+// Extend Window interface for vendor-prefixed Speech Recognition API
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
+}
+
 export function useSpeechIO() {
   const [isListening, setIsListening] = useState(false);
   const [useVoiceFeedback, setUseVoiceFeedback] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const rec = new SpeechRecognition();
+      const win = window as WindowWithSpeechRecognition;
+      const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
+      if (SpeechRecognitionAPI) {
+        const rec = new SpeechRecognitionAPI();
         rec.continuous = false;
         rec.interimResults = false;
         rec.lang = "en-US";
         rec.onstart = () => setIsListening(true);
         rec.onend = () => setIsListening(false);
-        rec.onerror = (event: any) => {
-          logger.error("Speech recognition error:", event.error);
+        rec.onerror = (event: SpeechRecognitionErrorEvent) => {
+          logger.error("Speech recognition error:", { error: event.error });
           setIsListening(false);
         };
         setRecognition(rec);
@@ -44,7 +50,7 @@ export function useSpeechIO() {
     if (isListening) {
       recognition.stop();
     } else {
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setInputText((prev: string) => (prev ? `${prev} ${transcript}` : transcript));
       };

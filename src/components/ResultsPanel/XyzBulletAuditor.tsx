@@ -114,8 +114,8 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to generate XYZ rewrite");
       setData(json.data);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Something went wrong");
     } finally {
       setLoading(false);
     }

@@ -22,13 +22,13 @@ export async function GET() {
 
       return NextResponse.json({ success: true, data });
     } catch (dbErr: unknown) {
-      logger.warn("Graceful db catch for interviews history GET:", (dbErr instanceof Error ? dbErr.message : String(dbErr)));
-      return NextResponse.json({ success: true, data: [], dbError: (dbErr instanceof Error ? dbErr.message : String(dbErr)), fallback: true });
+      logger.warn("Graceful db catch for interviews history GET:", (dbErr instanceof Error ? (dbErr as Error).message : String(dbErr)));
+      return NextResponse.json({ success: true, data: [], dbError: (dbErr instanceof Error ? (dbErr as Error).message : String(dbErr)), fallback: true });
     }
   } catch (error: unknown) {
     logger.error("Interviews history GET API error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to load history" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to load history" },
       { status: 500 }
     );
   }
@@ -65,13 +65,13 @@ export async function DELETE(req: NextRequest) {
 
       return NextResponse.json({ success: true });
     } catch (dbErr: unknown) {
-      logger.warn("Supabase delete exception caught on mock_interviews:", (dbErr instanceof Error ? dbErr.message : String(dbErr)));
-      return NextResponse.json({ success: false, error: (dbErr instanceof Error ? dbErr.message : String(dbErr)), fallback: true });
+      logger.warn("Supabase delete exception caught on mock_interviews:", (dbErr instanceof Error ? (dbErr as Error).message : String(dbErr)));
+      return NextResponse.json({ success: false, error: (dbErr instanceof Error ? (dbErr as Error).message : String(dbErr)), fallback: true });
     }
   } catch (error: unknown) {
     logger.error("Interviews history DELETE API error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to delete item" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to delete item" },
       { status: 500 }
     );
   }

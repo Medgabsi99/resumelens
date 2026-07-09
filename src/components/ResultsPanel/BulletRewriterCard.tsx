@@ -90,7 +90,7 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
         setRawStream((prev) => prev + chunk);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to generate rewrites";
+      const msg = err instanceof Error ? (err as Error).message : "Failed to generate rewrites";
       setError(msg);
     } finally {
       setStreaming(false);

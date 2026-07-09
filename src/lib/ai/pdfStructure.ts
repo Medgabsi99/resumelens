@@ -30,7 +30,7 @@ export async function analyzePdfStructure(
   resumeText: string,
   pdfBuffer?: Buffer
 ): Promise<AtsStructureResult> {
-  const contentParts: any[] = [];
+  const contentParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
 
   if (pdfBuffer) {
     contentParts.push({

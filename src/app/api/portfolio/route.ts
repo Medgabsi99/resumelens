@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: result });
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

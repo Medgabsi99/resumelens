@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const okRes = NextResponse.json({ success: true, data });
     return handleCors(req, okRes);
   } catch (err: unknown) {
-    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
+    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? (err as Error).message : String(err)) }, { status: 500 });
     return handleCors(req, errRes);
   }
 }

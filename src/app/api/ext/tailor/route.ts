@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         companyName = validateAndSanitizeInput(companyName, 200, "Company name");
       }
     } catch (err: unknown) {
-      const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 400 });
+      const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? (err as Error).message : String(err)) }, { status: 400 });
       return handleCors(req, errRes);
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     return handleCors(req, okRes);
   } catch (err: unknown) {
     logger.error("Extension tailor route error:", err);
-    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
+    const errRes = NextResponse.json({ success: false, error: (err instanceof Error ? (err as Error).message : String(err)) }, { status: 500 });
     return handleCors(req, errRes);
   }
 }

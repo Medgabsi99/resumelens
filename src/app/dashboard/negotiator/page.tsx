@@ -100,7 +100,7 @@ export default function NegotiatorPage() {
       try {
         const local = localStorage.getItem("salary_negotiations_local");
         if (local) {
-          localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
+          localHistory = JSON.parse(local).map((item: Partial<SavedNegotiationItem>) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
         logger.warn("Failed to load local storage fallback history:", err);
@@ -112,9 +112,9 @@ export default function NegotiatorPage() {
       );
 
       setHistory(mergedHistory);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to fetch page data");
+      setError((err as Error).message || "Failed to fetch page data");
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ export default function NegotiatorPage() {
       try {
         const local = localStorage.getItem("salary_negotiations_local");
         if (local) {
-          const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
+          const updated = JSON.parse(local).filter((entry: { id: string }) => entry.id !== item.id);
           localStorage.setItem("salary_negotiations_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
           toastSuccess("Scorecard deleted successfully.", "Deleted");
@@ -200,8 +200,8 @@ export default function NegotiatorPage() {
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
         toastSuccess("Scorecard deleted successfully.", "Deleted");
-      } catch (err: any) {
-        toastError(err.message || "Failed to delete entry from database.", "Delete Failed");
+      } catch (err: unknown) {
+        toastError((err as Error).message || "Failed to delete entry from database.", "Delete Failed");
       }
     }
   };
@@ -601,7 +601,7 @@ export default function NegotiatorPage() {
                       </span>
                     </summary>
                     <div className="mt-4 space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                      {selectedHistoryItem.feedback.transcript.map((msg: any, idx: number) => (
+                      {selectedHistoryItem.feedback.transcript.map((msg: { role: string; content: string }, idx: number) => (
                         <div
                           key={idx}
                           className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} text-xs`}

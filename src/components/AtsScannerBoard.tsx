@@ -290,7 +290,7 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
               { key: "headingsStandard", label: "Section Headings standard" },
               { key: "graphicalElements", label: "No graphical ratings/bars" },
             ].map((check) => {
-              const val = (data.checklist as any)[check.key];
+              const val = (data.checklist as Record<string, unknown>)[check.key];
               if (!val) return null;
               return (
                 <SpotlightCard

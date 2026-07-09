@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: any;
+  let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
@@ -75,10 +75,10 @@ Respond ONLY with a valid JSON object — no preamble, no markdown fences:
     const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({ success: true, data: parsed });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("XYZ bullet error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to generate XYZ bullet rewrite" },
+      { error: (err as Error).message || "Failed to generate XYZ bullet rewrite" },
       { status: 500 }
     );
   }

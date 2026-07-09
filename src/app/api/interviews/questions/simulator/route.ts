@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         difficulty = validateAndSanitizeInput(difficulty, 100, "Difficulty");
       }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Mock simulator questions generate route error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to generate mock interview questions";
+      error instanceof Error ? (error as Error).message : "Failed to generate mock interview questions";
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

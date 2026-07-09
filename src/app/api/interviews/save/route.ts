@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Programmatically compute filler words usage
-    const textAggregate = transcripts.map((t: any) => t.answer).join(" ").toLowerCase();
+    const textAggregate = transcripts.map((t: Record<string, unknown>) => t.answer).join(" ").toLowerCase();
     const fillerWordsCounts: Record<string, number> = {};
     const fillerWordsList = ["um", "uh", "like", "so", "actually", "basically", "you know"];
     fillerWordsList.forEach((word) => {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. Call AI to compile overall scorecard
-    const simpleTranscripts = transcripts.map((t: any) => ({
+    const simpleTranscripts = transcripts.map((t: Record<string, unknown>) => ({
       question: t.question,
       answer: t.answer,
       score: t.score,
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         savedItem = data;
       }
     } catch (err: unknown) {
-      dbError = (err instanceof Error ? err.message : String(err));
+      dbError = (err instanceof Error ? (err as Error).message : String(err));
       logger.warn("Graceful DB exception caught on save, falling back to local storage:", err);
     }
 
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Scorecard compile & save route error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to compile scorecard" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to compile scorecard" },
       { status: 500 }
     );
   }

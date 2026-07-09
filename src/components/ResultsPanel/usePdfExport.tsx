@@ -56,9 +56,9 @@ export function usePdfExport({
       const { downloadReviewPdf } = await import("@/lib/pdf/downloadPdf");
       await downloadReviewPdf(pdfTemplate, result, targetRole, jobDescription);
       onSuccess("PDF generated successfully.", "Download complete");
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("PDF export error:", err);
-      onError(err.message || "Failed to download PDF.", "Download error");
+      onError((err as Error).message || "Failed to download PDF.", "Download error");
     } finally {
       setIsDownloading(false);
     }

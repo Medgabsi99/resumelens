@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       companyName = validateAndSanitizeInput(companyName, 200, "Company name");
     }
   } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: matchResult });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Job match failed";
+    const message = err instanceof Error ? (err as Error).message : "Job match failed";
     logger.error("Job match error:", err);
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

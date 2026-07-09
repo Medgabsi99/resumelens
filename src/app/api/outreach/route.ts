@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       outreachType = validateAndSanitizeInput(outreachType, 100, "Outreach type");
     }
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     logger.error("Outreach API error:", err);
-    const message = err instanceof Error ? err.message : "Outreach message generation failed";
+    const message = err instanceof Error ? (err as Error).message : "Outreach message generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

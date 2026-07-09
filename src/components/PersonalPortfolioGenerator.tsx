@@ -44,7 +44,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
           setPortfolioData(data.data.content);
           setSelectedTheme(data.data.theme as ThemeType);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error("Failed to load portfolio:", err);
       } finally {
         setIsLoading(false);
@@ -70,8 +70,8 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
       setPortfolioData(data.data);
       // Try to save generated content immediately
       await savePortfolio(selectedTheme, data.data);
-    } catch (err: any) {
-      setError(err.message || "Could not generate portfolio copy.");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Could not generate portfolio copy.");
     } finally {
       setIsGenerating(false);
     }
@@ -95,8 +95,8 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
       if (!data.success) throw new Error(data.error || "Save failed");
       setSaveStatus("✓ Changes saved successfully");
       setTimeout(() => setSaveStatus(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to save changes.");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Failed to save changes.");
     } finally {
       setIsSaving(false);
     }
@@ -116,7 +116,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
   };
 
   // Update a single text field in portfolio copy
-  const updateField = (field: keyof PortfolioData, value: any) => {
+  const updateField = (field: keyof PortfolioData, value: string | string[] | Record<string, unknown>) => {
     if (!portfolioData) return;
     setPortfolioData((prev) => {
       if (!prev) return null;

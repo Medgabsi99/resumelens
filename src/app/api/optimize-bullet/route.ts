@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
     }
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
@@ -82,10 +82,10 @@ export async function POST(req: NextRequest) {
     const parsed = JSON.parse(cleanJson);
     return NextResponse.json({ success: true, alternatives: parsed });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Bullet optimization error:", err);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to optimize bullet point" },
+      { success: false, error: (err as Error).message || "Failed to optimize bullet point" },
       { status: 500 }
     );
   }

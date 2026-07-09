@@ -186,14 +186,14 @@ Culture: lower weight (0.4x) but include for completeness`;
 
   // Validate verdict
   const validVerdicts = ["strong", "good", "fair", "weak"] as const;
-  if (!validVerdicts.includes(parsed.fitVerdict as any)) {
+  if (!validVerdicts.includes(parsed.fitVerdict as (typeof validVerdicts)[number])) {
     const score = parsed.overallScore;
     parsed.fitVerdict = score >= 80 ? "strong" : score >= 65 ? "good" : score >= 50 ? "fair" : "weak";
   }
 
   // Validate experienceMatch verdict
   const validExpVerdicts = ["exceeds", "meets", "slightly-below", "below"] as const;
-  if (parsed.experienceMatch && !validExpVerdicts.includes(parsed.experienceMatch.verdict as any)) {
+  if (parsed.experienceMatch && !validExpVerdicts.includes(parsed.experienceMatch.verdict as (typeof validExpVerdicts)[number])) {
     parsed.experienceMatch.verdict = "meets";
   }
 
@@ -423,7 +423,7 @@ Rules for tailoring:
 
 function getRecommendedTemplate(
   targetRole: string = "",
-  experience: any[] = []
+  experience: Array<Record<string, unknown>> = []
 ): string {
   const role = targetRole.toLowerCase();
   

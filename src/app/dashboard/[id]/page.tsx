@@ -63,7 +63,7 @@ export default async function PastAnalysisPage({
   }
 
   // result_json might be a string or already parsed depending on DB driver
-  const resultData: any =
+  const resultData: import("@/types").AnalysisResult =
     typeof analysis.result_json === "string"
       ? JSON.parse(analysis.result_json)
       : analysis.result_json;

@@ -76,18 +76,21 @@ export async function embedText(
   while (true) {
     attempt++;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- outputDimensionality not yet in SDK types
       const result = await embeddingModel.embedContent({
         content: { parts: [{ text: trimmed }], role: "user" },
-        taskType: taskType as any, // SDK accepts string literals
-        outputDimensionality: EMBEDDING_DIMENSIONS, // cast below; not in this SDK version's TS types
-      } as any);
+        taskType: taskType as string,
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+      } as Parameters<typeof embeddingModel.embedContent>[0]);
       return l2Normalize(result.embedding.values);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errStatus = (err as { status?: number })?.status;
+      const errMsg = (err as Error)?.message ?? String(err);
       const isRateLimit =
-        err?.status === 429 ||
-        err?.status === 503 ||
-        String(err?.message).includes("quota") ||
-        String(err?.message).includes("rate");
+        errStatus === 429 ||
+        errStatus === 503 ||
+        String(errMsg).includes("quota") ||
+        String(errMsg).includes("rate");
 
       if (isRateLimit && attempt < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
@@ -143,13 +146,14 @@ async function embedBatchChunk(
   while (true) {
     attempt++;
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- outputDimensionality not yet in SDK types
       const result = await embeddingModel.batchEmbedContents({
         requests: sanitized.map((text) => ({
           content: { parts: [{ text }], role: "user" },
-          taskType: taskType as any,
+          taskType: taskType as string,
           outputDimensionality: EMBEDDING_DIMENSIONS,
         })),
-      } as any);
+      } as Parameters<typeof embeddingModel.batchEmbedContents>[0]);
 
       return result.embeddings.map((e) => {
         // Empty inputs get the zero vector
@@ -157,11 +161,13 @@ async function embedBatchChunk(
           ? l2Normalize(e.values)
           : new Array(EMBEDDING_DIMENSIONS).fill(0);
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errStatus = (err as { status?: number })?.status;
+      const errMsg = (err as Error)?.message ?? String(err);
       const isRateLimit =
-        err?.status === 429 ||
-        err?.status === 503 ||
-        String(err?.message).includes("quota");
+        errStatus === 429 ||
+        errStatus === 503 ||
+        String(errMsg).includes("quota");
 
       if (isRateLimit && attempt < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);

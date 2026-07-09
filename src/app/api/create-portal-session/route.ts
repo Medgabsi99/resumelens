@@ -24,10 +24,10 @@ export async function POST() {
     });
 
     return NextResponse.json({ url: portalSession.url });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("Portal session error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to create portal session" },
+      { error: (err as Error).message || "Failed to create portal session" },
       { status: 500 }
     );
   }

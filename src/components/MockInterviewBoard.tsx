@@ -6,6 +6,11 @@ import SpotlightCard from "./SpotlightCard";
 import { type EvaluateResponse } from "@/lib/ai";
 import StreamingText from "@/components/StreamingText";
 
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new () => SpeechRecognition;
+  webkitSpeechRecognition?: new () => SpeechRecognition;
+}
+
 interface Props {
   questions: string[];
   resumeText: string;
@@ -40,24 +45,24 @@ export default function MockInterviewBoard({
   const [isMuted, setIsMuted] = useState(false);
   const [isSupportedSpeech, setIsSupportedSpeech] = useState(false);
   
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentSession = sessions[currentIdx];
   const isFinished = currentIdx >= sessions.length;
 
   // ── Speech Recognition Setup ─────────────────────────────
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const win = window as WindowWithSpeechRecognition;
+      const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
       
-      if (SpeechRecognition) {
+      if (SpeechRecognitionAPI) {
         setIsSupportedSpeech(true);
-        const rec = new SpeechRecognition();
+        const rec = new SpeechRecognitionAPI();
         rec.continuous = true;
         rec.interimResults = true;
         rec.lang = "en-US";
 
-        rec.onresult = (event: any) => {
+        rec.onresult = (event: SpeechRecognitionEvent) => {
           let finalTranscript = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
@@ -72,8 +77,8 @@ export default function MockInterviewBoard({
           }
         };
 
-        rec.onerror = (err: any) => {
-          logger.error("Speech recognition error:", err);
+        rec.onerror = (err: SpeechRecognitionErrorEvent) => {
+          logger.error("Speech recognition error:", { error: err.error });
           setIsRecording(false);
         };
 
@@ -174,9 +179,9 @@ const toggleRecording = async () => {
             : s
         )
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setEvalError(err.message || "An error occurred during evaluation.");
+      setEvalError((err as Error).message || "An error occurred during evaluation.");
     } finally {
       setIsEvaluating(false);
     }
@@ -522,7 +527,7 @@ const toggleRecording = async () => {
                       { key: "action", label: "A" },
                       { key: "result", label: "R" },
                     ].map((star) => {
-                      const completed = (currentSession.evaluation!.starRating as any)[star.key];
+                      const completed = (currentSession.evaluation!.starRating as Record<string, boolean>)[star.key];
                       return (
                         <div
                           key={star.key}

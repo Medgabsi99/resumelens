@@ -8,13 +8,14 @@ export async function downloadResumePdf(
   templateId: string,
   data: ParsedResume,
   targetRole?: string,
-  customStyle?: any
+  customStyle?: Record<string, unknown>
 ) {
   // Dynamically import to ensure code-splitting / lazy-loading
   const { pdf } = await import("@react-pdf/renderer");
   const { renderResumePdf } = await import("./generatePdf");
 
   const doc = renderResumePdf(templateId, data, targetRole, customStyle);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-pdf's pdf() type expects Document but accepts ReactElement at runtime
   const blob = await pdf(doc as any).toBlob();
 
   const fileName = `${(data.contact.name || "Resume").replace(/\s+/g, "_")}-${templateId}.pdf`;
@@ -46,6 +47,7 @@ export async function downloadReviewPdf(
   const { renderReviewPdf } = await import("./generatePdf");
 
   const doc = renderReviewPdf(templateId, result, targetRole, jobDescription);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-pdf's pdf() type expects Document but accepts ReactElement at runtime
   const blob = await pdf(doc as any).toBlob();
 
   const fileName = `Resume_Review_${(targetRole || "Analysis").replace(/\s+/g, "_")}-${templateId}.pdf`;

@@ -85,9 +85,9 @@ export default function ScannerPage() {
       }
 
       setScannerData(scanData.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to run PDF structural scanner.");
+      setError((err as Error).message || "Failed to run PDF structural scanner.");
     } finally {
       clearInterval(interval);
       setLoading(false);
@@ -124,9 +124,9 @@ export default function ScannerPage() {
       }
 
       setScannerData(data.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to analyze document structure.");
+      setError((err as Error).message || "Failed to analyze document structure.");
     } finally {
       clearInterval(interval);
       setLoading(false);

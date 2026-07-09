@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
       }
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Smart resume generation error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to generate smart resume";
+      error instanceof Error ? (error as Error).message : "Failed to generate smart resume";
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 },

@@ -107,7 +107,7 @@ export default function ResumeEditor({
     try {
       await saveVersion(newVersionName.trim());
       setNewVersionName("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error handled by hook state
     }
   };
@@ -118,7 +118,7 @@ export default function ResumeEditor({
     try {
       await deleteVersion(versionId);
       if (compareVersion?.id === versionId) setCompareVersion(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error handled by hook state
     }
   };
@@ -184,7 +184,7 @@ export default function ResumeEditor({
       const data = parsedData || parseResume(text);
       const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
       await downloadResumePdf(selectedTemplate, data, targetRole, customStyle);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("PDF download error:", err);
       alert("Failed to download PDF. Please try again.");
     } finally {
@@ -461,7 +461,7 @@ export default function ResumeEditor({
                   <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Font</label>
                   <select
                     value={customStyle.fontFamily}
-                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontFamily: e.target.value as any }))}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontFamily: e.target.value as ResumeCustomStyle["fontFamily"] }))}
                     style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
                   >
                     <option value="serif">Serif (Classic)</option>
@@ -475,7 +475,7 @@ export default function ResumeEditor({
                   <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Size</label>
                   <select
                     value={customStyle.fontSize}
-                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontSize: e.target.value as any }))}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, fontSize: e.target.value as ResumeCustomStyle["fontSize"] }))}
                     style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
                   >
                     <option value="10pt">10pt (Small)</option>
@@ -490,7 +490,7 @@ export default function ResumeEditor({
                   <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Spacing</label>
                   <select
                     value={customStyle.lineHeight}
-                    onChange={(e) => setCustomStyle(prev => ({ ...prev, lineHeight: e.target.value as any }))}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, lineHeight: e.target.value as ResumeCustomStyle["lineHeight"] }))}
                     style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
                   >
                     <option value="1.4">Compact (1.4)</option>
@@ -505,7 +505,7 @@ export default function ResumeEditor({
                   <label style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Margins</label>
                   <select
                     value={customStyle.padding}
-                    onChange={(e) => setCustomStyle(prev => ({ ...prev, padding: e.target.value as any }))}
+                    onChange={(e) => setCustomStyle(prev => ({ ...prev, padding: e.target.value as ResumeCustomStyle["padding"] }))}
                     style={{ width: "100%", background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "var(--ink)" }}
                   >
                     <option value="36px 32px">Tight</option>

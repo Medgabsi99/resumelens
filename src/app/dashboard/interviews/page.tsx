@@ -28,7 +28,7 @@ interface SavedInterviewItem {
   interview_type: string;
   difficulty: string;
   questions: string[];
-  transcripts: any[];
+  transcripts: Array<{ question: string; answer: string; score?: number; feedback?: string }>;
   overall_score: number;
   star_mastery: number;
   filler_words: Record<string, number>;
@@ -105,7 +105,7 @@ export default function InterviewsPage() {
       try {
         const local = localStorage.getItem("mock_interviews_local");
         if (local) {
-          localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
+          localHistory = JSON.parse(local).map((item: Partial<SavedInterviewItem>) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
         logger.warn("Failed to load local storage mock interviews:", err);
@@ -116,9 +116,9 @@ export default function InterviewsPage() {
       );
 
       setHistory(mergedHistory);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to load history data");
+      setError((err as Error).message || "Failed to load history data");
     } finally {
       setLoading(false);
     }
@@ -170,9 +170,9 @@ export default function InterviewsPage() {
 
       setActiveResumeText(selected.resume_text);
       setActiveQuestions(data.questions);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to compile custom questions set. Please retry.");
+      setError((err as Error).message || "Failed to compile custom questions set. Please retry.");
     } finally {
       clearInterval(interval);
       setGenerating(false);
@@ -187,7 +187,7 @@ export default function InterviewsPage() {
       try {
         const local = localStorage.getItem("mock_interviews_local");
         if (local) {
-          const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
+          const updated = JSON.parse(local).filter((entry: { id: string }) => entry.id !== item.id);
           localStorage.setItem("mock_interviews_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
           toastSuccess("Mock interview deleted successfully.", "Deleted");
@@ -207,8 +207,8 @@ export default function InterviewsPage() {
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
         toastSuccess("Mock interview deleted successfully.", "Deleted");
-      } catch (err: any) {
-        toastError(err.message || "Failed to delete log from database.", "Delete Failed");
+      } catch (err: unknown) {
+        toastError((err as Error).message || "Failed to delete log from database.", "Delete Failed");
       }
     }
   };

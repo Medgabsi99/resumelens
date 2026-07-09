@@ -46,7 +46,7 @@ export function useSmartEnhance({
         setSelectedTemplate(data.recommendedTemplate as TemplateId);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Smart generation failed";
+      const msg = err instanceof Error ? (err as Error).message : "Smart generation failed";
       setSmartError(msg);
     } finally {
       setIsGenerating(false);

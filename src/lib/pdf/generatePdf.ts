@@ -11,7 +11,7 @@ export function getPdfTemplateComponent(
   templateId: string,
   data: ParsedResume,
   targetRole?: string,
-  customStyle?: any
+  customStyle?: Record<string, unknown>
 ) {
   const props = { data, targetRole, customStyle };
   switch (templateId) {
@@ -35,8 +35,8 @@ export function renderResumePdf(
   templateId: string,
   data: ParsedResume,
   targetRole?: string,
-  customStyle?: any
-): React.ReactElement<any> {
+  customStyle?: Record<string, unknown>
+): React.ReactElement {
   const component = getPdfTemplateComponent(templateId, data, targetRole, customStyle);
   return React.createElement(
     DocumentWrapper,
@@ -53,7 +53,7 @@ export function renderReviewPdf(
   result: AnalysisResult,
   targetRole?: string,
   jobDescription?: string
-): React.ReactElement<any> {
+): React.ReactElement {
   const component = React.createElement(ResumeReviewPdfTemplate, {
     result,
     targetRole,

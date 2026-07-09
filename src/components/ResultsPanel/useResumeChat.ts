@@ -84,12 +84,12 @@ export function useResumeChat(
           });
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setChatHistory((prev) => [
         ...prev,
         {
           role: "ai",
-          text: err.message || "Network error. Please try again.",
+          text: (err as Error).message || "Network error. Please try again.",
         },
       ]);
     } finally {

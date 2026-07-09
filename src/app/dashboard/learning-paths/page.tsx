@@ -27,8 +27,8 @@ interface SavedPathItem {
   role_title: string;
   company_name: string;
   missing_skills: string[];
-  project_details: any;
-  learning_path: any;
+  project_details: Record<string, unknown>;
+  learning_path: Record<string, unknown>;
   created_at: string;
   isLocal?: boolean;
 }
@@ -97,7 +97,7 @@ export default function LearningPathsPage() {
       try {
         const local = localStorage.getItem("learning_paths_local");
         if (local) {
-          localHistory = JSON.parse(local).map((item: any) => ({ ...item, isLocal: true }));
+          localHistory = JSON.parse(local).map((item: Partial<SavedPathItem>) => ({ ...item, isLocal: true }));
         }
       } catch (err) {
         logger.warn("Failed to load local storage learning paths:", err);
@@ -108,9 +108,9 @@ export default function LearningPathsPage() {
       );
 
       setHistory(mergedHistory);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "Failed to load page history.");
+      setError((err as Error).message || "Failed to load page history.");
     } finally {
       setLoading(false);
     }
@@ -186,9 +186,9 @@ export default function LearningPathsPage() {
 
       setActivePathData(generated);
       setActivePathId(newId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setError(err.message || "An error occurred while compiling your learning path.");
+      setError((err as Error).message || "An error occurred while compiling your learning path.");
     } finally {
       clearInterval(interval);
       setGenerating(false);
@@ -222,7 +222,7 @@ export default function LearningPathsPage() {
       try {
         const local = localStorage.getItem("learning_paths_local");
         if (local) {
-          const updated = JSON.parse(local).filter((entry: any) => entry.id !== item.id);
+          const updated = JSON.parse(local).filter((entry: { id: string }) => entry.id !== item.id);
           localStorage.setItem("learning_paths_local", JSON.stringify(updated));
           setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
           toastSuccess("Learning path deleted successfully.", "Deleted");
@@ -242,8 +242,8 @@ export default function LearningPathsPage() {
         }
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
         toastSuccess("Learning path deleted successfully.", "Deleted");
-      } catch (err: any) {
-        toastError(err.message || "Failed to delete entry from database.", "Delete Failed");
+      } catch (err: unknown) {
+        toastError((err as Error).message || "Failed to delete entry from database.", "Delete Failed");
       }
     }
   };

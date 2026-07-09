@@ -80,7 +80,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
       const data = parsedData || parseResume(resumeText);
       const { downloadResumePdf } = await import("@/lib/pdf/downloadPdf");
       await downloadResumePdf(selectedTemplate, data, targetRole);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("PDF download error:", err);
       alert("Failed to download PDF. Please try again.");
     } finally {
@@ -113,7 +113,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
         }
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Smart generation failed";
+      const msg = err instanceof Error ? (err as Error).message : "Smart generation failed";
       setSmartError(msg);
     } finally {
       setIsGenerating(false);

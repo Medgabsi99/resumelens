@@ -76,8 +76,8 @@ export function useSelectionOptimizer({
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to generate alternatives");
       setOptimizedAlternatives(data.alternatives);
-    } catch (err: any) {
-      setOptimizeError(err.message || "Something went wrong optimizing");
+    } catch (err: unknown) {
+      setOptimizeError((err as Error).message || "Something went wrong optimizing");
     } finally {
       setIsOptimizing(false);
     }

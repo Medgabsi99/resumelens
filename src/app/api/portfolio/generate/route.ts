@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Generate portfolio error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? error.message : String(error)) || "Failed to generate portfolio copy" },
+      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to generate portfolio copy" },
       { status: 500 }
     );
   }

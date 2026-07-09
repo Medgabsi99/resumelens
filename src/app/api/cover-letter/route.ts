@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
     }
   } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     logger.error("Cover letter API error:", err);
-    const message = err instanceof Error ? err.message : "Cover letter generation failed";
+    const message = err instanceof Error ? (err as Error).message : "Cover letter generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

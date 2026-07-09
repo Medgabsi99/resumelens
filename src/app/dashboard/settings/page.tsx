@@ -90,8 +90,8 @@ export default function SettingsPage() {
         "Email update initiated"
       );
       setNewEmail("");
-    } catch (err: any) {
-      toastError(err.message || "Failed to update email.", "Error updating email");
+    } catch (err: unknown) {
+      toastError((err as Error).message || "Failed to update email.", "Error updating email");
     } finally {
       setUpdatingEmail(false);
     }
@@ -119,8 +119,8 @@ export default function SettingsPage() {
       toastSuccess("Your password has been changed successfully.", "Password updated");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      toastError(err.message || "Failed to update password.", "Error updating password");
+    } catch (err: unknown) {
+      toastError((err as Error).message || "Failed to update password.", "Error updating password");
     } finally {
       setUpdatingPassword(false);
     }
@@ -144,8 +144,8 @@ export default function SettingsPage() {
       if (data.url) {
         window.location.href = data.url;
       }
-    } catch (err: any) {
-      toastError(err.message || "Failed to open billing portal.", "Billing Portal Error");
+    } catch (err: unknown) {
+      toastError((err as Error).message || "Failed to open billing portal.", "Billing Portal Error");
     } finally {
       setLoadingPortal(false);
     }
@@ -172,8 +172,8 @@ export default function SettingsPage() {
       await supabase.auth.signOut();
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      toastError(err.message || "Failed to delete account.", "Deletion Error");
+    } catch (err: unknown) {
+      toastError((err as Error).message || "Failed to delete account.", "Deletion Error");
       setDeleting(false);
     }
   }

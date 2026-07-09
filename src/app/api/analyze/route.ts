@@ -77,7 +77,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
     }
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   try {
     result = await analyzeResume(resumeText, jobDescription, targetRole);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Analysis failed";
+    const message = err instanceof Error ? (err as Error).message : "Analysis failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 

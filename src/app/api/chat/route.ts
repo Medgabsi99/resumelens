@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
     }
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     logger.error("Chat API error:", err);
-    const errorMsg = err instanceof Error ? err.message : "Chat failed";
+    const errorMsg = err instanceof Error ? (err as Error).message : "Chat failed";
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

@@ -225,9 +225,9 @@ export function useNegotiationSession({
         setSavingStatus("saved");
         setSavedMethod("local");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("Scorecard evaluation error:", err);
-      setSavingError(err.message || String(err));
+      setSavingError((err as Error).message || String(err));
       const mockScorecard: NegotiationScorecard = {
         score: finalVerdict === "accepted" ? Math.min(100, Math.round(leverage)) : 40,
         tacticsUsed: ["Polite Advocacy", "Package Structuring"],
@@ -299,9 +299,9 @@ export function useNegotiationSession({
       if (turn.isConcluded && turn.conclusionVerdict !== "ongoing") {
         handleConcludeNegotiation(turn.conclusionVerdict, turn.currentOffer);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setErrorMsg(err.message || "Failed to reach recruiter. Make sure server is online.");
+      setErrorMsg((err as Error).message || "Failed to reach recruiter. Make sure server is online.");
       setMessageHistory((prev) => prev.slice(0, -1));
       setInputText(userMsg);
     } finally {

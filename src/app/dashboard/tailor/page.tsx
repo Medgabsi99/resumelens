@@ -151,9 +151,9 @@ export default function TailorSandboxPage() {
 
       setActiveSandbox(true);
       toastSuccess("Playground initialized. Start editing!", "Sandbox Ready");
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      toastError(err.message || "Failed to launch sandbox.");
+      toastError((err as Error).message || "Failed to launch sandbox.");
     } finally {
       clearInterval(stepInterval);
       setIsInitializing(false);
@@ -238,8 +238,8 @@ export default function TailorSandboxPage() {
       toastSuccess("Optimized resume saved to your library!", "Saved");
       setShowSaveModal(false);
       fetchResumes(); // Reload resumes dropdown
-    } catch (err: any) {
-      toastError(err.message || "Failed to save version.");
+    } catch (err: unknown) {
+      toastError((err as Error).message || "Failed to save version.");
     } finally {
       setIsSaving(false);
     }
@@ -254,7 +254,7 @@ export default function TailorSandboxPage() {
       await downloadResumePdf(templateId, parsed, roleTitle || undefined);
       toastSuccess("PDF generated successfully.", "Download Complete");
       setShowExportModal(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
       toastError("Failed to compile vector PDF template.");
     }

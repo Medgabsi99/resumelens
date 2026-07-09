@@ -182,8 +182,8 @@ function LoginForm() {
       if (error) {
         setMessage({ type: "error", text: error.message });
       }
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Failed to start Google sign-in" });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: (err as Error).message || "Failed to start Google sign-in" });
     }
   }
 

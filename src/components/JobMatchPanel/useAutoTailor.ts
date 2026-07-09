@@ -10,7 +10,7 @@ interface UseAutoTailorArgs {
 export function useAutoTailor({ resumeText, jobDescription, jobTitle }: UseAutoTailorArgs) {
   const [isTailoring, setIsTailoring] = useState(false);
   const [tailorError, setTailorError] = useState<string | null>(null);
-  const [tailoredResult, setTailoredResult] = useState<any | null>(null);
+  const [tailoredResult, setTailoredResult] = useState<Record<string, unknown> | null>(null);
   const [showDiff, setShowDiff] = useState(false);
   const [appliedTailored, setAppliedTailored] = useState(false);
 
@@ -34,9 +34,9 @@ export function useAutoTailor({ resumeText, jobDescription, jobTitle }: UseAutoT
       }
       setTailoredResult(data);
       setShowDiff(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      setTailorError(err.message || "Failed to auto-tailor resume.");
+      setTailorError((err as Error).message || "Failed to auto-tailor resume.");
     } finally {
       setIsTailoring(false);
     }

@@ -4,11 +4,11 @@ interface LogMessage {
   timestamp: string;
   level: LogLevel;
   message: string;
-  context?: any;
+  context?: Record<string, unknown>;
 }
 
 class StructuredLogger {
-  private format(level: LogLevel, message: string, context?: any): string {
+  private format(level: LogLevel, message: string, context?: Record<string, unknown>): string {
     const logObj: LogMessage = {
       timestamp: new Date().toISOString(),
       level,
@@ -36,21 +36,21 @@ class StructuredLogger {
     return `[${logObj.timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
   }
 
-  debug(message: string, context?: any) {
+  debug(message: string, context?: Record<string, unknown>) {
     if (process.env.NODE_ENV !== "production") {
       console.debug(this.format("debug", message, context));
     }
   }
 
-  info(message: string, context?: any) {
+  info(message: string, context?: Record<string, unknown>) {
     console.info(this.format("info", message, context));
   }
 
-  warn(message: string, context?: any) {
+  warn(message: string, context?: Record<string, unknown>) {
     console.warn(this.format("warn", message, context));
   }
 
-  error(message: string, context?: any) {
+  error(message: string, context?: Record<string, unknown>) {
     console.error(this.format("error", message, context));
   }
 }

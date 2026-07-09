@@ -160,9 +160,9 @@ export default function CommitteeSimulationPage() {
           setVisibleMessageCount(1);
           setIsPlayingDebrief(true);
           toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
-        } catch (err: any) {
+        } catch (err: unknown) {
           logger.error(err);
-          toastError(err.message || "Failed to compile panel debrief.");
+          toastError((err as Error).message || "Failed to compile panel debrief.");
         } finally {
           clearInterval(stepInterval);
           setIsConvening(false);
@@ -177,9 +177,9 @@ export default function CommitteeSimulationPage() {
       setActiveSimulation(true);
       setVisibleMessageCount(1);
       setIsPlayingDebrief(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      toastError(err.message || "Failed to load past committee simulation.");
+      toastError((err as Error).message || "Failed to load past committee simulation.");
       // Clear URL params
       window.history.replaceState({}, "", "/dashboard/committee");
     } finally {
@@ -232,9 +232,9 @@ export default function CommitteeSimulationPage() {
       setVisibleMessageCount(1);
       setIsPlayingDebrief(true);
       toastSuccess("Hiring committee debrief complete!", "Debrief Finished");
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error(err);
-      toastError(err.message || "Failed to compile panel debrief.");
+      toastError((err as Error).message || "Failed to compile panel debrief.");
     } finally {
       clearInterval(stepInterval);
       setIsConvening(false);

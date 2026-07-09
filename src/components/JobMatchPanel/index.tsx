@@ -1,7 +1,7 @@
 "use client";
 
 import * as Diff from "diff";
-import { parseResume } from "@/lib/parseResume";
+import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import SpotlightCard from "@/components/SpotlightCard";
 import { useJobMatch } from "./useJobMatch";
 import { useAutoTailor } from "./useAutoTailor";
@@ -737,9 +737,9 @@ export default function JobMatchPanel({
                     💼 Work Experience Bullets
                   </h5>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {tailoredResult.tailoredResume.experience.map((exp: any, expIdx: number) => {
+                    {tailoredResult.tailoredResume.experience.map((exp: ParsedResume["experience"][number], expIdx: number) => {
                       const origResume = parseResume(resumeText);
-                      let origExp: any = origResume.experience[expIdx];
+                      let origExp: ParsedResume["experience"][number] | undefined = origResume.experience[expIdx];
                       if (!origExp && exp.company) {
                         origExp = origResume.experience.find(e => e.company.toLowerCase() === exp.company.toLowerCase());
                       }

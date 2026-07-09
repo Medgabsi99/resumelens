@@ -52,9 +52,9 @@ export function useCoverLetter(
           setCoverLetter(accumulated);
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error(e);
-      setClError(e.message || "Network error while generating cover letter.");
+      setClError((e as Error).message || "Network error while generating cover letter.");
     } finally {
       setIsGeneratingCL(false);
     }

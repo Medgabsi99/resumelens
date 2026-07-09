@@ -3,7 +3,7 @@
  * Throws a descriptive validation error if validation fails.
  */
 export function validateAndSanitizeInput(
-  text: any,
+  text: unknown,
   maxLength: number,
   fieldName: string,
   required = false
