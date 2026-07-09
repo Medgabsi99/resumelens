@@ -207,15 +207,15 @@ function LoginForm() {
         style={{ animationDelay: "-1.5s" }}
       />
 
-      <main className="relative z-10 w-full max-w-[400px] fade-up">
+      <main className="relative z-10 w-full max-w-[400px] min-w-0 fade-up">
         <div className="text-center mb-8">
           <a
             href="/"
-            className="font-display text-3xl font-bold tracking-tight no-underline text-ink inline-block"
+            className="font-display text-2xl sm:text-3xl font-bold tracking-tight no-underline text-ink inline-block"
           >
             Resume<span style={{ color: "var(--accent)" }}>Lens</span>
           </a>
-          <p className="text-ink-muted text-sm mt-2">
+          <p className="text-ink-muted text-xs sm:text-sm mt-2">
             {mode === "login"
               ? "Welcome back to your dashboard"
               : "Create your account for unlimited reviews"}

@@ -202,15 +202,40 @@ export default function SettingsPage() {
     }
   };
 
+  // Shared inline styles reused across cards
+  const cardStyle: React.CSSProperties = {
+    background: "var(--paper-card)",
+    border: "1px solid var(--border)",
+    borderRadius: 18,
+    display: "flex",
+    flexDirection: "column",
+    gap: 20,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: 10,
+    border: "1px solid var(--border)",
+    background: "var(--paper-card)",
+    color: "var(--ink)",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border 0.15s",
+  };
+
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto py-4">
+      {/* ── Page shell: horizontal padding + max-width ── */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         {/* Page Header */}
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--ink)", fontFamily: "Instrument Sans, sans-serif", letterSpacing: "-0.02em", margin: "0 0 6px 0" }}>
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+            style={{ color: "var(--ink)", fontFamily: "Instrument Sans, sans-serif", margin: "0 0 6px 0" }}>
             Account Settings
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "var(--ink-muted)" }}>
+          <p className="text-sm" style={{ margin: 0, color: "var(--ink-muted)" }}>
             Update your account details, manage your billing plan, and update your security settings.
           </p>
         </div>
@@ -221,18 +246,10 @@ export default function SettingsPage() {
             <div style={{ height: 180, background: "var(--paper-card)", borderRadius: 16, border: "1px solid var(--border)", animation: "pulse 1.5s infinite" }} />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          <div className="flex flex-col gap-7">
             
             {/* PROFILE & SECURITY */}
-            <div style={{
-              background: "var(--paper-card)",
-              border: "1px solid var(--border)",
-              borderRadius: 18,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              gap: 24,
-            }}>
+            <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Profile Credentials</h2>
                 <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Update your sign-in email address or change password.</p>
@@ -247,15 +264,7 @@ export default function SettingsPage() {
                     type="text"
                     disabled
                     value={userEmail || ""}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 10,
-                      border: "1px solid var(--border)",
-                      background: "var(--paper-warm)",
-                      color: "var(--ink-faint)",
-                      fontSize: 14,
-                      outline: "none",
-                    }}
+                    style={{ ...inputStyle, background: "var(--paper-warm)", color: "var(--ink-faint)" }}
                   />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -267,21 +276,12 @@ export default function SettingsPage() {
                     placeholder="Enter new email address"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 10,
-                      border: "1px solid var(--border)",
-                      background: "var(--paper-card)",
-                      color: "var(--ink)",
-                      fontSize: 14,
-                      outline: "none",
-                      transition: "border 0.15s",
-                    }}
+                    style={inputStyle}
                     onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
                     onBlur={(e) => e.target.style.borderColor = "var(--border)"}
                   />
                 </div>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+                <div className="flex justify-end mt-1">
                   <button
                     type="submit"
                     disabled={updatingEmail || !newEmail.trim()}
@@ -317,15 +317,7 @@ export default function SettingsPage() {
                       placeholder="Minimum 6 characters"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 10,
-                        border: "1px solid var(--border)",
-                        background: "var(--paper-card)",
-                        color: "var(--ink)",
-                        fontSize: 14,
-                        outline: "none",
-                      }}
+                      style={inputStyle}
                       onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
                       onBlur={(e) => e.target.style.borderColor = "var(--border)"}
                     />
@@ -339,21 +331,13 @@ export default function SettingsPage() {
                       placeholder="Re-type new password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 10,
-                        border: "1px solid var(--border)",
-                        background: "var(--paper-card)",
-                        color: "var(--ink)",
-                        fontSize: 14,
-                        outline: "none",
-                      }}
+                      style={inputStyle}
                       onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
                       onBlur={(e) => e.target.style.borderColor = "var(--border)"}
                     />
                   </div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+                <div className="flex justify-end mt-1">
                   <button
                     type="submit"
                     disabled={updatingPassword || !newPassword.trim()}
@@ -376,34 +360,17 @@ export default function SettingsPage() {
             </div>
 
             {/* BILLING & PLANS */}
-            <div style={{
-              background: "var(--paper-card)",
-              border: "1px solid var(--border)",
-              borderRadius: 18,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-            }}>
+            <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Billing & Subscription</h2>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Billing &amp; Subscription</h2>
                 <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>View your plan details, download invoices, or cancel a subscription.</p>
               </div>
 
               {profile && (
-                <div style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  padding: "16px 20px",
-                  background: "var(--paper-warm)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  flexWrap: "wrap",
-                  gap: 12,
-                }}>
+                <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                  style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>Current Plan</span>
                       <span style={{
                         padding: "3px 8px",
@@ -443,12 +410,8 @@ export default function SettingsPage() {
                           cursor: loadingPortal ? "not-allowed" : "pointer",
                           transition: "all 0.15s",
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "var(--accent-bg)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-bg)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                       >
                         {loadingPortal ? "Launching Portal..." : "Manage Billing & Cancel"}
                       </button>
@@ -478,16 +441,8 @@ export default function SettingsPage() {
             </div>
 
             {/* CHROME EXTENSION INTEGRATION */}
-            <div style={{
-              background: "var(--paper-card)",
-              border: "1px solid var(--border)",
-              borderRadius: 18,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+            <div className="p-5 sm:p-7" style={cardStyle}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
                     🔌 Chrome Extension Integration
@@ -504,14 +459,15 @@ export default function SettingsPage() {
                   borderRadius: 6,
                   fontSize: 11,
                   fontWeight: 700,
-                  textTransform: "uppercase"
+                  textTransform: "uppercase",
+                  flexShrink: 0,
                 }}>
                   Developer Tool
                 </span>
               </div>
 
-              {/* Steps Layout */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, fontSize: 13 }} className="grid grid-cols-1 md:grid-cols-2">
+              {/* Steps Layout — single col on mobile, two cols on md+ */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 {/* Left col: value props */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>Key Capabilities:</h3>
@@ -539,9 +495,9 @@ export default function SettingsPage() {
                   borderRadius: 12,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10
+                  gap: 10,
                 }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>How to Install & Load:</h3>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>How to Install &amp; Load:</h3>
                   <ol style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 6, color: "var(--ink-muted)", fontSize: 12, lineHeight: 1.4 }}>
                     <li>Open Chrome and navigate to <strong style={{ color: "var(--ink)", fontFamily: "monospace" }}>chrome://extensions/</strong></li>
                     <li>Toggle <strong>Developer mode</strong> in the top-right corner.</li>
@@ -554,31 +510,14 @@ export default function SettingsPage() {
             </div>
 
             {/* PREFERENCES */}
-            <div style={{
-              background: "var(--paper-card)",
-              border: "1px solid var(--border)",
-              borderRadius: 18,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-            }}>
+            <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Preferences</h2>
                 <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Personalization and onboarding options.</p>
               </div>
 
-              <div style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                padding: "16px 20px",
-                background: "var(--paper-warm)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                flexWrap: "wrap",
-                gap: 12,
-              }}>
+              <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}>
                 <div>
                   <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
                     🎓 Onboarding Tour
@@ -613,34 +552,17 @@ export default function SettingsPage() {
             </div>
 
             {/* DANGER ZONE */}
-            <div style={{
-              background: "var(--paper-card)",
-              border: "1px dashed #ef4444",
-              borderRadius: 18,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-            }}>
+            <div className="p-5 sm:p-7" style={{ ...cardStyle, border: "1px dashed #ef4444" }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "#ef4444" }}>Danger Zone</h2>
                 <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Permanently delete your account. This is irreversible.</p>
               </div>
 
-              <div style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                padding: "16px 20px",
-                background: "rgba(239, 68, 68, 0.04)",
-                border: "1px solid rgba(239, 68, 68, 0.1)",
-                borderRadius: 12,
-                flexWrap: "wrap",
-                gap: 12,
-              }}>
-                <div style={{ flex: 1, paddingRight: 20 }}>
+              <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                style={{ background: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.1)" }}>
+                <div className="flex-1 min-w-0 pr-0 sm:pr-5">
                   <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", fontWeight: 500, marginBottom: 4 }}>
-                    Delete Account & Data
+                    Delete Account &amp; Data
                   </p>
                   <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}>
                     Your subscription will be canceled and all saved resumes, job tracker logs, analysis results, and portfolio pages will be deleted forever.
@@ -657,6 +579,7 @@ export default function SettingsPage() {
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
+                    flexShrink: 0,
                     transition: "background 0.15s",
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.background = "#dc2626"}
@@ -719,17 +642,12 @@ export default function SettingsPage() {
                 value={deleteText}
                 onChange={(e) => setDeleteText(e.target.value)}
                 style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
+                  ...inputStyle,
                   background: "var(--paper-card)",
-                  color: "var(--ink)",
-                  fontSize: 14,
-                  outline: "none",
                 }}
               />
             </div>
-            <div style={{ display: "flex", justifySelf: "flex-end", gap: 12, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
               <button
                 disabled={deleting}
                 onClick={() => setDeleteConfirmOpen(false)}
