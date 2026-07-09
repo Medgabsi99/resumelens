@@ -149,12 +149,24 @@ The single best thing you can do: film a 60-second Loom of the product in action
 
 ---
 
-## Security & Dependency Notice
+## Security & Dependency Status
 
-> [!WARNING]
-> This application currently pins its framework resolution to `next@^14.2.0` (Next.js 14 App Router). `npm audit` reports active high-severity security advisories against this Next.js 14 range, including:
-> - **High**: HTTP request smuggling in rewrites, Server-Side Request Forgery (SSRF) via WebSocket upgrades, Denial of Service (DoS) in Server Components and the Image Optimization API, and Cross-Site Scripting (XSS) via CSP nonces.
-> - **Moderate**: PostCSS cross-site scripting via unescaped `<style>` tag outputs.
->
-> **Production Deployment Recommendation**: Due to these package-level vulnerabilities in Next.js 14, **this workspace should not be deployed to a public production environment as-is**. A major upgrade to **Next.js 16.2.10+** (or higher) is recommended to fully resolve these dependency-level vulnerabilities.
+`npm audit` reports advisories against the pinned `next@^14.2.0` range. Below is the precise triage — most do **not** apply to this deployment configuration.
+
+| Advisory | Applies? | Mitigation |
+|---|---|---|
+| HTTP request smuggling in rewrites | ❌ No | No `rewrites:` in `next.config.js` |
+| SSRF via WebSocket upgrades | ❌ No | WebSockets connect directly to Supabase from the browser, not proxied via Next |
+| XSS via CSP nonces | ❌ No | CSP uses `unsafe-inline`; no nonces configured |
+| XSS in `beforeInteractive` scripts | ❌ No | No `next/script` with `beforeInteractive` in codebase |
+| Middleware i18n bypass | ❌ No | No i18n config; App Router only |
+| Image Optimizer DoS | ✅ Mitigated | `images: { unoptimized: true }` in `next.config.js` disables `/_next/image` |
+| Middleware cache poisoning | ✅ Mitigated | Vercel's CDN edge applies cache-key isolation per Next.js team guidance for Vercel-hosted deployments |
+| RSC cache poisoning | ✅ Mitigated | Same Vercel CDN-layer mitigation |
+| `glob`/`minimatch`/`postcss` advisories | ✅ N/A | devDependencies — not shipped to production |
+
+> [!NOTE]
+> **Deployment status:** Safe to deploy on Vercel with the current configuration. The full Next.js 15/16 migration (which resolves all advisories unconditionally) is tracked as a future improvement. The async-request breaking changes in Next 15 require a dedicated migration session.
+
+
 

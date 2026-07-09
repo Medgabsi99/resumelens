@@ -13,6 +13,12 @@ const cspHeader = `
 `.replace(/\s{2,}/g, ' ').trim();
 
 const nextConfig = {
+  images: {
+    // Disables the /_next/image optimization endpoint (DoS surface — GHSA-h64f-5h5j-jqjh).
+    // This app uses no next/image components; unoptimized: true makes the route a
+    // simple pass-through with no CPU-intensive resize path exposed.
+    unoptimized: true,
+  },
   experimental: {
     // Required for pdf-parse and mammoth to work in API routes (Node.js runtime)
     // NOTE: Move to top-level `serverExternalPackages` when upgrading to Next.js 15+
