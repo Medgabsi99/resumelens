@@ -103,6 +103,7 @@ export function useNegotiationSession({
       });
     }, 600);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- INITIALIZING_STEPS is a module-level constant; its length never changes
   }, [isInitializing]);
 
   // Initialize recruiter profile and opening message

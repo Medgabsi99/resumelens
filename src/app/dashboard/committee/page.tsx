@@ -61,6 +61,7 @@ export default function CommitteeSimulationPage() {
     if (analysisId) {
       loadPastSimulation(analysisId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs once on mount; loadPastSimulation updates state and must not be re-added
   }, []);
 
   // Playback Timer Loop

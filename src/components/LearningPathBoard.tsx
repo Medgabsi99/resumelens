@@ -209,7 +209,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       <div className="border-t border-border pt-3 space-y-1">
                         <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">Hands-on Exercise</span>
                         <p className="text-xs text-ink-muted leading-relaxed italic">
-                          "{milestone.handsOnExercise}"
+                          &quot;{milestone.handsOnExercise}&quot;
                         </p>
                       </div>
                     </div>

@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     const _user = await requireUser();
 
     const body = await req.json();
-    let { resumeId, jobDescription, jobTitle, companyName } = body;
+    const { resumeId } = body;
+    let { jobDescription, jobTitle, companyName } = body;
 
     if (!resumeId) {
       const errRes = NextResponse.json({ success: false, error: "resumeId is required" }, { status: 400 });

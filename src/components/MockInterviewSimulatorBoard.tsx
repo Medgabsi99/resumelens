@@ -330,13 +330,41 @@ export default function MockInterviewSimulatorBoard({
   };
 
   // ── Final Evaluation Compile & Save ───────────────────────
-  useEffect(() => {
-    if (isFinished && transcripts.length === questions.length && !scorecard) {
-      triggerFinalScorecardCompilation();
-    }
-  }, [isFinished, transcripts]);
+  const saveToLocalStorage = useCallback((scorecardData: MockInterviewScorecard, transcriptLogs: MockInterviewTranscriptEntry[]) => {
+    try {
+      const local = localStorage.getItem("mock_interviews_local");
+      const localHistory = local ? JSON.parse(local) : [];
+      
+      // Calculate local aggregate filler word stats
+      const textAggregate = transcriptLogs.map((t) => t.answer).join(" ").toLowerCase();
+      const fillerWordsCounts: Record<string, number> = {};
+      FILLER_WORDS.forEach((word) => {
+        const regex = new RegExp(`\\b${word}\\b`, "g");
+        const matches = textAggregate.match(regex);
+        fillerWordsCounts[word] = matches ? matches.length : 0;
+      });
 
-  const triggerFinalScorecardCompilation = async () => {
+      const newItem = {
+        id: "local_" + Date.now(),
+        role_title: roleTitle,
+        company_name: companyName,
+        interview_type: interviewType,
+        difficulty,
+        questions,
+        transcripts: transcriptLogs,
+        overall_score: scorecardData.overallScore,
+        star_mastery: scorecardData.starMastery,
+        filler_words: fillerWordsCounts,
+        created_at: new Date().toISOString(),
+      };
+      
+      localStorage.setItem("mock_interviews_local", JSON.stringify([newItem, ...localHistory]));
+    } catch (e) {
+      logger.error("Failed to fallback save local interview:", e);
+    }
+  }, [roleTitle, companyName, interviewType, difficulty, questions]);
+
+  const triggerFinalScorecardCompilation = useCallback(async () => {
     setIsSaving(true);
     try {
       const saveRes = await fetch("/api/interviews/save", {
@@ -376,41 +404,13 @@ export default function MockInterviewSimulatorBoard({
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [roleTitle, companyName, interviewType, difficulty, questions, transcripts, saveToLocalStorage]);
 
-  const saveToLocalStorage = (scorecardData: MockInterviewScorecard, transcriptLogs: MockInterviewTranscriptEntry[]) => {
-    try {
-      const local = localStorage.getItem("mock_interviews_local");
-      const localHistory = local ? JSON.parse(local) : [];
-      
-      // Calculate local aggregate filler word stats
-      const textAggregate = transcriptLogs.map((t) => t.answer).join(" ").toLowerCase();
-      const fillerWordsCounts: Record<string, number> = {};
-      FILLER_WORDS.forEach((word) => {
-        const regex = new RegExp(`\\b${word}\\b`, "g");
-        const matches = textAggregate.match(regex);
-        fillerWordsCounts[word] = matches ? matches.length : 0;
-      });
-
-      const newItem = {
-        id: "local_" + Date.now(),
-        role_title: roleTitle,
-        company_name: companyName,
-        interview_type: interviewType,
-        difficulty,
-        questions,
-        transcripts: transcriptLogs,
-        overall_score: scorecardData.overallScore,
-        star_mastery: scorecardData.starMastery,
-        filler_words: fillerWordsCounts,
-        created_at: new Date().toISOString(),
-      };
-      
-      localStorage.setItem("mock_interviews_local", JSON.stringify([newItem, ...localHistory]));
-    } catch (e) {
-      logger.error("Failed to fallback save local interview:", e);
+  useEffect(() => {
+    if (isFinished && transcripts.length === questions.length && !scorecard) {
+      triggerFinalScorecardCompilation();
     }
-  };
+  }, [isFinished, transcripts, questions.length, scorecard, triggerFinalScorecardCompilation]);
 
   // ── Render ────────────────────────────────────────────────
   return (

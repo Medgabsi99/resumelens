@@ -20,7 +20,7 @@ export default function NotFound() {
         </h1>
         
         <p className="text-ink-muted text-sm mb-6 leading-relaxed">
-          The page you are looking for doesn't exist, has been moved, or the URL might be incorrect.
+          The page you are looking for doesn&apos;t exist, has been moved, or the URL might be incorrect.
         </p>
 
         <div className="flex justify-center">

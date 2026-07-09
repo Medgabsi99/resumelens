@@ -8,10 +8,10 @@ import { getUserProfile, canAnalyze } from "@/lib/auth";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  // ── 1. Auth ───────────────────────────────────────────────
+  // â”€â”€ 1. Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const _user = await requireUser();
 
-  // ── 2. Quota check ────────────────────────────────────────
+  // â”€â”€ 2. Quota check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
@@ -20,9 +20,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── 3. Parse & validate ───────────────────────────────────
+  // â”€â”€ 3. Parse & validate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const body = await req.json();
-  let { message, resumeText, jobDescription, targetRole, history } = body;
+  let { message, resumeText, jobDescription, targetRole } = body;
+  const { history } = body;
 
   try {
     message = validateAndSanitizeInput(message, 2000, "Message", true);
@@ -38,16 +39,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
-  // ── 4. RAG Chat ───────────────────────────────────────────
+  // â”€â”€ 4. RAG Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // chatWithResumeStream now embeds the question (RETRIEVAL_QUERY task type)
   // and retrieves the top-k semantically relevant resume chunks from pgvector
-  // before calling the LLM — true Retrieval-Augmented Generation.
+  // before calling the LLM â€” true Retrieval-Augmented Generation.
   try {
     const streamResult = await chatWithResumeStream(
       message,
-      _user.id, // userId — scopes vector search to this user
-      supabase,        // authenticated client — passed to retrieval layer
-      resumeText,      // full text — fallback if no embeddings stored yet
+      _user.id, // userId â€” scopes vector search to this user
+      supabase,        // authenticated client â€” passed to retrieval layer
+      resumeText,      // full text â€” fallback if no embeddings stored yet
       jobDescription,
       targetRole,
       history,

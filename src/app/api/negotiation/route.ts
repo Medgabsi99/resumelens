@@ -13,17 +13,8 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();
-    let {
-      resumeText,
-      roleTitle,
-      companyName,
-      scenario,
-      initialOffer,
-      currentOffer,
-      messageHistory,
-      userResponse,
-      recruiterProfile,
-    } = body;
+    const { initialOffer, currentOffer, messageHistory, recruiterProfile } = body;
+    let { resumeText, roleTitle, companyName, scenario, userResponse } = body;
 
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);

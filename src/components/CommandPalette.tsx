@@ -100,6 +100,7 @@ export default function CommandPalette({ isOpen, onClose }: Props) {
         .catch(() => {})
         .finally(() => setLoadingAnalyses(false));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- analyses.length is derived from state; re-running when it changes would cause unwanted re-fetches
   }, [isOpen]);
 
   // ── Navigate helper (closes palette first) ────────────────────
@@ -428,7 +429,7 @@ export default function CommandPalette({ isOpen, onClose }: Props) {
                 fontSize: 14,
               }}
             >
-              No results for "{query}"
+              No results for &quot;{query}&quot;
             </div>
           )}
 

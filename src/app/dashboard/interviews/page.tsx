@@ -532,7 +532,7 @@ export default function InterviewsPage() {
                   <div className="grid grid-cols-3 md:grid-cols-4 gap-2 text-xs">
                     {Object.entries(selectedHistoryItem.filler_words).map(([w, c]) => (
                       <div key={w} className="bg-[#181822] border border-border/50 p-2 rounded-lg flex justify-between">
-                        <span className="text-ink-muted font-mono">"{w}"</span>
+                        <span className="text-ink-muted font-mono">&quot;{w}&quot;</span>
                         <span className="font-bold">{c}</span>
                       </div>
                     ))}
@@ -553,14 +553,14 @@ export default function InterviewsPage() {
                         Q{idx + 1}: {s.question}
                       </div>
                       <div className="text-ink-muted bg-[#121216] border border-border/50 p-2.5 rounded-lg leading-relaxed italic">
-                        "{s.answer}"
+                        &quot;{s.answer}&quot;
                       </div>
                       <div className="text-[11px] leading-relaxed pt-1.5 border-t border-[#2c2c38]/40">
                         <strong>Grade Feedback (Score: {s.score}/10):</strong> <span className="text-ink-muted">{s.feedback}</span>
                       </div>
                       {s.sampleAnswer && (
                         <div className="text-[11px] text-emerald-400 leading-relaxed pt-1 border-t border-dashed border-[#2c2c38]/40">
-                          <strong>Coach Suggestion:</strong> "{s.sampleAnswer}"
+                          <strong>Coach Suggestion:</strong> &quot;{s.sampleAnswer}&quot;
                         </div>
                       )}
                     </div>

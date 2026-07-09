@@ -155,13 +155,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setMobileOpen(false);
   }, [pathname]);
 
-  const toggleSidebar = () => {
+  const toggleSidebar = useCallback(() => {
     setCollapsed((v) => {
       const nextVal = !v;
       localStorage.setItem("sidebar_collapsed", String(nextVal));
       return nextVal;
     });
-  };
+  }, []);
 
   // ── Unified global keyboard handler ──────────────────────
   const handleKeyDown = useCallback(

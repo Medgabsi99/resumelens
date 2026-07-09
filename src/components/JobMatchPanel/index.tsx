@@ -332,7 +332,7 @@ export default function JobMatchPanel({
                 marginBottom: 10,
               }}
             >
-              ✓ Why you're a good fit
+              ✓ Why you&apos;re a good fit
             </div>
             <ul style={{ margin: 0, paddingLeft: 18, listStyle: "none" }}>
               {result.strengths.map((s, i) => (
