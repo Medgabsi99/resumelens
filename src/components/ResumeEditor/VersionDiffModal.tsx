@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import * as Diff from "diff";
 import { ResumeVersion } from "./types";
 
@@ -15,6 +15,7 @@ export default function VersionDiffModal({
   onClose,
   onRestore,
 }: VersionDiffModalProps) {
+  const [viewMode, setViewMode] = useState<"inline" | "side-by-side">("inline");
   const diffs = useMemo(() => {
     return Diff.diffWordsWithSpace(version.resume_text, currentText);
   }, [version.resume_text, currentText]);
@@ -97,80 +98,190 @@ export default function VersionDiffModal({
           borderBottom: "1px solid var(--border)",
           background: "var(--paper-warm)",
           display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           gap: "16px",
           fontSize: "11px",
           fontWeight: 600,
           fontFamily: "Instrument Sans, sans-serif",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "#ffebe9",
-              border: "1px solid #ffc1c1",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "#b91c1c" }}>Deleted from Snapshot</span>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid #ffc1c1",
+                borderRadius: "3px",
+                display: "inline-block",
+              }} />
+              <span style={{ color: "#b91c1c" }}>Deleted from Snapshot</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{
+                width: "12px",
+                height: "12px",
+                background: "rgba(16, 185, 129, 0.15)",
+                border: "1px solid #abf2af",
+                borderRadius: "3px",
+                display: "inline-block",
+              }} />
+              <span style={{ color: "#15803d" }}>Added in Active Editor</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{
+                width: "12px",
+                height: "12px",
+                background: "var(--paper)",
+                border: "1px solid var(--border)",
+                borderRadius: "3px",
+                display: "inline-block",
+              }} />
+              <span style={{ color: "var(--ink-muted)" }}>Unchanged</span>
+            </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "#e6ffec",
-              border: "1px solid #abf2af",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "#15803d" }}>Added in Active Editor</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              width: "12px",
-              height: "12px",
-              background: "var(--paper)",
-              border: "1px solid var(--border)",
-              borderRadius: "3px",
-              display: "inline-block",
-            }} />
-            <span style={{ color: "var(--ink-muted)" }}>Unchanged</span>
+
+          <div style={{ display: "flex", background: "var(--paper-card)", borderRadius: "8px", border: "1px solid var(--border)", padding: "2px" }}>
+            <button
+              type="button"
+              onClick={() => setViewMode("inline")}
+              style={{
+                background: viewMode === "inline" ? "var(--accent)" : "transparent",
+                color: viewMode === "inline" ? "#fff" : "var(--ink-muted)",
+                border: "none",
+                borderRadius: "6px",
+                padding: "3px 10px",
+                fontSize: "10px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              Inline
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("side-by-side")}
+              style={{
+                background: viewMode === "side-by-side" ? "var(--accent)" : "transparent",
+                color: viewMode === "side-by-side" ? "#fff" : "var(--ink-muted)",
+                border: "none",
+                borderRadius: "6px",
+                padding: "3px 10px",
+                fontSize: "10px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              Side-by-Side
+            </button>
           </div>
         </div>
 
         {/* Diff view */}
-        <div style={{
-          flex: 1,
-          overflow: "auto",
-          padding: "24px",
-          background: "var(--paper)",
-          fontFamily: "DM Mono, monospace",
-          fontSize: "13px",
-          lineHeight: "1.7",
-          whiteSpace: "pre-wrap",
-        }}>
-          {diffs.map((part, index) => {
-            let style: React.CSSProperties = {};
-            if (part.added) {
-              style = {
-                background: "#e6ffec",
-                color: "#15803d",
-                textDecoration: "none",
-                fontWeight: 600,
-              };
-            } else if (part.removed) {
-              style = {
-                background: "#ffebe9",
-                color: "#b91c1c",
-                textDecoration: "line-through",
-              };
-            }
-            return (
-              <span key={index} style={style}>
-                {part.value}
-              </span>
-            );
-          })}
-        </div>
+        {viewMode === "inline" ? (
+          <div style={{
+            flex: 1,
+            overflow: "auto",
+            padding: "24px",
+            background: "var(--paper)",
+            fontFamily: "DM Mono, monospace",
+            fontSize: "13px",
+            lineHeight: "1.7",
+            whiteSpace: "pre-wrap",
+          }}>
+            {diffs.map((part, index) => {
+              let style: React.CSSProperties = {};
+              if (part.added) {
+                style = {
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#15803d",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                };
+              } else if (part.removed) {
+                style = {
+                  background: "rgba(239, 68, 68, 0.15)",
+                  color: "#b91c1c",
+                  textDecoration: "line-through",
+                };
+              }
+              return (
+                <span key={index} style={style}>
+                  {part.value}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{
+            flex: 1,
+            display: "flex",
+            overflow: "hidden",
+            background: "var(--paper)",
+            fontFamily: "DM Mono, monospace",
+            fontSize: "13px",
+            lineHeight: "1.7",
+          }}>
+            {/* Snapshot column */}
+            <div style={{
+              flex: 1,
+              overflow: "auto",
+              padding: "24px",
+              borderRight: "1px solid var(--border)",
+              whiteSpace: "pre-wrap",
+            }}>
+              <div style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: "12px", fontFamily: "Instrument Sans, sans-serif" }}>
+                Snapshot: {version.version_name}
+              </div>
+              {diffs.map((part, index) => {
+                if (part.added) return null;
+                let style: React.CSSProperties = {};
+                if (part.removed) {
+                  style = {
+                    background: "rgba(239, 68, 68, 0.15)",
+                    color: "#b91c1c",
+                    textDecoration: "line-through",
+                  };
+                }
+                return (
+                  <span key={index} style={style}>
+                    {part.value}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Active Draft column */}
+            <div style={{
+              flex: 1,
+              overflow: "auto",
+              padding: "24px",
+              whiteSpace: "pre-wrap",
+            }}>
+              <div style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: "12px", fontFamily: "Instrument Sans, sans-serif" }}>
+                Active Draft
+              </div>
+              {diffs.map((part, index) => {
+                if (part.removed) return null;
+                let style: React.CSSProperties = {};
+                if (part.added) {
+                  style = {
+                    background: "rgba(16, 185, 129, 0.15)",
+                    color: "#15803d",
+                    fontWeight: 600,
+                  };
+                }
+                return (
+                  <span key={index} style={style}>
+                    {part.value}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Footer Actions */}
         <div style={{
