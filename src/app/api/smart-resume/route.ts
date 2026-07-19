@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
@@ -8,7 +9,11 @@ import { resumeToText } from "@/lib/parseResume";
 export async function POST(req: NextRequest) {
   try {
     // Auth check
-    await requireUser();
+    const _user = await requireUser();
+    const rateLimit = await checkRateLimit(_user.id, "smart-resume");
+    if (!rateLimit.success) {
+      return rateLimitResponse();
+    }
 
     const body = await req.json();
     let { resumeText, targetRole, jobDescription } = body;

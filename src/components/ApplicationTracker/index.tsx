@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { LayoutGrid, List } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import {
   ApplicationStatus,
   APPLICATION_STATUS_LABELS,
@@ -163,7 +165,8 @@ export default function ApplicationTracker() {
                 : "text-ink-muted border border-transparent hover:text-ink"
             }`}
           >
-            <span>⬓</span> Board
+            <LayoutGrid size={13} className="shrink-0" />
+            <span>Board</span>
           </button>
           <button
             type="button"
@@ -174,7 +177,8 @@ export default function ApplicationTracker() {
                 : "text-ink-muted border border-transparent hover:text-ink"
             }`}
           >
-            <span>☰</span> List
+            <List size={13} className="shrink-0" />
+            <span>List</span>
           </button>
         </div>
       </div>
@@ -331,23 +335,25 @@ export default function ApplicationTracker() {
                         <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-1">
                           {colApps.length === 0 ? (
                             <div className="text-center py-12 text-ink-faint text-xs font-mono border border-dashed border-border/40 rounded-xl bg-paper-card/30">
-                              {isOver && draggingId ? "Drop here →" : "Empty Zone"}
+                              {isOver && draggingId ? "Drop here" : "Empty Zone"}
                             </div>
                           ) : (
-                            colApps.map((app) => (
-                              <KanbanCard
-                                key={app.id}
-                                app={app}
-                                isDragging={draggingId === app.id}
-                                isInsertTarget={insertBeforeId === app.id}
-                                onDragStart={(e) => handleDragStart(e, app.id)}
-                                onDragEnd={handleDragEnd}
-                                onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
-                                onEdit={() => setEditingApp(app)}
-                                onDelete={() => handleDelete(app)}
-                                onStatusChange={(s) => handleStatusChange(app, s)}
-                              />
-                            ))
+                            <AnimatePresence initial={false}>
+                              {colApps.map((app) => (
+                                <KanbanCard
+                                  key={app.id}
+                                  app={app}
+                                  isDragging={draggingId === app.id}
+                                  isInsertTarget={insertBeforeId === app.id}
+                                  onDragStart={(e) => handleDragStart(e, app.id)}
+                                  onDragEnd={handleDragEnd}
+                                  onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
+                                  onEdit={() => setEditingApp(app)}
+                                  onDelete={() => handleDelete(app)}
+                                  onStatusChange={(s) => handleStatusChange(app, s)}
+                                />
+                              ))}
+                            </AnimatePresence>
                           )}
                         </div>
                       </div>
@@ -372,18 +378,20 @@ export default function ApplicationTracker() {
       />
 
       {/* Edit Modal */}
-      {editingApp && (
-        <EditApplicationModal
-          application={editingApp}
-          onClose={() => setEditingApp(null)}
-          onUpdated={(updated) => {
-            setApplications((prev) =>
-              prev.map((a) => (a.id === updated.id ? updated : a))
-            );
-            setEditingApp(null);
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {editingApp && (
+          <EditApplicationModal
+            application={editingApp}
+            onClose={() => setEditingApp(null)}
+            onUpdated={(updated) => {
+              setApplications((prev) =>
+                prev.map((a) => (a.id === updated.id ? updated : a))
+              );
+              setEditingApp(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { Upload } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { type AtsStructureResult } from "@/lib/ai";
 import dynamic from "next/dynamic";
@@ -161,7 +162,7 @@ export default function ScannerPage() {
         {!scannerData && !loading && (
           <div className="space-y-1.5">
             <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink flex items-center gap-2 flex-wrap">
-              PDF ATS-Compliance Heatmap & Structural Scanner 🔍
+              PDF ATS-Compliance Heatmap & Structural Scanner
             </h1>
             <p className="text-ink-muted text-sm max-w-3xl">
               Upload your resume PDF to scan for common formatting issues that confuse applicant tracking system parsers. Get a visual heatmap of your document structure warnings.
@@ -171,7 +172,7 @@ export default function ScannerPage() {
 
         {error && (
           <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -198,7 +199,9 @@ export default function ScannerPage() {
               }`}
             >
               <input {...getInputProps()} />
-              <span className="text-5xl mb-4">📂</span>
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent-border flex items-center justify-center text-accent mb-4">
+                <Upload size={28} />
+              </div>
               <h3 className="font-display text-lg font-bold text-ink mb-1.5">
                 Drag and Drop Resume PDF here
               </h3>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowRight, Check } from "lucide-react";
 import { createBrowserClient } from "@/lib/supabase";
 
 const PLANS = [
@@ -120,7 +121,7 @@ export default function PricingPage() {
             className="text-sm font-semibold text-ink-muted hover:text-accent border border-border hover:border-accent-border px-4 py-2 rounded-xl no-underline transition-all duration-200 flex items-center gap-1.5"
             style={{ background: "var(--paper-card)" }}
           >
-            Dashboard →
+            Dashboard <ArrowRight size={13} />
           </a>
         ) : (
           <a
@@ -193,10 +194,10 @@ export default function PricingPage() {
                       style={{ color: f.included ? "var(--ink)" : "var(--ink-faint)" }}
                     >
                       <span
-                        className="text-base flex-shrink-0 leading-none"
+                        className="text-base flex-shrink-0 leading-none flex items-center justify-center"
                         style={{ color: f.included ? "#10b981" : "var(--ink-faint)" }}
                       >
-                        {f.included ? "✓" : "—"}
+                        {f.included ? <Check size={14} /> : "—"}
                       </span>
                       <span style={{ textDecoration: f.included ? "none" : "line-through", opacity: f.included ? 1 : 0.6 }}>
                         {f.name}

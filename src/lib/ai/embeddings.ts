@@ -1,18 +1,18 @@
 /**
  * embeddings.ts
  *
- * Wraps Gemini `gemini-embedding-001`, truncated to 768 dimensions via
+ * Wraps gemini-2.5 `gemini-2.5-embedding-001`, truncated to 768 dimensions via
  * outputDimensionality (matches the `vector(768)` columns in
  * supabase/migrations/20240625_pgvector_resume_chunks.sql).
  *
  * NOTE: `text-embedding-004` was shut down by Google on Jan 14, 2026.
- * gemini-embedding-001 is the direct replacement, but its embedding space
+ * gemini-2.5-embedding-001 is the direct replacement, but its embedding space
  * is NOT compatible with text-embedding-004 — any rows already embedded
  * with the old model must be re-embedded, or similarity search will
  * silently return bad matches (no error, just wrong ranking).
  *
- * gemini-embedding-001 also does NOT auto-normalize truncated output the
- * way the newer gemini-embedding-2 does — Google's docs require manual
+ * gemini-2.5-embedding-001 also does NOT auto-normalize truncated output the
+ * way the newer gemini-2.5-embedding-2 does — Google's docs require manual
  * L2 normalization for any outputDimensionality other than the 3072
  * default, so we do that below before returning/storing vectors.
  *
@@ -22,7 +22,7 @@
  *
  * Includes:
  *  - Exponential-backoff retry (429 / 503 rate-limit handling)
- *  - Batch embedding via batchEmbedContents (max 100 per call per Gemini limits)
+ *  - Batch embedding via batchEmbedContents (max 100 per call per gemini-2.5 limits)
  */
 
 import { genAI } from "./client";
@@ -33,12 +33,12 @@ export type EmbeddingTaskType =
   | "RETRIEVAL_QUERY"
   | "SEMANTIC_SIMILARITY";
 
-const EMBEDDING_MODEL = "gemini-embedding-001";
+const EMBEDDING_MODEL = "gemini-2.5-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 
 /**
  * L2-normalize a vector in place-safe fashion. Required for
- * gemini-embedding-001 whenever outputDimensionality !== 3072 (the model's
+ * gemini-2.5-embedding-001 whenever outputDimensionality !== 3072 (the model's
  * default). A zero vector (e.g. our empty-text placeholder) is returned
  * unchanged to avoid a divide-by-zero.
  */
@@ -49,11 +49,11 @@ function l2Normalize(vec: number[]): number[] {
   if (norm === 0) return vec;
   return vec.map((v) => v / norm);
 }
-const MAX_BATCH_SIZE = 100; // Gemini API limit per batchEmbedContents call
+const MAX_BATCH_SIZE = 100; // gemini-2.5 API limit per batchEmbedContents call
 const MAX_RETRIES = 4;
 const BASE_DELAY_MS = 500;
 
-/** Gemini embedding model instance (singleton) */
+/** gemini-2.5 embedding model instance (singleton) */
 const embeddingModel = genAI.getGenerativeModel({ model: EMBEDDING_MODEL });
 
 // ─── Single embedding ─────────────────────────────────────────────────────────

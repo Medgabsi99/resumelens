@@ -1,20 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { FileSearch, ScanSearch, Brain, BarChart2, Sparkles, Check } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface Step {
   id: number;
   label: string;
   sublabel: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 const STEPS: Step[] = [
-  { id: 0, label: "Analyzing Layout Structure", sublabel: "Reading document columns & alignment rules", icon: "📄" },
-  { id: 1, label: "Extracting Text Layer", sublabel: "Locating contact block, education, & experiences", icon: "🔍" },
-  { id: 2, label: "Reranking Keywords", sublabel: "Comparing experience descriptions with target JD", icon: "🧠" },
-  { id: 3, label: "Calibrating ATS Score", sublabel: "Checking styling, fonts, & margin rules", icon: "📊" },
-  { id: 4, label: "Structuring AI Suggestions", sublabel: "Finalizing custom rewrite actions", icon: "✨" }
+  { id: 0, label: "Analyzing Layout Structure", sublabel: "Reading document columns & alignment rules", Icon: FileSearch },
+  { id: 1, label: "Extracting Text Layer", sublabel: "Locating contact block, education, & experiences", Icon: ScanSearch },
+  { id: 2, label: "Reranking Keywords", sublabel: "Comparing experience descriptions with target JD", Icon: Brain },
+  { id: 3, label: "Calibrating ATS Score", sublabel: "Checking styling, fonts, & margin rules", Icon: BarChart2 },
+  { id: 4, label: "Structuring AI Suggestions", sublabel: "Finalizing custom rewrite actions", Icon: Sparkles },
 ];
 
 interface Props {
@@ -101,7 +103,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
             >
               {/* Step Status Indicator Icon */}
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all ${
+                className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold border transition-all ${
                   isDone
                     ? "bg-emerald-500/20 border-emerald-500/35 text-emerald-400"
                     : isActive
@@ -109,7 +111,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
                     : "bg-[#0d0d15] border-white/5 text-slate-500"
                 }`}
               >
-                {isDone ? "✓" : step.icon}
+                {isDone ? <Check size={18} /> : <step.Icon size={18} />}
               </div>
 
               <div className="flex-1 min-w-0">

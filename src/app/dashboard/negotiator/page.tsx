@@ -9,6 +9,7 @@ import { type SavedNegotiationItem } from "@/types";
 import { useToast } from "@/components/ToastProvider";
 import EmptyState from "@/components/EmptyState";
 import dynamic from "next/dynamic";
+import { Gamepad2, Mic, Trophy, X } from "lucide-react";
 
 const SalaryNegotiatorBoard = dynamic(() => import("@/components/SalaryNegotiatorBoard"), {
   ssr: false,
@@ -231,7 +232,7 @@ export default function NegotiatorPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2">
-              Salary Negotiator 💰
+              Salary Negotiator
             </h1>
             <p className="text-ink-muted text-sm">
               Practice compensation negotiation scenarios with our interactive AI Recruiter. Highlight your resume achievements to maximize your offers.
@@ -241,7 +242,7 @@ export default function NegotiatorPage() {
 
         {error && (
           <div className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -251,7 +252,7 @@ export default function NegotiatorPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-5 shadow-lg">
               <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                🎮 Setup Simulation Session
+              <Gamepad2 size={14} /> Setup Simulation Session
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -392,7 +393,7 @@ export default function NegotiatorPage() {
                 disabled={!selectedResumeId || !roleTitle || !companyName}
                 className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
               >
-                🎙️ Launch Salary Negotiation Simulator
+                <Mic size={14} /> Launch Salary Negotiation Simulator
               </button>
 
             </div>
@@ -402,7 +403,7 @@ export default function NegotiatorPage() {
           <div className="space-y-6">
             <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-4 shadow-lg h-full">
               <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-border pb-3">
-                🏆 Scorecard History
+                <Trophy size={11} /> Scorecard History
               </h3>
 
               {loading ? (
@@ -518,9 +519,9 @@ export default function NegotiatorPage() {
                   onClick={() => setSelectedHistoryItem(null)}
                   className="absolute right-0 top-0 text-ink-muted hover:text-ink border border-border px-2.5 py-1 rounded-lg text-xs"
                 >
-                  ✕ Close
+                  <X size={13} /> Close
                 </button>
-                <div className="text-3xl mb-2">🏆</div>
+                <div className="flex justify-center mb-2"><Trophy size={32} className="text-accent" /></div>
                 <h3 className="font-display text-2xl font-bold text-ink">Saved Scorecard Result</h3>
                 <p className="text-ink-muted text-sm mt-1">
                   {selectedHistoryItem.role_title} at <span className="font-semibold">{selectedHistoryItem.company_name}</span>
@@ -596,7 +597,7 @@ export default function NegotiatorPage() {
                 <div className="border-t border-border pt-4 mt-2">
                   <details className="group">
                     <summary className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center justify-between cursor-pointer select-none">
-                      <span>💬 View Negotiation Conversation Logs</span>
+                      <span>View Negotiation Conversation Logs</span>
                       <span className="text-accent group-open:rotate-180 transition-transform duration-200">
                         ▼
                       </span>

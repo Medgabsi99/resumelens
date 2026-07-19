@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  Compass,
+  Palette,
+  Search,
+  Keyboard,
+  X,
+} from "lucide-react";
+import type React from "react";
+
 // ─── Types ───────────────────────────────────────────────────
 interface ShortcutRow {
   description: string;
@@ -8,7 +17,7 @@ interface ShortcutRow {
 
 interface ShortcutGroup {
   group: string;
-  icon: string;
+  icon: React.ReactNode;
   rows: ShortcutRow[];
 }
 
@@ -16,7 +25,7 @@ interface ShortcutGroup {
 const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     group: "Navigation",
-    icon: "🧭",
+    icon: <Compass size={12} />,
     rows: [
       { description: "Open command palette", keys: [["⌘", "K"], ["Ctrl", "K"]] },
       { description: "Go to Dashboard",      keys: [["G", "D"]] },
@@ -33,7 +42,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   },
   {
     group: "Interface",
-    icon: "🎨",
+    icon: <Palette size={12} />,
     rows: [
       { description: "Show keyboard shortcuts", keys: [["?"]] },
       { description: "Toggle sidebar",           keys: [["["], ["Ctrl", "\\"]] },
@@ -43,7 +52,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   },
   {
     group: "Command Palette",
-    icon: "🔍",
+    icon: <Search size={12} />,
     rows: [
       { description: "Navigate results",  keys: [["↑"], ["↓"]] },
       { description: "Execute command",   keys: [["↵"]] },
@@ -184,10 +193,9 @@ export default function KeyboardShortcutsPanel({ isOpen, onClose }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 15,
               }}
             >
-              ⌨️
+              <Keyboard size={16} />
             </div>
             <div>
               <div
@@ -227,11 +235,13 @@ export default function KeyboardShortcutsPanel({ isOpen, onClose }: Props) {
               border: "none",
               color: "var(--ink-faint)",
               cursor: "pointer",
-              fontSize: 20,
               lineHeight: 1,
               padding: "4px 6px",
               borderRadius: 6,
               transition: "color 0.15s, background 0.15s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = "var(--ink)";
@@ -242,7 +252,7 @@ export default function KeyboardShortcutsPanel({ isOpen, onClose }: Props) {
               e.currentTarget.style.background = "transparent";
             }}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 

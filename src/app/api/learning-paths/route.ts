@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +9,11 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
-    await requireUser();
+    const _user = await requireUser();
+    const rateLimit = await checkRateLimit(_user.id, "learning-paths");
+    if (!rateLimit.success) {
+      return rateLimitResponse();
+    }
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();

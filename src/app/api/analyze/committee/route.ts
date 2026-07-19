@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
@@ -12,6 +13,10 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
     const user = await requireUser();
+  const rateLimit = await checkRateLimit(user.id, "analyze-committee");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
 
     // ── 2. Parse and Validate Request ────────────────────────
     const body = await req.json();

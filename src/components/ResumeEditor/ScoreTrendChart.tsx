@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { TrendingUp } from "lucide-react";
 import { ResumeVersion } from "./types";
 
 export default function ScoreTrendChart({ versions }: { versions: ResumeVersion[] }) {
@@ -27,7 +28,10 @@ export default function ScoreTrendChart({ versions }: { versions: ResumeVersion[
         background: "rgba(0,0,0,0.02)",
         marginBottom: "16px",
       }}>
-        📈 Save at least 2 versions to see score trend analytics.
+        <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
+          <TrendingUp size={13} />
+          <span>Save at least 2 versions to see score trend analytics.</span>
+        </div>
       </div>
     );
   }
@@ -71,7 +75,7 @@ export default function ScoreTrendChart({ versions }: { versions: ResumeVersion[
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <span>📈 SCORE TREND</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><TrendingUp size={10} /><span>SCORE TREND</span></span>
         <span style={{ fontWeight: 700, color: "var(--accent)" }}>
           {chartData[chartData.length - 1].score - chartData[0].score >= 0 ? "+" : ""}
           {chartData[chartData.length - 1].score - chartData[0].score} pts

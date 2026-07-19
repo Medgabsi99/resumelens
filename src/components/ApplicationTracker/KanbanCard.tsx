@@ -1,7 +1,21 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { JobApplication, PRIORITY_COLORS, APPLICATION_STATUS_LABELS, ApplicationStatus } from "@/types";
 import { formatDate, daysUntil } from "./utils";
 import { useContextMenu } from "@/components/ContextMenu";
+import {
+  Pencil,
+  Trash2,
+  ExternalLink,
+  ArrowRight,
+  CheckCircle,
+  XCircle,
+  Award,
+  MapPin,
+  DollarSign,
+  Bell,
+  Calendar
+} from "lucide-react";
 
 interface KanbanCardProps {
   app: JobApplication;
@@ -59,20 +73,20 @@ export default function KanbanCard({
       {
         key: "edit",
         label: "Edit Application",
-        icon: "✏️",
+        icon: <Pencil size={13} />,
         shortcut: "E",
         onClick: onEdit,
       },
       ...(app.job_url ? [{
         key: "open-url",
         label: "Open Job Posting",
-        icon: "↗",
+        icon: <ExternalLink size={13} />,
         onClick: () => window.open(app.job_url!, "_blank", "noopener"),
       }] : []),
       ...(onStatusChange ? [{
         key: "status-sep",
         label: "Move to Status...",
-        icon: "⟶",
+        icon: <ArrowRight size={13} />,
         separator: true,
         disabled: true,
         onClick: () => {},
@@ -83,14 +97,14 @@ export default function KanbanCard({
           .map(s => ({
             key: `move-${s}`,
             label: APPLICATION_STATUS_LABELS[s],
-            icon: s === "accepted" ? "✅" : s === "rejected" ? "❌" : s === "offer" ? "🎉" : "→",
+            icon: s === "accepted" ? <CheckCircle size={13} className="text-emerald-500" /> : s === "rejected" ? <XCircle size={13} className="text-red-500" /> : s === "offer" ? <Award size={13} className="text-amber-500" /> : <ArrowRight size={13} />,
             onClick: () => onStatusChange!(s),
           }))
       ] : []),
       {
         key: "delete",
         label: "Delete Application",
-        icon: "🗑️",
+        icon: <Trash2 size={13} />,
         danger: true,
         separator: true,
         onClick: onDelete,
@@ -100,9 +114,14 @@ export default function KanbanCard({
   };
 
   return (
-    <div
+    <motion.div
+      layout
       onDragEnter={onCardDragEnter}
       onContextMenu={buildContextMenu}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 380, damping: 28 }}
       style={{ position: "relative" }}
     >
       {/* Insert-before drop indicator */}
@@ -122,17 +141,22 @@ export default function KanbanCard({
           }}
         />
       )}
-      <div
-        draggable="true"
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        className={`group glass-card bg-paper-card border p-4 rounded-xl shadow-sm transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
-          isDragging ? "opacity-40 scale-95 border-accent/40" : "opacity-100"
-        }`}
-        style={{
-          borderLeft: `4px solid ${PRIORITY_COLORS[app.priority] || "var(--border)"}`,
-        }}
+      <motion.div
+        animate={isDragging
+          ? { opacity: 0.45, scale: 0.96, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }
+          : { opacity: 1, scale: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }
+        }
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
+        <div
+          draggable="true"
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          className="group glass-card bg-paper-card border p-4 rounded-xl select-none cursor-grab active:cursor-grabbing"
+          style={{
+            borderLeft: `4px solid ${PRIORITY_COLORS[app.priority] || "var(--border)"}`,
+          }}
+        >
       {/* Top row: Company & Action Buttons */}
       <div className="flex justify-between items-start gap-2 mb-1">
         <span className="text-[11px] font-semibold text-ink-muted truncate max-w-[160px]" title={app.company_name}>
@@ -148,19 +172,7 @@ export default function KanbanCard({
             title="Edit Application"
             className="p-1 rounded-md text-ink-faint hover:text-ink hover:bg-paper border border-transparent hover:border-border transition-all cursor-pointer"
           >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
+            <Pencil className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -171,19 +183,7 @@ export default function KanbanCard({
             title="Delete Application"
             className="p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer"
           >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -218,18 +218,20 @@ export default function KanbanCard({
         )}
         {app.location && (
           <span 
-            className="text-[9px] text-ink-muted bg-paper border border-border px-1.5 py-0.5 rounded truncate max-w-[100px]" 
+            className="text-[9px] text-ink-muted bg-paper border border-border px-1.5 py-0.5 rounded truncate max-w-[100px] flex items-center gap-1" 
             title={app.location}
           >
-            📍 {app.location}
+            <MapPin size={9} className="text-slate-500 shrink-0" />
+            <span>{app.location}</span>
           </span>
         )}
         {formattedSalary && (
           <span 
-            className="text-[9px] text-ink-muted bg-paper border border-border px-1.5 py-0.5 rounded truncate max-w-[110px]" 
+            className="text-[9px] text-ink-muted bg-paper border border-border px-1.5 py-0.5 rounded truncate max-w-[110px] flex items-center gap-1" 
             title={formattedSalary}
           >
-            💰 {formattedSalary}
+            <DollarSign size={9} className="text-slate-500 shrink-0" />
+            <span>{formattedSalary}</span>
           </span>
         )}
       </div>
@@ -258,7 +260,7 @@ export default function KanbanCard({
               followUpUrgent ? "text-red-500" : "text-ink-muted"
             }`}
           >
-            {followUpUrgent ? "🔔" : "📅"}{" "}
+            {followUpUrgent ? <Bell size={9} className="shrink-0" /> : <Calendar size={9} className="shrink-0" />}{" "}
             {followUpUrgent 
               ? (followUpDays !== null && followUpDays < 0 ? "Overdue" : `Due in ${followUpDays}d`)
               : formatDate(app.follow_up_at)
@@ -276,11 +278,13 @@ export default function KanbanCard({
             className="text-accent hover:text-accent-hover font-semibold no-underline flex items-center gap-0.5"
             onClick={(e) => e.stopPropagation()}
           >
-            Apply ↗
+            <span>Apply</span>
+            <ExternalLink size={8} />
           </a>
         )}
       </div>
-      </div>
-    </div>
+        </div>
+        </motion.div>
+    </motion.div>
   );
 }

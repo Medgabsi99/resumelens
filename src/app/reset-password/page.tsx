@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase";
+import { Check, X, CheckCircle } from "lucide-react";
 import {
   compose,
   required,
@@ -94,7 +95,7 @@ function MatchIndicator({ password, confirm }: { password: string; confirm: stri
         transition: "color 0.2s",
       }}
     >
-      {match ? "✓ Passwords match" : "✗ Passwords don't match"}
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{match ? <Check size={13} /> : <X size={13} />} {match ? "Passwords match" : "Passwords don't match"}</span>
     </div>
   );
 }
@@ -280,7 +281,7 @@ function ResetPasswordForm() {
                   lineHeight: 1.5,
                 }}
               >
-                {message.type === "success" && <span style={{ marginRight: 6 }}>✅</span>}
+                {message.type === "success" && <span style={{ marginRight: 6, display: "inline-flex", verticalAlign: "middle" }}><CheckCircle size={14} /></span>}
                 {message.text}
               </div>
             )}

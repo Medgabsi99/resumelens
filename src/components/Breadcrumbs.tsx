@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
+import { ChevronRight, Home } from "lucide-react";
 
 // ─── Route metadata map ────────────────────────────────────────────────────────
-// Maps pathname segments → human-readable labels + optional icons
-const SEGMENT_META: Record<string, { label: string; icon: string }> = {
-  dashboard:      { label: "Dashboard",          icon: "⌂" },
-  applications:   { label: "Job Applications",   icon: "💼" },
-  negotiator:     { label: "Salary Negotiator",  icon: "💰" },
-  interviews:     { label: "Mock Interviews",    icon: "🎙️" },
-  scanner:        { label: "ATS Scanner",        icon: "🔍" },
-  "learning-paths": { label: "Learning Paths",  icon: "🎓" },
-  tailor:         { label: "Tailor Sandbox",     icon: "✨" },
-  committee:      { label: "Recruiter Sandbox",  icon: "👥" },
-  settings:       { label: "Settings",           icon: "⚙️" },
+// Maps pathname segments → human-readable labels
+const SEGMENT_META: Record<string, { label: string }> = {
+  dashboard:      { label: "Dashboard" },
+  applications:   { label: "Job Applications" },
+  negotiator:     { label: "Salary Negotiator" },
+  interviews:     { label: "Mock Interviews" },
+  scanner:        { label: "ATS Scanner" },
+  "learning-paths": { label: "Learning Paths" },
+  tailor:         { label: "Tailor Sandbox" },
+  committee:      { label: "Recruiter Sandbox" },
+  settings:       { label: "Settings" },
 };
 
 // Detect UUID-like IDs (analysis detail pages, e.g. /dashboard/abc-123)
@@ -23,63 +24,31 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 const SHORT_ID_REGEX = /^[0-9a-f]{20,}$/i;
 
-function humanizeSegment(segment: string): { label: string; icon: string } {
+function humanizeSegment(segment: string): { label: string } {
   if (SEGMENT_META[segment]) return SEGMENT_META[segment];
   if (UUID_REGEX.test(segment) || SHORT_ID_REGEX.test(segment)) {
-    return { label: "Analysis Report", icon: "📊" };
+    return { label: "Analysis Report" };
   }
   // Fallback: title-case the segment
   return {
     label: segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    icon: "›",
   };
 }
 
 // ─── Separator SVG ─────────────────────────────────────────────────────────────
 function ChevronSeparator() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      style={{ color: "var(--ink-faint)", flexShrink: 0 }}
-    >
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  );
+  return <ChevronRight size={12} className="text-ink-faint shrink-0" />;
 }
 
 // ─── Home icon ─────────────────────────────────────────────────────────────────
 function HomeIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-      <path d="M9 21V12h6v9" />
-    </svg>
-  );
+  return <Home size={13} className="shrink-0" />;
 }
 
 // ─── Individual crumb ─────────────────────────────────────────────────────────
 interface Crumb {
   href: string;
   label: string;
-  icon: string;
   isActive: boolean;
   isHome: boolean;
 }
@@ -94,14 +63,13 @@ export default function Breadcrumbs() {
 
     return segments.map((seg, idx) => {
       const href = "/" + segments.slice(0, idx + 1).join("/");
-      const { label, icon } = humanizeSegment(seg);
+      const { label } = humanizeSegment(seg);
       const isLast = idx === segments.length - 1;
       const isHome = seg === "dashboard" && idx === 0;
 
       return {
         href,
         label,
-        icon,
         isActive: isLast,
         isHome,
       };

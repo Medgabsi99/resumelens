@@ -8,6 +8,18 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Sparkles,
+  Activity,
+  AlertTriangle,
+  AlertCircle,
+  Clock,
+  AlertOctagon,
+  Calendar,
+  Award,
+  ArrowRight
+} from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type NotifType =
@@ -28,7 +40,7 @@ export interface Notification {
   href?: string;
   createdAt: Date;
   read: boolean;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 // ─── Raw API shapes (minimal) ─────────────────────────────────────────────────
@@ -109,7 +121,7 @@ function synthesize(
         href: `/dashboard/${a.id}`,
         createdAt: new Date(a.created_at),
         read: readIds.has(id),
-        icon: a.score >= 75 ? "🎯" : a.score >= 55 ? "📊" : "⚠️",
+        icon: a.score >= 75 ? <Sparkles size={16} className="text-amber-500" /> : a.score >= 55 ? <Activity size={16} className="text-blue-500" /> : <AlertTriangle size={16} className="text-rose-500" />,
       });
     });
 
@@ -128,7 +140,7 @@ function synthesize(
         href: "/dashboard/applications",
         createdAt: new Date(app.follow_up_at!),
         read: readIds.has(id),
-        icon: "🔴",
+        icon: <AlertCircle size={16} className="text-red-500" />,
       });
     } else if (d <= 2) {
       const id = `followup_due_${app.id}`;
@@ -140,7 +152,7 @@ function synthesize(
         href: "/dashboard/applications",
         createdAt: new Date(app.follow_up_at!),
         read: readIds.has(id),
-        icon: d === 0 ? "🔔" : "⏰",
+        icon: d === 0 ? <Bell size={16} className="text-amber-500" /> : <Clock size={16} className="text-slate-400" />,
       });
     }
   });
@@ -159,7 +171,7 @@ function synthesize(
         href: "/dashboard/applications",
         createdAt: new Date(app.deadline_at!),
         read: readIds.has(id),
-        icon: d === 0 ? "🚨" : "📅",
+        icon: d === 0 ? <AlertOctagon size={16} className="text-red-500" /> : <Calendar size={16} className="text-slate-400" />,
       });
     }
   });
@@ -172,12 +184,12 @@ function synthesize(
       notifs.push({
         id,
         type: "offer_received",
-        title: "🎉 Job Offer Received!",
+        title: "Job Offer Received!",
         body: `${app.job_title} at ${app.company_name} — congratulations!`,
         href: "/dashboard/applications",
         createdAt: app.updated_at ? new Date(app.updated_at) : new Date(),
         read: readIds.has(id),
-        icon: "🎉",
+        icon: <Award size={16} className="text-emerald-500" />,
       });
     });
 
@@ -310,23 +322,8 @@ export default function NotificationBell() {
         style={{ position: "relative" }}
         className="flex items-center justify-center w-9 h-9 rounded-xl border border-border text-ink-muted hover:text-ink hover:bg-paper-card hover:border-accent-border transition-all duration-200 cursor-pointer"
       >
-        {/* Bell SVG */}
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          {unreadCount > 0 && (
-            <circle cx="18" cy="5" r="4" fill="var(--accent)" stroke="none" />
-          )}
-        </svg>
+        {/* Bell Icon */}
+        <Bell size={16} />
 
         {/* Unread badge */}
         {unreadCount > 0 && (
@@ -456,7 +453,9 @@ export default function NotificationBell() {
                   color: "var(--ink-faint)",
                 }}
               >
-                <div style={{ fontSize: 32, marginBottom: 10 }}>🔔</div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+                  <Bell size={32} className="text-ink-faint" />
+                </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-muted)" }}>
                   All caught up!
                 </div>
@@ -502,10 +501,14 @@ export default function NotificationBell() {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}
                 className="hover:text-accent transition-colors"
               >
-                View all applications →
+                <span>View all applications</span>
+                <ArrowRight size={10} />
               </button>
             </div>
           )}

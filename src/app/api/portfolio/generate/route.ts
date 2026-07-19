@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
@@ -6,7 +7,11 @@ import { generatePortfolio } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   try {
-    await requireUser();
+    const _user = await requireUser();
+    const rateLimit = await checkRateLimit(_user.id, "portfolio-generate");
+    if (!rateLimit.success) {
+      return rateLimitResponse();
+    }
 
     const body = await req.json();
     let { resumeText } = body;

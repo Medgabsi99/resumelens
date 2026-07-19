@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
@@ -10,6 +11,10 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "cover-letter");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
 
   // ── 2. Load user profile & check quota ───────────────────
   // We require the user to have active quota to generate a cover letter

@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { type AtsStructureResult, type AtsZoneHighlight } from "@/lib/ai";
 import SpotlightCard from "./SpotlightCard";
+import {
+  Check,
+  AlertTriangle,
+  X,
+  FileText,
+  Camera,
+  ArrowLeft,
+  CheckSquare,
+  Search
+} from "lucide-react";
 
 interface Props {
   data: AtsStructureResult;
@@ -26,14 +36,14 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
     }
   };
 
-  const getStatusIcon = (status: "pass" | "warn" | "fail") => {
+  const getStatusIcon = (status: "pass" | "warn" | "fail"): React.ReactNode => {
     switch (status) {
       case "pass":
-        return "✓";
+        return <Check size={12} />;
       case "warn":
-        return "⚠";
+        return <AlertTriangle size={12} />;
       case "fail":
-        return "✗";
+        return <X size={12} />;
     }
   };
 
@@ -66,8 +76,9 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
       {/* Visual Heatmap Mockup Resume Page */}
       <div className="w-full lg:w-[480px] shrink-0 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-sm font-bold text-ink-muted uppercase tracking-wider">
-            📄 Interactive Layout Heatmap
+          <h3 className="font-display text-sm font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <FileText size={14} className="text-accent" />
+            <span>Interactive Layout Heatmap</span>
           </h3>
           <span className="text-xs text-ink-faint italic">Hover highlighted zones to inspect</span>
         </div>
@@ -227,7 +238,7 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
                   <div className="h-2 w-28 bg-slate-700/40 rounded" />
                 </div>
                 <div className="h-8 w-8 bg-slate-700/50 rounded-full shrink-0 flex items-center justify-center">
-                  <span className="text-[10px] text-slate-500">📷</span>
+                  <Camera size={14} className="text-slate-500" />
                 </div>
                 {getHighlightForZone("graphics") && (
                   <div className="absolute inset-0 bg-amber-500/10 border-2 border-amber-500 border-dashed rounded animate-pulse opacity-70 hover:opacity-100 transition-opacity" />
@@ -269,16 +280,18 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-paper border border-border text-ink hover:bg-paper-warm rounded-xl text-sm font-semibold transition shrink-0 cursor-pointer"
+            className="px-5 py-2.5 bg-paper border border-border text-ink hover:bg-paper-warm rounded-xl text-sm font-semibold transition shrink-0 cursor-pointer flex items-center gap-1.5"
           >
-            ← Back
+            <ArrowLeft size={14} />
+            <span>Back</span>
           </button>
         </SpotlightCard>
 
         {/* Structured Checklist Grid */}
         <div className="space-y-3">
-          <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
-            ✓ Technical Checklist Breakdown
+          <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
+            <CheckSquare size={14} className="text-accent" />
+            <span>Technical Checklist Breakdown</span>
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -315,7 +328,9 @@ export default function AtsScannerBoard({ data, onClose }: Props) {
           <SpotlightCard className="bg-paper-card border border-border rounded-2xl p-5 space-y-3.5 shadow-lg border-l-4 border-l-accent animate-scale-up">
             <div className="flex justify-between items-center">
               <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
-                🔎 Active Zone Inspection: <span className="text-accent capitalize">{activeHighlight.zone}</span>
+                <Search size={14} className="text-accent" />
+                <span>Active Zone Inspection: </span>
+                <span className="text-accent capitalize">{activeHighlight.zone}</span>
               </h4>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getSeverityColor(activeHighlight.severity)}`}>
                 {activeHighlight.severity}

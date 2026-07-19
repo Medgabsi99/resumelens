@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,6 +9,10 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "interviews-questions-stream");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
 
   // ── 2. Load user profile & check quota ───────────────────
   const profile = await getUserProfile(_user.id);

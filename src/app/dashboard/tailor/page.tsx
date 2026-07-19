@@ -7,6 +7,7 @@ import { parseResume } from "@/lib/parseResume";
 import { useToast } from "@/components/ToastProvider";
 import { downloadResumePdf } from "@/lib/pdf/downloadPdf";
 import * as Diff from "diff";
+import { Settings, Sparkles, Wrench, Loader2, ScanSearch, Target, BookOpen, FileText, X, ArrowLeft, ArrowRight, Download, Check } from "lucide-react";
 
 interface ResumeItem {
   id: string;
@@ -271,7 +272,7 @@ export default function TailorSandboxPage() {
           <div className="max-w-3xl mx-auto fade-up space-y-6">
             <div>
               <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2.5">
-                AI Tailoring Sandbox ✨
+                AI Tailoring Sandbox
               </h1>
               <p className="text-ink-muted text-sm leading-relaxed">
                 Optimize and match your baseline resume to target roles. Write manual edits inside a side-by-side sandbox, track matching keywords, and evaluate ATS fit in real-time.
@@ -282,7 +283,7 @@ export default function TailorSandboxPage() {
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
               <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                ⚙️ Setup Sandbox Configuration
+                Setup Sandbox Configuration
               </h3>
 
               <div className="space-y-4">
@@ -360,12 +361,12 @@ export default function TailorSandboxPage() {
                 className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
               >
                 {isInitializing ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin text-lg">⚙️</span>
-                    <span>{LOADING_STEPS[initStep]}</span>
-                  </span>
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin inline-flex"><Loader2 size={15} /></span>
+                      <span>{LOADING_STEPS[initStep]}</span>
+                    </span>
                 ) : (
-                  <>✨ Initialize Tailor Playground Sandbox</>
+                  <><Sparkles size={14} /> Initialize Tailor Playground Sandbox</>
                 )}
               </button>
             </div>
@@ -380,7 +381,7 @@ export default function TailorSandboxPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
               <div>
                 <span className="inline-block bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider mb-2 font-mono">
-                  🛠️ Interactive Sandbox Mode
+                  <Wrench size={10} className="inline mr-1" /> Interactive Sandbox Mode
                 </span>
                 <h1 className="font-display text-2xl font-bold text-ink">
                   {roleTitle || "Target Role"} Sandbox
@@ -411,11 +412,11 @@ export default function TailorSandboxPage() {
                 >
                   {isScanning ? (
                     <>
-                      <span className="animate-spin">⟳</span>
+                      <span className="animate-spin inline-flex"><Loader2 size={13} /></span>
                       Scanning...
                     </>
                   ) : (
-                    <>🔍 Re-scan Match Score</>
+                    <><ScanSearch size={13} /> Re-scan Match Score</>
                   )}
                 </button>
               </div>
@@ -426,7 +427,7 @@ export default function TailorSandboxPage() {
               <div className="glass-card bg-paper-card border border-border p-5 rounded-2xl shadow-md space-y-3">
                 <div className="flex justify-between items-center border-b border-border pb-2">
                   <span className="text-xs font-semibold text-ink uppercase tracking-wider font-mono flex items-center gap-1.5">
-                    🎯 Dynamic Keyword checklist
+                    <Target size={11} /> Dynamic Keyword checklist
                   </span>
                   <span className="font-mono text-xs text-ink-muted">
                     Matched: <strong className="text-emerald-500">{matchedCount}</strong> / {liveChecklist.length} ({Math.round((matchedCount / liveChecklist.length) * 100)}%)
@@ -443,7 +444,7 @@ export default function TailorSandboxPage() {
                           : "bg-paper border-border text-ink-muted"
                       }`}
                     >
-                      {kw.matched ? "✓" : "○"} {kw.text}
+                      {kw.matched ? <Check size={9} className="inline mr-0.5" /> : <span className="mr-0.5">–</span>} {kw.text}
                     </span>
                   ))}
                 </div>
@@ -457,7 +458,7 @@ export default function TailorSandboxPage() {
               <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col h-[52vh] overflow-hidden shadow-lg">
                 <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-rose-500 uppercase flex items-center gap-1.5">
-                    🔴 Original Baseline Resume (Read-only)
+                    <BookOpen size={10} /> Original Baseline Resume (Read-only)
                   </span>
                 </div>
                 <div className="p-5 flex-1 overflow-y-auto">
@@ -471,7 +472,7 @@ export default function TailorSandboxPage() {
               <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col h-[52vh] overflow-hidden shadow-lg">
                 <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
-                    🟢 Tailored Playground Draft
+                    <FileText size={10} /> Tailored Playground Draft
                   </span>
 
                   {/* Visual Diff Toggle */}
@@ -547,7 +548,7 @@ export default function TailorSandboxPage() {
                 }}
                 className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer"
               >
-                ← Exit Sandbox
+                <ArrowLeft size={13} /> Exit Sandbox
               </button>
 
               <div className="flex items-center gap-3">
@@ -555,14 +556,14 @@ export default function TailorSandboxPage() {
                   onClick={() => setShowExportModal(true)}
                   className="bg-paper border border-border text-ink-muted hover:text-accent hover:border-accent-border px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
-                  📥 Export PDF Template
+                  <Download size={13} /> Export PDF Template
                 </button>
 
                 <button
                   onClick={() => setShowSaveModal(true)}
                   className="btn-gradient px-5 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer shadow hover:scale-[1.01] active:scale-[1] transition"
                 >
-                  💾 Save as New version
+                  Save as New version
                 </button>
               </div>
             </div>
@@ -605,7 +606,7 @@ export default function TailorSandboxPage() {
                   disabled={isSaving || !saveName.trim()}
                   className="bg-accent hover:bg-accent/90 text-white font-semibold px-5 py-2 rounded-xl text-xs transition disabled:opacity-50 cursor-pointer shadow flex items-center gap-1.5"
                 >
-                  {isSaving ? "Saving..." : "Save Resume ➔"}
+                  {isSaving ? "Saving..." : <><span>Save Resume</span><ArrowRight size={13} /></>}
                 </button>
               </div>
             </div>
@@ -618,13 +619,13 @@ export default function TailorSandboxPage() {
             <div className="bg-paper-card border border-border rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5">
               <div className="flex justify-between items-center border-b border-border pb-3">
                 <h3 className="font-display text-lg font-bold text-ink flex items-center gap-2">
-                  📄 Export Vector PDF Template
+                  <FileText size={14} /> Export Vector PDF Template
                 </h3>
                 <button
                   onClick={() => setShowExportModal(false)}
                   className="text-ink-muted hover:text-ink text-sm p-1"
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
 
@@ -661,7 +662,7 @@ export default function TailorSandboxPage() {
                       </p>
                     </div>
                     <span className="text-[10px] font-semibold text-accent text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Download PDF ➔
+                      Download PDF <ArrowRight size={10} />
                     </span>
                   </button>
                 ))}

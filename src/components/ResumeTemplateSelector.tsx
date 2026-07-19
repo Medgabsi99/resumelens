@@ -2,6 +2,7 @@
 import { logger } from "@/lib/logger";
 
 import React, { useState, useRef } from "react";
+import { Loader2, Sparkles, AlertTriangle, ArrowDown } from "lucide-react";
 import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import ProfessionalTemplate from "./resume-templates/ProfessionalTemplate";
 import ModernTemplate from "./resume-templates/ModernTemplate";
@@ -160,13 +161,11 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
         >
           {isGenerating ? (
             <>
-              <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⚙️</span>
+              <span style={{ display: "inline-flex", animation: "spin 1s linear infinite" }}><Loader2 size={14} /></span>
               AI is restructuring your resume...
             </>
           ) : (
-            <>
-              ✨ Smart Generate
-            </>
+            <><Sparkles size={14} /> Smart Generate</>
           )}
         </button>
         {isEnhanced && (
@@ -179,12 +178,12 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
             fontWeight: 700,
             letterSpacing: "0.03em",
           }}>
-            ✨ AI Enhanced
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Sparkles size={11} /> AI Enhanced</span>
           </span>
         )}
         {smartError && (
           <span style={{ color: "#dc2626", fontSize: 12, fontWeight: 500 }}>
-            ⚠ {smartError}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} /> {smartError}</span>
           </span>
         )}
       </div>
@@ -226,7 +225,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
                   letterSpacing: "0.05em",
                   textTransform: "uppercase",
                 }}>
-                  ✨ AI Pick
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Sparkles size={9} /> AI Pick</span>
                 </div>
               )}
               <div>
@@ -268,7 +267,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
                   fontWeight: 700,
                   marginLeft: 8,
                 }}>
-                  ✨ AI Enhanced
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Sparkles size={10} /> AI Enhanced</span>
                 </span>
               )}
             </div>
@@ -285,7 +284,7 @@ export default function ResumeTemplateSelector({ resumeText, targetRole }: Props
                 disabled={isDownloading}
                 className="btn-gradient text-xs font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
               >
-                {isDownloading ? "Generating..." : "↓ Download PDF"}
+                 {isDownloading ? "Generating..." : <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><ArrowDown size={13} /> Download PDF</span>}
               </button>
             </div>
           </div>

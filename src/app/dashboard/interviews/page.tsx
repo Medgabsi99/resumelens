@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { useToast } from "@/components/ToastProvider";
 import dynamic from "next/dynamic";
+import { Settings2, Trophy, X, GraduationCap } from "lucide-react";
 
 const MockInterviewSimulatorBoard = dynamic(() => import("@/components/MockInterviewSimulatorBoard"), {
   ssr: false,
@@ -224,12 +225,12 @@ export default function InterviewsPage() {
   return (
     <DashboardLayout>
       <div className="fade-up max-w-5xl mx-auto space-y-8">
-        
+
         {/* Page Titles */}
         {!activeQuestions && !generating && (
           <div className="space-y-1.5">
             <h1 className="font-display text-4xl font-bold tracking-tight text-ink flex items-center gap-2">
-              Mock Interview Simulator 🎙️
+              Mock Interview Simulator
             </h1>
             <p className="text-ink-muted text-sm max-w-3xl">
               Practice situational, technical, and screening interviews tailored directly to your target company, role seniority, and resume background.
@@ -239,7 +240,7 @@ export default function InterviewsPage() {
 
         {error && (
           <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -251,7 +252,7 @@ export default function InterviewsPage() {
               {GENERATING_STEPS[genStep]}
             </h3>
             <p className="text-xs text-ink-muted">
-              Leveraging Gemini models to customize specialized questions for your target profile
+              Leveraging gemini-2.5 models to customize specialized questions for your target profile
             </p>
           </div>
         )}
@@ -259,16 +260,16 @@ export default function InterviewsPage() {
         {/* Core Layout Setup */}
         {!activeQuestions && !generating && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Launcher Setup Form */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-5 shadow-lg">
                 <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                  🛠️ Configure Interview Setup
+                  <Settings2 size={14} /> Configure Interview Setup
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
+
                   {/* Select Resume */}
                   <div className="flex flex-col gap-1.5 md:col-span-2">
                     <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
@@ -369,7 +370,7 @@ export default function InterviewsPage() {
                   disabled={!selectedResumeId || !roleTitle || !companyName}
                   className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
                 >
-                  🚀 Generate Custom Questions & Start Simulation
+                  Generate Custom Questions & Start Simulation
                 </button>
 
               </div>
@@ -379,7 +380,7 @@ export default function InterviewsPage() {
             <div className="space-y-6">
               <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-4 shadow-lg h-full">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-border pb-3">
-                  🏆 Session History
+                  <Trophy size={11} /> Session History
                 </h3>
 
                 {loading ? (
@@ -407,7 +408,7 @@ export default function InterviewsPage() {
                             </h4>
                             <span className="text-[10px] text-ink-muted font-medium block">at {item.company_name}</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-1.5">
                             <span className="bg-indigo-500/10 text-indigo-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
                               {item.overall_score}%
@@ -476,16 +477,16 @@ export default function InterviewsPage() {
         {selectedHistoryItem && (
           <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 overflow-y-auto backdrop-blur-sm">
             <div className="w-full max-w-2xl bg-[#121216] border border-[#2c2c38] rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 max-h-[85vh] overflow-y-auto text-slate-100 font-sans">
-              
+
               {/* Header */}
               <div className="text-center border-b border-[#2c2c38]/50 pb-5 relative">
                 <button
                   onClick={() => setSelectedHistoryItem(null)}
                   className="absolute right-0 top-0 text-ink-muted hover:text-ink border border-border px-2.5 py-1 rounded-lg text-xs"
                 >
-                  ✕ Close
+                  <X size={13} /> Close
                 </button>
-                <div className="text-3xl mb-2">🎓</div>
+                <div className="flex justify-center mb-2"><GraduationCap size={32} className="text-ink-muted" /></div>
                 <h3 className="font-display text-2xl font-bold text-ink">Saved Interview Scorecard</h3>
                 <p className="text-ink-muted text-sm mt-1">
                   {selectedHistoryItem.role_title} at <span className="font-semibold text-ink">{selectedHistoryItem.company_name}</span>
@@ -502,7 +503,7 @@ export default function InterviewsPage() {
 
               {/* Stats Row */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
+
                 {/* Score */}
                 <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
                   <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Match Score</span>

@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/components/ToastProvider";
 import { type CommitteeDebriefResult } from "@/types";
 import SpotlightCard from "@/components/SpotlightCard";
+import { Sparkles, Scale, Mic, ChevronsRight, CheckCircle2, XCircle, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface ResumeItem {
   id: string;
@@ -339,7 +340,7 @@ export default function CommitteeSimulationPage() {
           <div className="max-w-3xl mx-auto fade-up space-y-6">
             <div>
               <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2.5">
-                Recruiter Sandbox 👥
+                Recruiter Sandbox
               </h1>
               <p className="text-ink-muted text-sm leading-relaxed">
                 Simulate a behind-the-scenes hiring committee debrief session. Convene a panel consisting of an HR Recruiter, an Engineering Manager, and a Product Manager to debate your credentials and vote.
@@ -361,7 +362,7 @@ export default function CommitteeSimulationPage() {
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
                 <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                  👥 Configure Panel Debrief
+                  Configure Panel Debrief
                 </h3>
 
                 <div className="space-y-4">
@@ -435,7 +436,7 @@ export default function CommitteeSimulationPage() {
                   disabled={!selectedResumeId || jobDescription.trim().length < 50}
                   className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
                 >
-                  ✨ Convene Hiring Committee Debrief
+                  <Sparkles size={14} /> Convene Hiring Committee Debrief
                 </button>
               </SpotlightCard>
             )}
@@ -450,7 +451,7 @@ export default function CommitteeSimulationPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-5">
               <div>
                 <span className="inline-block bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider mb-2 font-mono">
-                  ⚖️ Committee Consensus
+                  <Scale size={10} className="inline mr-1" /> Committee Consensus
                 </span>
                 <h1 className="font-display text-2xl font-bold text-ink">
                   {roleTitle || "Target Role"} Debrief
@@ -563,7 +564,7 @@ export default function CommitteeSimulationPage() {
             <SpotlightCard className="glass-card bg-paper-card border border-border rounded-2xl shadow-xl flex flex-col h-[50vh] overflow-hidden">
               <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
                 <span className="text-xs font-mono font-bold tracking-wider text-ink uppercase flex items-center gap-2">
-                  🎙️ Debrief Room Transcript Feed
+                  <Mic size={11} /> Debrief Room Transcript Feed
                 </span>
                 
                 {/* Playback controls */}
@@ -573,7 +574,7 @@ export default function CommitteeSimulationPage() {
                     onClick={() => setIsPlayingDebrief(!isPlayingDebrief)}
                     className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-paper border border-border rounded-lg hover:bg-paper-warm text-ink transition cursor-pointer"
                   >
-                    {isPlayingDebrief ? "⏸ Pause" : "▶ Play"}
+                    {isPlayingDebrief ? "Pause" : "Play"}
                   </button>
                   <button
                     type="button"
@@ -583,7 +584,7 @@ export default function CommitteeSimulationPage() {
                     }}
                     className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-paper border border-border rounded-lg hover:bg-paper-warm text-ink transition cursor-pointer"
                   >
-                    ⏩ Skip
+                    <ChevronsRight size={12} /> Skip
                   </button>
                   <span className="text-[10px] text-ink-muted font-mono">
                     {visibleMessageCount} of {debriefData.debriefTranscript.length}
@@ -624,12 +625,12 @@ export default function CommitteeSimulationPage() {
               {/* Strengths */}
               <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
                 <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
-                  🟢 Strengths Highlighted
+                  <CheckCircle2 size={13} className="text-emerald-500" /> Strengths Highlighted
                 </h4>
                 <ul className="space-y-2">
                   {debriefData.strengthsDebated.map((str, i) => (
                     <li key={i} className="text-xs text-ink-muted flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-emerald-400 font-bold">✓</span>
+                      <CheckCircle2 size={12} className="text-emerald-400" />
                       <span>{str}</span>
                     </li>
                   ))}
@@ -639,12 +640,12 @@ export default function CommitteeSimulationPage() {
               {/* Weaknesses */}
               <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
                 <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
-                  🔴 Weaknesses Identified
+                  <XCircle size={13} className="text-rose-500" /> Weaknesses Identified
                 </h4>
                 <ul className="space-y-2">
                   {debriefData.weaknessesDebated.map((weak, i) => (
                     <li key={i} className="text-xs text-ink-muted flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-rose-400 font-bold">✗</span>
+                      <XCircle size={12} className="text-rose-400" />
                       <span>{weak}</span>
                     </li>
                   ))}
@@ -656,7 +657,7 @@ export default function CommitteeSimulationPage() {
             {/* Actionable Remedies Section */}
             <SpotlightCard className="glass-card bg-paper-card border border-border p-6 rounded-2xl shadow space-y-3">
               <h4 className="font-display text-sm font-bold text-ink uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
-                🛠️ Actionable Committee Remedies
+                Actionable Committee Remedies
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {debriefData.recommendedRemedies.map((rem, i) => (
@@ -676,13 +677,13 @@ export default function CommitteeSimulationPage() {
                 onClick={handleReset}
                 className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer"
               >
-                ← Exit Simulation
+                <ArrowLeft size={14} /> Exit Simulation
               </button>
               <button
                 onClick={handleReset}
                 className="btn-gradient px-5 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer shadow hover:scale-[1.01] active:scale-[1] transition"
               >
-                Convene New Committee ➔
+                Convene New Committee <ArrowRight size={14} />
               </button>
             </div>
 

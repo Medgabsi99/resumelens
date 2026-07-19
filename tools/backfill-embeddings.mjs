@@ -3,14 +3,14 @@
  * tools/backfill-embeddings.mjs
  *
  * Re-embeds every row in `resume_chunks` using the current embedding model
- * (gemini-embedding-001, truncated + normalized to 768 dims — matches
+ * (gemini-2.5-embedding-001, truncated + normalized to 768 dims — matches
  * src/lib/ai/embeddings.ts exactly).
  *
  * WHY THIS EXISTS:
  * Any row created before the text-embedding-004 shutdown (Jan 14, 2026) is
  * still 768-dimensional, so it will NOT error against the current schema —
  * but it's from a completely different, incompatible embedding space than
- * rows created after the switch to gemini-embedding-001. Mixing the two in
+ * rows created after the switch to gemini-2.5-embedding-001. Mixing the two in
  * the same similarity search silently returns wrong rankings, with no
  * error anywhere to flag it. This script re-embeds everything so the whole
  * table is consistent again.
@@ -37,9 +37,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
 
-const EMBEDDING_MODEL = "gemini-embedding-001";
+const EMBEDDING_MODEL = "gemini-2.5-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
-const DB_BATCH_SIZE = 25; // rows per Gemini batchEmbedContents call — well under the 100 limit
+const DB_BATCH_SIZE = 25; // rows per gemini-2.5 batchEmbedContents call — well under the 100 limit
 const DRY_RUN = !process.argv.includes("--yes");
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !GOOGLE_AI_API_KEY) {

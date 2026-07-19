@@ -1,8 +1,9 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-server";
-import { analyzeResume, extractTextFromBuffer } from "@/lib/ai";
+import { analyzeResume, previewAnalyzeResume, extractTextFromBuffer } from "@/lib/ai";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
 import { AnalyzeResponse } from "@/types";
 
@@ -11,6 +12,10 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeResponse>> {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "analyze");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
 
   const userId = _user.id;
 
@@ -90,17 +95,22 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
 
   // ── 4. Free tier — return preview only ───────────────────
   if (!canAnalyze(profile)) {
-    // Run a lightweight preview (score + summary only)
-    const full = await analyzeResume(resumeText, jobDescription, targetRole);
-    return NextResponse.json({
-      success: true,
-      requiresUpgrade: true,
-      preview: {
-        score: full.score,
-        summary: full.summary,
-        strengths: full.strengths.slice(0, 2),
-      },
-    });
+    // Run a lightweight preview (score + summary only) - gates the API call itself to avoid full token expense
+    try {
+      const preview = await previewAnalyzeResume(resumeText, jobDescription, targetRole);
+      return NextResponse.json({
+        success: true,
+        requiresUpgrade: true,
+        preview: {
+          score: preview.score,
+          summary: preview.summary,
+          strengths: preview.strengths,
+        },
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? (err as Error).message : "Preview generation failed";
+      return NextResponse.json({ success: false, error: message }, { status: 500 });
+    }
   }
 
   // ── 5. Full analysis ──────────────────────────────────────

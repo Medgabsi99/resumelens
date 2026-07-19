@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +11,10 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Auth check
     const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "interviews-questions-simulator");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
 
     // 2. Load user profile & check quota
     const profile = await getUserProfile(_user.id);

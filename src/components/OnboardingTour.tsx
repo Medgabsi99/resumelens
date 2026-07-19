@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, Sparkles, X } from "lucide-react";
 
 const STORAGE_KEY = "resumelens_onboarding_done";
 
@@ -156,11 +157,11 @@ const STEPS = [
     accentColor: "var(--accent)",
     accentRgb: "99,102,241",
     label: "Welcome",
-    title: "Welcome to ResumeLens 🎉",
+    title: "Welcome to ResumeLens",
     description:
       "Your AI-powered career acceleration suite is ready. In the next 30 seconds, we'll show you exactly where everything lives — so you can hit the ground running.",
     illustration: <StepIllustrationWelcome />,
-    ctaLabel: "Let's go →",
+    ctaLabel: "Let's go",
     link: null as string | null,
   },
   {
@@ -168,11 +169,11 @@ const STEPS = [
     accentColor: "#10b981",
     accentRgb: "16,185,129",
     label: "AI Analyzer",
-    title: "AI Resume Analyzer 📄",
+    title: "AI Resume Analyzer",
     description:
       "Upload any resume and get an instant ATS compatibility score, a detailed strength & weakness breakdown, and AI-rewritten bullet points to maximize your impact.",
     illustration: <StepIllustrationAnalyzer />,
-    ctaLabel: "Next →",
+    ctaLabel: "Next",
     link: null,
   },
   {
@@ -180,11 +181,11 @@ const STEPS = [
     accentColor: "#f59e0b",
     accentRgb: "245,158,11",
     label: "Job Tracker",
-    title: "Job Application Tracker 📋",
+    title: "Job Application Tracker",
     description:
       "Track every opportunity in a drag-and-drop Kanban board. Log roles, companies, interview stages, and follow-up deadlines — never let a hot lead go cold.",
     illustration: <StepIllustrationTracker />,
-    ctaLabel: "Next →",
+    ctaLabel: "Next",
     link: null,
   },
   {
@@ -192,11 +193,11 @@ const STEPS = [
     accentColor: "#8b5cf6",
     accentRgb: "139,92,246",
     label: "Negotiator",
-    title: "Salary Negotiation Simulator 💰",
+    title: "Salary Negotiation Simulator",
     description:
       "Practice live salary negotiations against an AI recruiter with a hidden budget. Build the confidence and vocabulary to ask for exactly what you're worth.",
     illustration: <StepIllustrationNegotiator />,
-    ctaLabel: "Get Started 🚀",
+    ctaLabel: "Get Started",
     link: "/dashboard",
   },
 ];
@@ -404,22 +405,25 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
 
           <button
             onClick={dismiss}
-            aria-label="Skip tour"
             style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "var(--ink-faint)",
-              background: "transparent",
+              background: "none",
               border: "none",
+              fontSize: 11,
+              fontWeight: 500,
+              color: "var(--ink-faint)",
               cursor: "pointer",
               padding: "2px 4px",
               fontFamily: "inherit",
               transition: "color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink-muted)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-faint)")}
           >
-            Skip tour ✕
+            <span>Skip tour</span>
+            <X size={11} />
           </button>
         </div>
 
@@ -531,6 +535,9 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                   cursor: "pointer",
                   fontFamily: "inherit",
                   transition: "all 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--border-strong)";
@@ -541,7 +548,8 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                   e.currentTarget.style.color = "var(--ink-muted)";
                 }}
               >
-                ← Back
+                <ArrowLeft size={13} />
+                <span>Back</span>
               </button>
             )}
 
@@ -553,8 +561,10 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                 style={{
                   flex: 1,
                   maxWidth: 240,
-                  display: "inline-block",
-                  textAlign: "center",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
                   padding: "12px 24px",
                   borderRadius: 13,
                   background: `linear-gradient(135deg, ${current.accentColor} 0%, rgba(${current.accentRgb},0.8) 100%)`,
@@ -566,7 +576,8 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                   transition: "all 0.2s",
                 }}
               >
-                {current.ctaLabel}
+                <span>{current.ctaLabel}</span>
+                <Sparkles size={14} />
               </Link>
             ) : (
               <button
@@ -585,6 +596,10 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                   fontFamily: "inherit",
                   boxShadow: `0 6px 20px rgba(${current.accentRgb}, 0.35)`,
                   transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
@@ -595,7 +610,8 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
                   e.currentTarget.style.boxShadow = `0 6px 20px rgba(${current.accentRgb}, 0.35)`;
                 }}
               >
-                {current.ctaLabel}
+                <span>{current.ctaLabel}</span>
+                <ArrowRight size={14} />
               </button>
             )}
           </div>

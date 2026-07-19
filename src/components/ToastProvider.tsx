@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
+import type React from "react";
+import { Check, X, AlertTriangle, Info, ArrowRight } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────
 export type ToastVariant = "success" | "error" | "warning" | "info";
@@ -44,31 +46,31 @@ export function useToast(): ToastContextValue {
 // ─── Variant config ───────────────────────────────────────────
 const VARIANT_CONFIG: Record<
   ToastVariant,
-  { icon: string; accent: string; bg: string; border: string; progress: string }
+  { icon: React.ReactNode; accent: string; bg: string; border: string; progress: string }
 > = {
   success: {
-    icon: "✓",
+    icon: <Check size={13} />,
     accent: "#10b981",
     bg: "rgba(16, 185, 129, 0.08)",
     border: "rgba(16, 185, 129, 0.25)",
     progress: "#10b981",
   },
   error: {
-    icon: "✕",
+    icon: <X size={13} />,
     accent: "#ef4444",
     bg: "rgba(239, 68, 68, 0.08)",
     border: "rgba(239, 68, 68, 0.25)",
     progress: "#ef4444",
   },
   warning: {
-    icon: "⚠",
+    icon: <AlertTriangle size={12} />,
     accent: "#f59e0b",
     bg: "rgba(245, 158, 11, 0.08)",
     border: "rgba(245, 158, 11, 0.25)",
     progress: "#f59e0b",
   },
   info: {
-    icon: "ℹ",
+    icon: <Info size={13} />,
     accent: "#6366f1",
     bg: "rgba(99, 102, 241, 0.08)",
     border: "rgba(99, 102, 241, 0.25)",
@@ -175,9 +177,12 @@ function ToastCard({
               cursor: "pointer",
               padding: 0,
               fontFamily: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 3,
             }}
           >
-            {toast.action.label} →
+            {toast.action.label} <ArrowRight size={11} />
           </button>
         )}
       </div>
@@ -191,19 +196,21 @@ function ToastCard({
           border: "none",
           color: "var(--ink-faint)",
           cursor: "pointer",
-          fontSize: 16,
           lineHeight: 1,
           padding: "0 2px",
           flexShrink: 0,
           marginTop: 1,
           transition: "color 0.15s",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
         onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
         onMouseLeave={(e) =>
           (e.currentTarget.style.color = "var(--ink-faint)")
         }
       >
-        ✕
+        <X size={14} />
       </button>
 
       {/* Progress bar */}

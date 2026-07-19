@@ -6,7 +6,7 @@ import { createServerComponentClient } from "@/lib/supabase-server";
  *  1. Chunk resume text into labelled sections (chunker.ts)
  *  2. Contextual Retrieval: enrich each chunk with a 1-sentence LLM context
  *     prefix that situates it in the full resume (Anthropic, 2024)
- *  3. Embed the CONTEXTUALIZED text via Gemini text-embedding-004
+ *  3. Embed the CONTEXTUALIZED text via gemini-2.5 text-embedding-004
  *  4. Upsert into resume_chunks with context_prefix stored separately
  *
  * Called automatically (fire-and-forget) from /api/analyze after each analysis.
@@ -107,15 +107,15 @@ export async function POST(req: NextRequest) {
 
   // ── 7. Upsert into resume_chunks ──────────────────────────
   const rows = contextualChunks.map((chunk, i) => ({
-    user_id:        userId,
-    analysis_id:    analysisId ?? null,
-    resume_id:      resumeId ?? null,
-    chunk_index:    chunk.index,
-    chunk_type:     chunk.type,
-    content:        chunk.content,          // original, readable
+    user_id: userId,
+    analysis_id: analysisId ?? null,
+    resume_id: resumeId ?? null,
+    chunk_index: chunk.index,
+    chunk_type: chunk.type,
+    content: chunk.content,          // original, readable
     context_prefix: chunk.contextPrefix,    // for debugging / display
-    embedding:      embeddings[i],          // of contextualized text
-    metadata:       chunk.metadata,
+    embedding: embeddings[i],          // of contextualized text
+    metadata: chunk.metadata,
   }));
 
   const { error: insertError } = await supabase.from("resume_chunks").insert(rows);

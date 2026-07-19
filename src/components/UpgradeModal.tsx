@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X, Check } from "lucide-react";
 
 interface Props {
   preview: { score: number; summary: string; strengths: string[] } | null;
@@ -44,9 +45,9 @@ export default function UpgradeModal({ preview, onClose }: Props) {
         <button
           onClick={onClose}
           aria-label="Close upgrade modal"
-          className="absolute top-4 right-4 bg-transparent border-none text-xl font-bold cursor-pointer text-ink-faint hover:text-ink transition-colors duration-150"
+          className="absolute top-4 right-4 bg-transparent border-none cursor-pointer text-ink-faint hover:text-ink transition-colors duration-150 flex items-center justify-center"
         >
-          ×
+          <X size={18} />
         </button>
 
         <div className="text-center mb-8">
@@ -65,14 +66,15 @@ export default function UpgradeModal({ preview, onClose }: Props) {
                 {preview.strengths.slice(0, 2).map((s) => (
                   <span
                     key={s}
-                    className="text-xs px-2.5 py-1 rounded-lg font-medium border"
+                    className="text-xs px-2.5 py-1 rounded-lg font-medium border flex items-center gap-1"
                     style={{
                       background: "rgba(16, 185, 129, 0.08)",
                       color: "#10b981",
                       borderColor: "rgba(16, 185, 129, 0.2)",
                     }}
                   >
-                    ✓ {s}
+                    <Check size={11} />
+                    {s}
                   </span>
                 ))}
                 <span className="text-xs px-2.5 py-1 rounded-lg font-medium border border-border text-ink-muted bg-paper">

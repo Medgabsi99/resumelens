@@ -3,18 +3,33 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import {
+  FileText,
+  Plus,
+  Mic,
+  Sparkles,
+  Search,
+  DollarSign,
+  GraduationCap,
+  BarChart2,
+  Rocket,
+  Upload,
+  X,
+  Zap,
+} from "lucide-react";
+import type React from "react";
 
 // ─── Action definition ────────────────────────────────────────────────────────
 interface FABAction {
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   description: string;
   onClick: (router: ReturnType<typeof useRouter>) => void;
-  accent?: string; // override color for this action
+  accent?: string;
 }
 
 interface FABConfig {
-  primaryIcon: string;
+  primaryIcon: React.ReactNode;
   primaryLabel: string;
   primaryColor: string;
   actions: FABAction[];
@@ -26,31 +41,31 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard") {
     return {
-      primaryIcon: "✦",
+      primaryIcon: <Zap size={22} />,
       primaryLabel: "Quick Actions",
       primaryColor: "var(--accent)",
       actions: [
         {
           label: "Analyze Resume",
-          icon: "📄",
+          icon: <FileText size={18} />,
           description: "Run AI resume analysis",
           onClick: (r) => r.push("/"),
         },
         {
           label: "Add Application",
-          icon: "➕",
+          icon: <Plus size={18} />,
           description: "Track a new job application",
           onClick: (r) => r.push("/dashboard/applications"),
         },
         {
           label: "Mock Interview",
-          icon: "🎤",
+          icon: <Mic size={18} />,
           description: "Practice with AI interviewer",
           onClick: (r) => r.push("/dashboard/interviews"),
         },
         {
           label: "Tailor Resume",
-          icon: "✨",
+          icon: <Sparkles size={18} />,
           description: "Optimize for a specific role",
           onClick: (r) => r.push("/dashboard/tailor"),
         },
@@ -60,28 +75,27 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/applications") {
     return {
-      primaryIcon: "➕",
+      primaryIcon: <Plus size={22} />,
       primaryLabel: "Add Application",
       primaryColor: "var(--accent)",
       actions: [
         {
           label: "Add Application",
-          icon: "➕",
+          icon: <Plus size={18} />,
           description: "Track a new job",
           onClick: (_r) => {
-            // Dispatch a custom event that the ApplicationTracker listens for
             window.dispatchEvent(new CustomEvent("fab:add-application"));
           },
         },
         {
           label: "ATS Scanner",
-          icon: "🔍",
+          icon: <Search size={18} />,
           description: "Check your resume score",
           onClick: (r) => r.push("/dashboard/scanner"),
         },
         {
           label: "Salary Negotiator",
-          icon: "💰",
+          icon: <DollarSign size={18} />,
           description: "Prep your counter-offer",
           onClick: (r) => r.push("/dashboard/negotiator"),
         },
@@ -91,13 +105,13 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/interviews") {
     return {
-      primaryIcon: "🎤",
+      primaryIcon: <Mic size={22} />,
       primaryLabel: "Start Interview",
       primaryColor: "#8b5cf6",
       actions: [
         {
           label: "New Interview",
-          icon: "🎤",
+          icon: <Mic size={18} />,
           description: "Start a mock session",
           onClick: (_r) => {
             window.dispatchEvent(new CustomEvent("fab:start-interview"));
@@ -105,7 +119,7 @@ function useFABConfig(): FABConfig | null {
         },
         {
           label: "Learning Paths",
-          icon: "📚",
+          icon: <GraduationCap size={18} />,
           description: "Structured skill building",
           onClick: (r) => r.push("/dashboard/learning-paths"),
         },
@@ -115,13 +129,13 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/scanner") {
     return {
-      primaryIcon: "🔍",
+      primaryIcon: <Search size={22} />,
       primaryLabel: "Scan Resume",
       primaryColor: "#10b981",
       actions: [
         {
           label: "Upload & Scan",
-          icon: "📤",
+          icon: <Upload size={18} />,
           description: "Analyze a new resume",
           onClick: () => {
             window.dispatchEvent(new CustomEvent("fab:upload-resume"));
@@ -129,7 +143,7 @@ function useFABConfig(): FABConfig | null {
         },
         {
           label: "Tailor Sandbox",
-          icon: "✨",
+          icon: <Sparkles size={18} />,
           description: "Optimize for a role",
           onClick: (r) => r.push("/dashboard/tailor"),
         },
@@ -139,13 +153,13 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/negotiator") {
     return {
-      primaryIcon: "💰",
+      primaryIcon: <DollarSign size={22} />,
       primaryLabel: "New Negotiation",
       primaryColor: "#f59e0b",
       actions: [
         {
           label: "New Negotiation",
-          icon: "💰",
+          icon: <DollarSign size={18} />,
           description: "Start salary analysis",
           onClick: () => {
             window.dispatchEvent(new CustomEvent("fab:new-negotiation"));
@@ -153,7 +167,7 @@ function useFABConfig(): FABConfig | null {
         },
         {
           label: "Mock Interview",
-          icon: "🎤",
+          icon: <Mic size={18} />,
           description: "Practice for the offer call",
           onClick: (r) => r.push("/dashboard/interviews"),
         },
@@ -163,19 +177,19 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/tailor") {
     return {
-      primaryIcon: "✨",
+      primaryIcon: <Sparkles size={22} />,
       primaryLabel: "Tailor Resume",
       primaryColor: "#6366f1",
       actions: [
         {
           label: "Analyze First",
-          icon: "📊",
+          icon: <BarChart2 size={18} />,
           description: "Get your base score",
           onClick: (r) => r.push("/"),
         },
         {
           label: "ATS Scanner",
-          icon: "🔍",
+          icon: <Search size={18} />,
           description: "Check keyword match",
           onClick: (r) => r.push("/dashboard/scanner"),
         },
@@ -185,13 +199,13 @@ function useFABConfig(): FABConfig | null {
 
   if (pathname === "/dashboard/learning-paths") {
     return {
-      primaryIcon: "📚",
+      primaryIcon: <GraduationCap size={22} />,
       primaryLabel: "New Learning Path",
       primaryColor: "#ec4899",
       actions: [
         {
           label: "Generate Path",
-          icon: "🚀",
+          icon: <Rocket size={18} />,
           description: "AI-curated skill plan",
           onClick: () => {
             window.dispatchEvent(new CustomEvent("fab:generate-path"));
@@ -199,7 +213,7 @@ function useFABConfig(): FABConfig | null {
         },
         {
           label: "Mock Interview",
-          icon: "🎤",
+          icon: <Mic size={18} />,
           description: "Test your knowledge",
           onClick: (r) => r.push("/dashboard/interviews"),
         },
@@ -365,7 +379,7 @@ export default function FloatingActionButton() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 18,
+                    color: "var(--ink-muted)",
                     cursor: "pointer",
                     transition: "transform 0.15s ease, box-shadow 0.15s ease",
                   }}
@@ -406,8 +420,7 @@ export default function FloatingActionButton() {
             justifyContent: "center",
             cursor: "pointer",
             color: "#fff",
-            fontSize: open ? 20 : 22,
-            transition: reduced ? "none" : "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease, font-size 0.15s ease",
+            transition: reduced ? "none" : "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease",
             transform: reduced ? "none" : (open ? "rotate(45deg) scale(1.05)" : "rotate(0deg) scale(1)"),
             position: "relative",
             overflow: "hidden",
@@ -435,17 +448,19 @@ export default function FloatingActionButton() {
               borderRadius: "inherit",
             }}
           />
-          {/* Icon — cross when open, primary icon when closed */}
+          {/* Icon — X when open, primary icon when closed */}
           <span
             style={{
-              fontSize: open ? 18 : 22,
               lineHeight: 1,
-              transition: "font-size 0.15s ease",
+              transition: "transform 0.15s ease",
               position: "relative",
               zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {open ? "✕" : config.primaryIcon}
+            {open ? <X size={20} /> : config.primaryIcon}
           </span>
         </button>
       </div>

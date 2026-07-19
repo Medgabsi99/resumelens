@@ -2,7 +2,7 @@ import React from "react";
 
 export interface ToolbarButtonProps {
   onClick: () => void;
-  label: string;
+  label: React.ReactNode;
   disabled?: boolean;
   variant?: "default" | "primary" | "danger";
   active?: boolean;

@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle, RefreshCw, LayoutDashboard } from "lucide-react";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -25,8 +26,8 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
         {/* Glow accent */}
         <div className="absolute -top-12 -right-12 w-24 h-24 bg-red-500/10 rounded-full blur-2xl" />
         
-        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6 text-2xl">
-          ⚠️
+        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+          <AlertTriangle size={28} />
         </div>
 
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink mb-3">
@@ -52,16 +53,16 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer text-center"
+            className="w-full sm:w-auto btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2"
           >
-            🔄 Try Again
+            <RefreshCw size={14} /> Try Again
           </button>
           
           <Link
             href="/dashboard"
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-semibold border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border transition-all duration-200 no-underline text-center"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-semibold border border-border bg-paper-card text-ink hover:bg-paper-warm hover:border-accent-border transition-all duration-200 no-underline text-center flex items-center justify-center gap-2"
           >
-            🏠 Go to Dashboard
+            <LayoutDashboard size={14} /> Go to Dashboard
           </Link>
         </div>
       </div>

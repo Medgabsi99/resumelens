@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         analyses_used: 0, // reset counter on upgrade
       }).eq("id", userId);
 
-      logger.info(`✓ Upgraded user ${userId} to ${plan}`);
+      logger.info(`[OK] Upgraded user ${userId} to ${plan}`);
       break;
     }
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         analyses_limit: PLAN_LIMITS.free,
       }).eq("id", userId);
 
-      logger.info(`✓ Downgraded user ${userId} to free (subscription cancelled)`);
+      logger.info(`[OK] Downgraded user ${userId} to free (subscription cancelled)`);
       break;
     }
 

@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   ApplicationStatus,
   APPLICATION_STATUS_LABELS,
@@ -71,8 +72,12 @@ export default function EditApplicationModal({
   };
 
   return (
-    <div
+    <motion.div
       onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
       style={{
         position: "fixed",
         inset: 0,
@@ -86,8 +91,12 @@ export default function EditApplicationModal({
         padding: 20,
       }}
     >
-      <div
+      <motion.div
         onClick={(e) => e.stopPropagation()}
+        initial={{ y: 32, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 16, opacity: 0, scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         style={{
           background: "var(--paper-card)",
           border: "1px solid var(--border)",
@@ -157,9 +166,9 @@ export default function EditApplicationModal({
                   onChange={(e) => setPriority(e.target.value as Priority)}
                   className="premium-input cursor-pointer"
                 >
-                  <option value="low">🟢 Low</option>
-                  <option value="medium">🟡 Medium</option>
-                  <option value="high">🔴 High</option>
+                  <option value="low">◎ Low</option>
+                  <option value="medium">◉ Medium</option>
+                  <option value="high">● High</option>
                 </select>
               </div>
             </div>
@@ -282,7 +291,7 @@ export default function EditApplicationModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

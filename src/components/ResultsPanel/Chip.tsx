@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ChipProps {
-  label: string;
+  label: React.ReactNode;
   variant: "match" | "miss";
 }
 

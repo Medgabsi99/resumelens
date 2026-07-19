@@ -3,6 +3,20 @@ import { logger } from "@/lib/logger";
 
 import { useState, useEffect } from "react";
 import { type SkillGapPathResult } from "@/lib/ai";
+import {
+  GraduationCap,
+  ArrowLeft,
+  Calendar,
+  Wrench,
+  CheckCircle,
+  Circle,
+  ExternalLink,
+  BookOpen,
+  Copy,
+  Check,
+  Layout,
+  ArrowDown
+} from "lucide-react";
 
 interface Props {
   data: SkillGapPathResult;
@@ -59,8 +73,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
       <div className="p-6 border-b border-border bg-paper-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="bg-accent/15 text-accent border border-accent/20 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-              🎓 Tailored Skill-Gap Path
+            <span className="bg-accent/15 text-accent border border-accent/20 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+              <GraduationCap size={12} />
+              <span>Tailored Skill-Gap Path</span>
             </span>
             <h2 className="font-display text-xl font-bold text-ink leading-none">
               {data.roleTitle} at {data.companyName}
@@ -94,9 +109,10 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-paper border border-border text-ink hover:bg-paper-warm rounded-xl text-xs font-semibold transition cursor-pointer"
+            className="px-4 py-2 bg-paper border border-border text-ink hover:bg-paper-warm rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
           >
-            ← Back to Setup
+            <ArrowLeft size={12} />
+            <span>Back to Setup</span>
           </button>
         </div>
       </div>
@@ -105,19 +121,21 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
       <div className="border-b border-border bg-paper flex">
         <button
           onClick={() => setActiveTab("timeline")}
-          className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+          className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeTab === "timeline" ? "border-accent text-accent bg-accent/5" : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
           }`}
         >
-          🎓 4-Week Study Timeline
+          <Calendar size={13} />
+          <span>4-Week Study Timeline</span>
         </button>
         <button
           onClick={() => setActiveTab("project")}
-          className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+          className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeTab === "project" ? "border-accent text-accent bg-accent/5" : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
           }`}
         >
-          🛠️ Custom Project Outline
+          <Wrench size={13} />
+          <span>Custom Project Outline</span>
         </button>
       </div>
 
@@ -146,7 +164,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                     }`}
                     title={completed ? "Mark incomplete" : "Mark completed"}
                   >
-                    {completed ? "✓" : milestone.week}
+                    {completed ? <Check size={12} /> : milestone.week}
                   </button>
 
                   {/* Core details */}
@@ -157,13 +175,20 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       </h3>
                       <button
                         onClick={() => toggleWeekCompletion(milestone.week)}
-                        className={`text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded cursor-pointer transition ${
+                        className={`text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded cursor-pointer transition flex items-center gap-1 ${
                           completed
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                             : "bg-slate-500/5 text-slate-400 border-border/80 hover:border-accent/40"
                         }`}
                       >
-                        {completed ? "Completed ✓" : "Mark Done"}
+                        {completed ? (
+                          <>
+                            <Check size={10} />
+                            <span>Completed</span>
+                          </>
+                        ) : (
+                          <span>Mark Done</span>
+                        )}
                       </button>
                     </div>
 
@@ -198,7 +223,8 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                                 rel="noreferrer"
                                 className="bg-paper border border-border text-ink hover:bg-paper-warm hover:text-accent px-3 py-1 rounded-lg text-xs no-underline font-medium transition inline-flex items-center gap-1.5"
                               >
-                                🔗 {res.name}
+                                <ExternalLink size={10} />
+                                <span>{res.name}</span>
                               </a>
                             ))}
                           </div>
@@ -226,8 +252,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
             
             {/* Title & Description */}
             <div className="bg-paper-card border border-border rounded-2xl p-5 space-y-3 shadow-sm">
-              <h3 className="font-display text-lg font-bold text-ink">
-                🛠️ Tailored Project: {data.project.title}
+              <h3 className="font-display text-lg font-bold text-ink flex items-center gap-2">
+                <Wrench size={18} className="text-accent" />
+                <span>Tailored Project: {data.project.title}</span>
               </h3>
               <p className="text-xs text-ink-muted leading-relaxed">
                 {data.project.description}
@@ -286,9 +313,19 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       <span>{data.project.starterSnippet.filePath}</span>
                       <button
                         onClick={handleCopyCode}
-                        className="text-xs font-semibold text-accent hover:text-accent/80 transition cursor-pointer"
+                        className="text-xs font-semibold text-accent hover:text-accent/80 transition cursor-pointer flex items-center gap-1"
                       >
-                        {copiedCode ? "✓ Copied!" : "Copy code"}
+                        {copiedCode ? (
+                          <>
+                            <Check size={11} />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={11} />
+                            <span>Copy code</span>
+                          </>
+                        )}
                       </button>
                     </div>
                     
@@ -308,7 +345,8 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
               <div className="space-y-4">
                 <div className="bg-paper-card border border-border rounded-2xl p-5 space-y-3.5 shadow-sm h-full">
                   <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
-                    🔲 Architecture Blueprint
+                    <Layout size={13} className="text-accent" />
+                    <span>Architecture Blueprint</span>
                   </h4>
                   
                   <p className="text-xs text-ink-muted leading-relaxed bg-paper border border-border/60 p-3 rounded-xl">
@@ -322,12 +360,18 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                         <div className="text-xs font-bold text-accent">Frontend Layout</div>
                         <div className="text-[10px] text-ink-muted mt-0.5">Mock UI / SPA layer</div>
                       </div>
-                      <div className="text-center text-xs text-ink-muted leading-none">↓ API Requests</div>
+                      <div className="text-center text-xs text-ink-muted leading-none flex items-center justify-center gap-1">
+                        <ArrowDown size={11} />
+                        <span>API Requests</span>
+                      </div>
                       <div className="bg-[#12121b] border border-border/60 p-2.5 rounded-lg text-center">
                         <div className="text-xs font-bold text-accent">Core API Gateway</div>
                         <div className="text-[10px] text-ink-muted mt-0.5">Router / Controllers</div>
                       </div>
-                      <div className="text-center text-xs text-ink-muted leading-none">↓ Async Actions</div>
+                      <div className="text-center text-xs text-ink-muted leading-none flex items-center justify-center gap-1">
+                        <ArrowDown size={11} />
+                        <span>Async Actions</span>
+                      </div>
                       <div className="bg-[#12121b] border border-border/60 p-2.5 rounded-lg text-center">
                         <div className="text-xs font-bold text-accent">Cache / Message Queue</div>
                         <div className="text-[10px] text-ink-muted mt-0.5">Bridging technologies</div>

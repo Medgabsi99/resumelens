@@ -83,7 +83,7 @@ export function routeQueryToChunkType(
 // ─── RankGPT listwise reranking (2026 standard) ─────────────────────────────
 
 /**
- * Listwise Reranking (RankGPT-style): uses Gemini to precisely score and rank
+ * Listwise Reranking (RankGPT-style): uses gemini-2.5 to precisely score and rank
  * candidate chunks based on multi-dimensional relevance to the user's query.
  * Falls back to initial hybrid ranking if LLM call fails.
  */
@@ -175,12 +175,12 @@ export async function retrieveHybrid(
     const fetchLimit = Math.max(12, k * 2);
 
     const { data, error } = await supabase.rpc("match_resume_chunks_hybrid", {
-      query_embedding:    queryEmbedding,
-      query_text:         queryText,
-      match_user_id:      userId,
-      match_count:        fetchLimit,
+      query_embedding: queryEmbedding,
+      query_text: queryText,
+      match_user_id: userId,
+      match_count: fetchLimit,
       filter_analysis_id: analysisId ?? null,
-      filter_chunk_type:  chunkType ?? null,
+      filter_chunk_type: chunkType ?? null,
     });
 
     if (error) {
@@ -190,7 +190,7 @@ export async function retrieveHybrid(
     }
 
     if (!data || data.length === 0) return [];
-    
+
     // Sort initially by similarity/RRF score
     const candidates = (data as RetrievedChunk[]).sort((a, b) => b.similarity - a.similarity);
 
@@ -220,12 +220,12 @@ export async function retrieveRelevantChunks(
 ): Promise<RetrievedChunk[]> {
   try {
     const { data, error } = await supabase.rpc("match_resume_chunks", {
-      query_embedding:    queryEmbedding,
-      match_user_id:      userId,
-      match_count:        k,
-      match_threshold:    threshold,
+      query_embedding: queryEmbedding,
+      match_user_id: userId,
+      match_count: k,
+      match_threshold: threshold,
       filter_analysis_id: analysisId ?? null,
-      filter_chunk_type:  chunkType ?? null,
+      filter_chunk_type: chunkType ?? null,
     });
 
     if (error) {

@@ -8,6 +8,23 @@ import {
 } from "@/types";
 import { formatDate, daysUntil } from "./utils";
 import { useContextMenu } from "@/components/ContextMenu";
+import {
+  Pencil,
+  ExternalLink,
+  Clipboard,
+  ArrowRight,
+  CheckCircle,
+  XCircle,
+  Award,
+  Trash2,
+  DollarSign,
+  X,
+  Calendar,
+  Clock,
+  Bell,
+  User,
+  GripVertical
+} from "lucide-react";
 
 interface ApplicationCardProps {
   app: JobApplication;
@@ -47,26 +64,26 @@ export default function ApplicationCard({
       {
         key: "edit",
         label: "Edit Application",
-        icon: "✏️",
+        icon: <Pencil size={13} />,
         shortcut: "E",
         onClick: onEdit,
       },
       ...(app.job_url ? [{
         key: "open-url",
         label: "Open Job Posting",
-        icon: "↗",
+        icon: <ExternalLink size={13} />,
         onClick: () => window.open(app.job_url!, "_blank", "noopener"),
       }] : []),
       {
         key: "copy-role",
         label: "Copy Role Title",
-        icon: "📋",
+        icon: <Clipboard size={13} />,
         onClick: () => navigator.clipboard.writeText(`${app.job_title} at ${app.company_name}`),
       },
       {
         key: "status-header",
         label: "Move to Status",
-        icon: "⟶",
+        icon: <ArrowRight size={13} />,
         separator: true,
         disabled: true,
         onClick: () => {},
@@ -77,13 +94,13 @@ export default function ApplicationCard({
         .map(s => ({
           key: `move-${s}`,
           label: APPLICATION_STATUS_LABELS[s],
-          icon: s === "accepted" ? "✅" : s === "rejected" ? "❌" : s === "offer" ? "🎉" : "→",
+          icon: s === "accepted" ? <CheckCircle size={13} className="text-emerald-500" /> : s === "rejected" ? <XCircle size={13} className="text-red-500" /> : s === "offer" ? <Award size={13} className="text-amber-500" /> : <ArrowRight size={13} />,
           onClick: () => onStatusChange(s),
         })),
       {
         key: "delete",
         label: "Delete Application",
-        icon: "🗑️",
+        icon: <Trash2 size={13} />,
         danger: true,
         separator: true,
         onClick: onDelete,
@@ -133,14 +150,7 @@ export default function ApplicationCard({
             title="Drag to reorder"
             aria-hidden="true"
           >
-            <svg width="10" height="18" viewBox="0 0 10 18" fill="currentColor" className="text-ink-faint">
-              <circle cx="2" cy="3" r="1.4" />
-              <circle cx="8" cy="3" r="1.4" />
-              <circle cx="2" cy="9" r="1.4" />
-              <circle cx="8" cy="9" r="1.4" />
-              <circle cx="2" cy="15" r="1.4" />
-              <circle cx="8" cy="15" r="1.4" />
-            </svg>
+            <GripVertical size={16} className="text-ink-faint" />
           </div>
         )}
         <div className="min-w-0 flex-1">
@@ -190,22 +200,26 @@ export default function ApplicationCard({
             {app.job_url && (
               <>
                 <span className="text-ink-faint">•</span>
-                <a
+                 <a
                   href={app.job_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-accent hover:text-accent-hover font-semibold no-underline"
+                  className="text-accent hover:text-accent-hover font-semibold no-underline inline-flex items-center gap-0.5"
                 >
-                  View Posting ↗
+                  <span>View Posting</span>
+                  <ExternalLink size={10} />
                 </a>
               </>
             )}
           </div>
           {(app.salary_min || app.salary_max) && (
-            <div className="text-xs text-ink-faint font-mono bg-paper px-2.5 py-1 rounded-lg inline-block">
-              💰 {app.salary_currency || "USD"}{" "}
-              {app.salary_min?.toLocaleString() || "?"} –{" "}
-              {app.salary_max?.toLocaleString() || "?"}
+            <div className="text-xs text-ink-faint font-mono bg-paper px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
+              <DollarSign size={11} className="text-slate-500 shrink-0" />
+              <span>
+                {app.salary_currency || "USD"}{" "}
+                {app.salary_min?.toLocaleString() || "?"} –{" "}
+                {app.salary_max?.toLocaleString() || "?"}
+              </span>
             </div>
           )}
         </div>
@@ -234,9 +248,9 @@ export default function ApplicationCard({
           <button
             onClick={onDelete}
             aria-label="Delete application"
-            className="bg-transparent hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 text-red-500 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150"
+            className="bg-transparent hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 text-red-500 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center"
           >
-            ×
+            <X size={14} />
           </button>
         </div>
       </div>
@@ -244,11 +258,15 @@ export default function ApplicationCard({
       {/* Meta row */}
       <div className="flex gap-x-5 gap-y-2 text-xs text-ink-faint flex-wrap items-center">
         {app.applied_at && (
-          <span className="flex items-center gap-1">📅 Applied: {formatDate(app.applied_at)}</span>
+          <span className="flex items-center gap-1">
+            <Calendar size={12} className="shrink-0" />
+            <span>Applied: {formatDate(app.applied_at)}</span>
+          </span>
         )}
         {app.deadline_at && (
           <span className="flex items-center gap-1">
-            ⏰ Deadline: {formatDate(app.deadline_at)}
+            <Clock size={12} className="shrink-0" />
+            <span>Deadline: {formatDate(app.deadline_at)}</span>
             {(() => {
               const d = daysUntil(app.deadline_at);
               if (d === null) return null;
@@ -263,7 +281,8 @@ export default function ApplicationCard({
             className="flex items-center gap-1 font-medium"
             style={{ color: followUpUrgent ? "#ef4444" : "var(--ink-faint)" }}
           >
-            🔔 Follow-up: {formatDate(app.follow_up_at)}
+            <Bell size={12} className="shrink-0" />
+            <span>Follow-up: {formatDate(app.follow_up_at)}</span>
             {followUpDays !== null && followUpDays <= 3 && (
               <span>({followUpDays < 0 ? "overdue" : `${followUpDays}d`})</span>
             )}
@@ -271,7 +290,8 @@ export default function ApplicationCard({
         )}
         {(app.contact_name || app.contact_email) && (
           <span className="flex items-center gap-1">
-            👤 {app.contact_name}
+            <User size={12} className="shrink-0" />
+            <span>{app.contact_name}</span>
             {app.contact_email && ` (${app.contact_email})`}
           </span>
         )}

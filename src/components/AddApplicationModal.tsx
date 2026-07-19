@@ -1,7 +1,9 @@
 "use client";
 import { logger } from "@/lib/logger";
 
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Info } from "lucide-react";
 import {
   ApplicationStatus,
   APPLICATION_STATUS_LABELS,
@@ -47,7 +49,6 @@ export default function AddApplicationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -129,8 +130,14 @@ export default function AddApplicationModal({
   };
 
   return (
-    <div
+    <AnimatePresence>
+      {isOpen && (
+    <motion.div
       onClick={handleClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
       style={{
         position: "fixed",
         inset: 0,
@@ -144,8 +151,12 @@ export default function AddApplicationModal({
         padding: 20,
       }}
     >
-      <div
+      <motion.div
         onClick={(e) => e.stopPropagation()}
+        initial={{ y: 32, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 16, opacity: 0, scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         style={{
           background: "var(--paper-card)",
           border: "1px solid var(--border)",
@@ -283,9 +294,9 @@ export default function AddApplicationModal({
                   onChange={(e) => setPriority(e.target.value as Priority)}
                   className="premium-input cursor-pointer"
                 >
-                  <option value="low">🟢 Low</option>
-                  <option value="medium">🟡 Medium</option>
-                  <option value="high">🔴 High</option>
+                  <option value="low">◎ Low</option>
+                  <option value="medium">◉ Medium</option>
+                  <option value="high">● High</option>
                 </select>
               </div>
             </div>
@@ -435,7 +446,7 @@ export default function AddApplicationModal({
                   marginBottom: 12,
                 }}
               >
-                💡 Match score <strong>{defaultMatchScore}</strong> from your Job Match analysis will be saved with this application.
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, verticalAlign: "middle" }}><Info size={12} /></span>{" "}Match score <strong>{defaultMatchScore}</strong> from your Job Match analysis will be saved with this application.
               </div>
             )}
 
@@ -509,7 +520,9 @@ export default function AddApplicationModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

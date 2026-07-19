@@ -18,20 +18,20 @@ function scrapeJobDetails() {
           json["@type"] === "JobPosting"
             ? json
             : Array.isArray(json["@graph"])
-            ? json["@graph"].find((n) => n["@type"] === "JobPosting")
-            : null;
+              ? json["@graph"].find((n) => n["@type"] === "JobPosting")
+              : null;
 
         if (posting) {
-          jobTitle       = posting.title || "";
-          companyName    = posting.hiringOrganization?.name || "";
+          jobTitle = posting.title || "";
+          companyName = posting.hiringOrganization?.name || "";
           // description comes as raw HTML — strip tags to get clean plain text
-          const tmp      = document.createElement("div");
-          tmp.innerHTML  = posting.description || "";
+          const tmp = document.createElement("div");
+          tmp.innerHTML = posting.description || "";
           jobDescription = tmp.innerText.trim();
           break;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // ── 2. CSS selectors — logged-in authenticated layout ──────────────────
     // Only run if JSON-LD missed anything. Class names here are stable BEM
@@ -123,7 +123,7 @@ function scrapeJobDetails() {
   // Strip "· Company · Location · N applicants" noise that bleeds in if the
   // container was grabbed instead of the anchor
 
-   if (companyName) {
+  if (companyName) {
     companyName = companyName
       .split("\n")[0]
       .split("·")[0]
@@ -151,8 +151,8 @@ function scrapeJobDetails() {
     jobDescription = mainContent?.innerText || "";
   }
 
-  jobTitle       = jobTitle.trim().replace(/\s+/g, " ");
-  companyName    = companyName.trim().replace(/\s+/g, " ");
+  jobTitle = jobTitle.trim().replace(/\s+/g, " ");
+  companyName = companyName.trim().replace(/\s+/g, " ");
   jobDescription = jobDescription.trim();
 
   if (jobDescription.length > 8000) {
@@ -430,7 +430,7 @@ async function handleAutoTailorSync() {
   isTailoring = true;
   button.disabled = true;
   button.innerText = "Tailoring resume... ⏳";
-  note.innerText = "Running Gemini compatibility matching...";
+  note.innerText = "Running gemini-2.5 compatibility matching...";
 
   // 1. Scrape listing context
   const details = scrapeJobDetails();
@@ -522,23 +522,23 @@ function injectTailoredText(text) {
 function extractFieldsFromResume(text) {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
   const nameLine = lines[0] || "";
-  
+
   const nameParts = nameLine.split(/\s+/);
   const firstName = nameParts[0] || "";
   const lastName = nameParts.slice(1).join(" ") || "";
-  
+
   let email = "";
   const emailMatch = text.match(/[\w.+-]+@[\w.-]+\.\w+/);
   if (emailMatch) email = emailMatch[0];
-  
+
   let phone = "";
   const phoneMatch = text.match(/[+]?[\d\s\-()]{7,}/);
   if (phoneMatch) phone = phoneMatch[0].trim();
-  
+
   let linkedin = "";
   let github = "";
   let website = "";
-  
+
   const linkMatches = text.match(/https?:\/\/[^\s]+/g) || [];
   linkMatches.forEach(link => {
     const cleanLink = link.replace(/[,;|]$/, "");
@@ -562,7 +562,7 @@ function extractFieldsFromResume(text) {
 
   let currentTitle = "";
   let currentCompany = "";
-  
+
   const expIdx = lines.findIndex(l => l.toLowerCase().includes("experience") && l.length < 25);
   if (expIdx > -1 && expIdx + 1 < lines.length) {
     const firstJobLine = lines[expIdx + 1];
@@ -570,7 +570,7 @@ function extractFieldsFromResume(text) {
     currentTitle = parts[0]?.trim() || "";
     currentCompany = parts[1]?.trim() || "";
   }
-  
+
   let school = "";
   let degree = "";
   const eduIdx = lines.findIndex(l => l.toLowerCase().includes("education") && l.length < 25);
@@ -606,7 +606,7 @@ function findAndFillForm(fields) {
     const name = (el.name || "").toLowerCase();
     const placeholder = (el.placeholder || "").toLowerCase();
     const autocomplete = (el.getAttribute("autocomplete") || "").toLowerCase();
-    
+
     let labelText = "";
     if (el.id) {
       const labelEl = document.querySelector(`label[for="${el.id}"]`);
@@ -618,10 +618,10 @@ function findAndFillForm(fields) {
     }
 
     const testMatch = (patterns) => {
-      return patterns.some(pattern => 
-        id.includes(pattern) || 
-        name.includes(pattern) || 
-        placeholder.includes(pattern) || 
+      return patterns.some(pattern =>
+        id.includes(pattern) ||
+        name.includes(pattern) ||
+        placeholder.includes(pattern) ||
         autocomplete.includes(pattern) ||
         labelText.includes(pattern)
       );
@@ -658,7 +658,7 @@ function findAndFillForm(fields) {
     if (valToFill && !el.value) {
       fillElement(el, valToFill);
       fillCount++;
-      
+
       const origBorder = el.style.border;
       el.style.border = "1.5px solid #10b981";
       setTimeout(() => {
@@ -692,9 +692,9 @@ async function handleAutoFillForm() {
   try {
     const fields = extractFieldsFromResume(resume.resume_text);
     note.innerText = "Scanning page inputs...";
-    
+
     const fillCount = findAndFillForm(fields);
-    
+
     if (fillCount > 0) {
       note.innerText = `Successfully filled ${fillCount} fields!`;
       showToast(`✓ Auto-filled ${fillCount} form inputs from your resume!`);
@@ -716,7 +716,7 @@ async function handleAutoFillForm() {
 function fillElement(el, value) {
   if (el.tagName === "SELECT") {
     const lowerVal = value.toLowerCase();
-    const matchedOption = Array.from(el.options).find(opt => 
+    const matchedOption = Array.from(el.options).find(opt =>
       opt.text.toLowerCase().includes(lowerVal) || opt.value.toLowerCase().includes(lowerVal)
     );
     if (matchedOption) {
@@ -757,14 +757,14 @@ function fillElement(el, value) {
   // Fire the full event sequence React/Vue/Angular all listen for.
   // `input`  → triggers React's onChange synthetic handler
   // `change` → triggers Vue/Angular and native form validation
-  el.dispatchEvent(new Event("input",  { bubbles: true }));
+  el.dispatchEvent(new Event("input", { bubbles: true }));
   el.dispatchEvent(new Event("change", { bubbles: true }));
 
   // Some ATS forms (Workday, iCIMS) also watch blur for field-level validation
   try {
     el.focus();
     el.blur();
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // ── SPA Transition Routing Observer ───────────────────────────────────

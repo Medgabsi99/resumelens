@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase";
 import { compose, required, isEmail, noScript } from "@/lib/formValidation";
+import { CheckCircle, ArrowLeft } from "lucide-react";
 
 const emailRules = compose(required("Email"), isEmail(), noScript());
 
@@ -185,7 +186,7 @@ function ForgotPasswordForm() {
                 }}
               >
                 {message.type === "success" && (
-                  <span style={{ marginRight: 6 }}>✅</span>
+                  <span style={{ marginRight: 6, display: "inline-flex", verticalAlign: "middle" }}><CheckCircle size={14} /></span>
                 )}
                 {message.text}
               </div>
@@ -234,7 +235,7 @@ function ForgotPasswordForm() {
                 fontWeight: 600,
               }}
             >
-              ← Back to sign in
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><ArrowLeft size={13} /> Back to sign in</span>
             </a>
           </p>
         </div>

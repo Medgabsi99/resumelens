@@ -10,6 +10,17 @@ import { createBrowserClient } from "@/lib/supabase";
 import AuroraBackground from "@/components/AuroraBackground";
 import ConfettiCannon from "@/components/ConfettiCannon";
 import ParsingProgressVisualizer from "@/components/ParsingProgressVisualizer";
+import HomepageMarketing from "@/components/HomepageMarketing";
+import {
+  FileText,
+  Upload,
+  Sparkles,
+  Menu,
+  X,
+  Play,
+  ArrowRight,
+  TrendingUp
+} from "lucide-react";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -205,13 +216,9 @@ export default function HomePage() {
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-6 h-6" />
               ) : (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <Menu className="w-6 h-6" />
               )}
             </button>
           </div>
@@ -345,9 +352,9 @@ export default function HomePage() {
                   Quota: <strong className="text-ink">{Math.max(0, profile.analyses_limit - profile.analyses_used)} / {profile.analyses_limit}</strong> remaining
                 </span>
               ) : (
-                <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
                   <span>Unlimited Reviews</span>
-                  <span>✨</span>
+                  <Sparkles size={14} className="text-amber-500" />
                 </strong>
               )}
             </div>
@@ -367,14 +374,20 @@ export default function HomePage() {
                 {/* Drop zone */}
                 <div
                   {...getRootProps()}
-                  className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-2 transition-all duration-300"
+                  className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-3.5 transition-all duration-300 group"
                   style={{
                     borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
                     background: isDragActive ? "var(--accent-bg)" : "var(--paper-warm)",
                   }}
                 >
                   <input {...getInputProps()} />
-                  <div className="text-2xl mb-1">{fileName ? "📄" : "📤"}</div>
+                  <div className="flex items-center justify-center">
+                    {fileName ? (
+                      <FileText size={28} className="text-accent" />
+                    ) : (
+                      <Upload size={28} className="text-ink-muted group-hover:text-accent transition-colors" />
+                    )}
+                  </div>
                   <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
                     {fileName
                       ? `${fileName}`
@@ -406,7 +419,7 @@ export default function HomePage() {
                   </span>
                   {resumeText.length > 500 && (
                     <span className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}>
-                      {resumeText.length >= 4000 ? "✓ Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
+                      {resumeText.length >= 4000 ? "Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
                     </span>
                   )}
                 </div>
@@ -437,7 +450,8 @@ export default function HomePage() {
                 disabled={loading}
                 className="btn-gradient px-8 py-3.5 rounded-xl text-base font-semibold min-w-[200px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>Analyze Resume →</span>
+                <span>Analyze Resume</span>
+                <Play size={14} fill="currentColor" />
               </button>
 
               {error && (
@@ -474,13 +488,19 @@ export default function HomePage() {
             <p className="text-ink-muted mb-6 text-sm leading-relaxed max-w-sm mx-auto">{preview.summary}</p>
             <button
               onClick={() => setShowUpgradeModal(true)}
-              className="btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
+              className="btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
             >
-              Unlock Full Report →
+              <span>Unlock Full Report</span>
+              <ArrowRight size={14} />
             </button>
           </div>
         )}
       </main>
+
+      {/* Marketing / trust sections — only when no result is active */}
+      {!result && !requiresUpgrade && (
+        <HomepageMarketing />
+      )}
 
       {showUpgradeModal && (
         <UpgradeModal preview={preview} onClose={() => setShowUpgradeModal(false)} />

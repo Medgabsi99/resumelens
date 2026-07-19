@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Zap, CheckCircle2, AlertTriangle, AlertOctagon, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Props {
   resumeText: string;
@@ -96,12 +97,15 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
   const scoreColor =
     score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : "#ef4444";
 
-  const scoreLabel =
+  const scoreLabelText =
     score >= 80
-      ? "Strong Verbs ✅"
+      ? "Strong Verbs"
       : score >= 60
-      ? "Needs Improvement ⚠️"
-      : "Weak Verb Usage 🚨";
+      ? "Needs Improvement"
+      : "Weak Verb Usage";
+
+  const ScoreLabelIcon =
+    score >= 80 ? CheckCircle2 : score >= 60 ? AlertTriangle : AlertOctagon;
 
   return (
     <div
@@ -124,7 +128,9 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
         }}
         onClick={() => setExpanded((v) => !v)}
       >
-        <span style={{ fontSize: 22 }}>⚡</span>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", color: scoreColor }}>
+          <Zap size={20} />
+        </span>
         <div style={{ flex: 1 }}>
           <div
             style={{
@@ -155,12 +161,13 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
           >
             {score}
           </div>
-          <div style={{ fontSize: 9.5, color: scoreColor, fontWeight: 700, marginTop: 2 }}>
-            {scoreLabel}
+          <div style={{ fontSize: 9.5, color: scoreColor, fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 3, justifyContent: "center" }}>
+            <ScoreLabelIcon size={10} />
+            {scoreLabelText}
           </div>
         </div>
-        <span style={{ color: "var(--ink-faint)", fontSize: 14, marginLeft: 4 }}>
-          {expanded ? "▲" : "▼"}
+        <span style={{ color: "var(--ink-faint)", fontSize: 14, marginLeft: 4, display: "flex", alignItems: "center" }}>
+          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </span>
       </div>
 
@@ -200,9 +207,14 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                 fontSize: 13,
                 fontWeight: 600,
                 textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              ✅ Excellent! Your resume uses strong, active action verbs throughout.
+              <CheckCircle2 size={16} />
+              Excellent! Your resume uses strong, active action verbs throughout.
             </div>
           ) : (
             <>
@@ -290,8 +302,8 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                           </span>
                         ))}
                       </div>
-                      <span style={{ color: "var(--ink-faint)", fontSize: 12 }}>
-                        {expandedVerb === m.verb ? "▲" : "▼"}
+                      <span style={{ color: "var(--ink-faint)", display: "flex", alignItems: "center" }}>
+                        {expandedVerb === m.verb ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       </span>
                     </div>
 

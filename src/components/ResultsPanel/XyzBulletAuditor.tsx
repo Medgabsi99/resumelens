@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Check, Copy, FlaskConical, Zap, AlertTriangle, Star } from "lucide-react";
 
 interface XyzData {
   xyzRewrite: string;
@@ -39,9 +40,12 @@ function CopyButton({ text }: { text: string }) {
         transition: "all 0.18s",
         whiteSpace: "nowrap",
         flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
       }}
     >
-      {copied ? "✓ Copied" : "Copy"}
+      {copied ? <><Check size={10} /><span>Copied</span></> : <><Copy size={10} /><span>Copy</span></>}
     </button>
   );
 }
@@ -146,7 +150,9 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
           else setOpen((v) => !v);
         }}
       >
-        <span style={{ fontSize: 18, marginTop: 1 }}>🔬</span>
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FlaskConical size={17} />
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
@@ -195,7 +201,7 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
           }}
           disabled={loading}
         >
-          {loading ? "Analyzing..." : data ? "Re-analyze" : "⚡ XYZ Audit"}
+          {loading ? "Analyzing..." : data ? "Re-analyze" : <><Zap size={11} /><span style={{ marginLeft: 3 }}>XYZ Audit</span></>}
         </button>
       </div>
 
@@ -238,9 +244,13 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
                 margin: 12,
                 fontSize: 12.5,
                 color: "#991b1b",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              ⚠️ {error}
+              <AlertTriangle size={13} />
+              <span>{error}</span>
             </div>
           )}
 
@@ -258,7 +268,9 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
                   lineHeight: 1.5,
                 }}
               >
-                <span style={{ fontWeight: 700 }}>⚠️ Why it was weak:</span>{" "}
+                <span style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                  <AlertTriangle size={12} /> Why it was weak:
+                </span>{" "}
                 {data.weaknessAnalysis}
               </div>
 
@@ -313,7 +325,8 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
                       gap: 5,
                     }}
                   >
-                    ⭐ XYZ Formula Rewrite
+                    <Star size={11} className="shrink-0" />
+                    XYZ Formula Rewrite
                     <span
                       style={{
                         background: "#6366f1",

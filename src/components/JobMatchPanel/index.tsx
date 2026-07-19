@@ -5,6 +5,19 @@ import { parseResume, type ParsedResume } from "@/lib/parseResume";
 import SpotlightCard from "@/components/SpotlightCard";
 import { useJobMatch } from "./useJobMatch";
 import { useAutoTailor } from "./useAutoTailor";
+import {
+  Check,
+  X,
+  Sparkles,
+  CheckCircle,
+  ArrowRight,
+  Loader2,
+  AlertTriangle,
+  PenTool,
+  Briefcase,
+  Tag,
+  RotateCcw
+} from "lucide-react";
 
 interface Props {
   resumeText: string;
@@ -330,11 +343,15 @@ export default function JobMatchPanel({
                 color: "#1e5c3a",
                 fontWeight: 700,
                 marginBottom: 10,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              ✓ Why you&apos;re a good fit
+              <Check size={12} className="text-emerald-600" />
+              <span>Why you&apos;re a good fit</span>
             </div>
-            <ul style={{ margin: 0, paddingLeft: 18, listStyle: "none" }}>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
               {result.strengths.map((s, i) => (
                 <li
                   key={i}
@@ -344,11 +361,13 @@ export default function JobMatchPanel({
                     marginBottom: 6,
                     lineHeight: 1.5,
                     position: "relative",
-                    paddingLeft: 4,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 6,
                   }}
                 >
-                  <span style={{ color: "#2d6a4f", fontWeight: 700, marginRight: 6 }}>+</span>
-                  {s}
+                  <span className="text-emerald-600 font-bold shrink-0 mt-1">•</span>
+                  <span>{s}</span>
                 </li>
               ))}
             </ul>
@@ -370,11 +389,15 @@ export default function JobMatchPanel({
                 color: "#7a2020",
                 fontWeight: 700,
                 marginBottom: 10,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              ✗ Gaps to address
+              <X size={12} className="text-rose-600" />
+              <span>Gaps to address</span>
             </div>
-            <ul style={{ margin: 0, paddingLeft: 18, listStyle: "none" }}>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
               {result.gaps.map((g, i) => (
                 <li
                   key={i}
@@ -384,11 +407,13 @@ export default function JobMatchPanel({
                     marginBottom: 6,
                     lineHeight: 1.5,
                     position: "relative",
-                    paddingLeft: 4,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 6,
                   }}
                 >
-                  <span style={{ color: "#7a2020", fontWeight: 700, marginRight: 6 }}>−</span>
-                  {g}
+                  <span className="text-rose-600 font-bold shrink-0 mt-1">•</span>
+                  <span>{g}</span>
                 </li>
               ))}
             </ul>
@@ -430,9 +455,13 @@ export default function JobMatchPanel({
                       color: "#1e5c3a",
                       border: "1px solid rgba(45,106,79,0.3)",
                       fontFamily: "DM Mono, monospace",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                     }}
                   >
-                    ✓ {s}
+                    <Check size={10} />
+                    <span>{s}</span>
                   </span>
                 ))
               )}
@@ -468,9 +497,13 @@ export default function JobMatchPanel({
                       color: "#7a3010",
                       border: "1px solid rgba(200,86,42,0.3)",
                       fontFamily: "DM Mono, monospace",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                     }}
                   >
-                    ✗ {s}
+                    <X size={10} />
+                    <span>{s}</span>
                   </span>
                 ))
               )}
@@ -497,9 +530,13 @@ export default function JobMatchPanel({
               color: "var(--accent)",
               fontWeight: 700,
               marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            💡 Top recommendations to improve your match
+            <Sparkles size={12} className="text-amber-500" />
+            <span>Top recommendations to improve your match</span>
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>
             {result.topRecommendations.map((r, i) => (
@@ -534,8 +571,9 @@ export default function JobMatchPanel({
             }}
           >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#1e5c3a", marginBottom: 2 }}>
-                ✓ Tailored Resume Applied!
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#1e5c3a", marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                <CheckCircle size={14} className="text-emerald-600" />
+                <span>Tailored Resume Applied!</span>
               </div>
               <div style={{ fontSize: 12, color: "#2d6a4f", lineHeight: 1.4 }}>
                 The optimized text has been loaded into your editor. Scroll up to review, preview template options, and export your PDF.
@@ -559,9 +597,13 @@ export default function JobMatchPanel({
                 cursor: "pointer",
                 fontFamily: "Instrument Sans, sans-serif",
                 whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              Go to Editor ✏️
+              <span>Go to Editor</span>
+              <ArrowRight size={12} />
             </button>
           </div>
         )}
@@ -628,16 +670,20 @@ export default function JobMatchPanel({
             >
               {isTailoring ? (
                 <>
-                  <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⚙️</span>
-                  Tailoring Resume points...
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Tailoring Resume points...</span>
                 </>
               ) : (
-                <>✨ Auto-Tailor Resume</>
+                <>
+                  <Sparkles size={14} />
+                  <span>Auto-Tailor Resume</span>
+                </>
               )}
             </button>
             {tailorError && (
-              <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 500 }}>
-                ⚠  {tailorError}
+              <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
+                <AlertTriangle size={12} />
+                <span>{tailorError}</span>
               </div>
             )}
           </SpotlightCard>
@@ -689,9 +735,13 @@ export default function JobMatchPanel({
                     cursor: "pointer",
                     fontFamily: "Instrument Sans, sans-serif",
                     boxShadow: "0 2px 6px rgba(16, 185, 129, 0.2)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
-                  ✓ Apply changes
+                  <Check size={12} />
+                  <span>Apply changes</span>
                 </button>
                 <button
                   onClick={() => setShowDiff(false)}
@@ -718,8 +768,9 @@ export default function JobMatchPanel({
               {/* Summary Diff */}
               {tailoredResult.tailoredResume.summary && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 8, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    ✍ Professional Summary
+                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 8, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                    <PenTool size={12} className="text-accent" />
+                    <span>Professional Summary</span>
                   </h5>
                   <div style={{ padding: "10px 14px", background: "var(--paper-warm)", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <DiffText 
@@ -733,8 +784,9 @@ export default function JobMatchPanel({
               {/* Experience Diff */}
               {tailoredResult.tailoredResume.experience.length > 0 && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 12, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    💼 Work Experience Bullets
+                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 12, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Briefcase size={12} className="text-accent" />
+                    <span>Work Experience Bullets</span>
                   </h5>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {tailoredResult.tailoredResume.experience.map((exp: ParsedResume["experience"][number], expIdx: number) => {
@@ -771,8 +823,9 @@ export default function JobMatchPanel({
               {/* Skills Diff */}
               {tailoredResult.tailoredResume.skills.length > 0 && (
                 <div>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 10, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    🛠 Skills & Keywords
+                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 10, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Tag size={12} className="text-accent" />
+                    <span>Skills & Keywords</span>
                   </h5>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {(() => {
@@ -821,9 +874,13 @@ export default function JobMatchPanel({
               fontWeight: 600,
               cursor: "pointer",
               fontFamily: "Instrument Sans, sans-serif",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            ↻ Match against a different job
+            <RotateCcw size={12} />
+            <span>Match against a different job</span>
           </button>
         </div>
       </div>
@@ -919,9 +976,23 @@ export default function JobMatchPanel({
             transition: "opacity 0.15s",
             minHeight: 44,
             width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
           }}
         >
-          {isMatching ? "Analyzing match..." : "Match My Resume 🎯"}
+          {isMatching ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Analyzing match...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              <span>Match My Resume</span>
+            </>
+          )}
         </button>
       </div>
 

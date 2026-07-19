@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
@@ -16,6 +17,10 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "ext-tailor");
+  if (!rateLimit.success) {
+    return handleCors(req, rateLimitResponse());
+  }
   const supabase = await createServerComponentClient();
 
     const body = await req.json();

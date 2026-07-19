@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getSecureModel } from "@/lib/ai/client";
@@ -12,10 +13,16 @@ const bulletRewriteModel = getSecureModel({
 
 export async function POST(req: NextRequest) {
   // Auth guard
+  let _user;
   try {
-    await requireUser();
+    _user = await requireUser();
   } catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimit(_user.id, "rewrite-bullet");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
   }
 
   const { bullet, resumeContext, targetRole } = await req.json();

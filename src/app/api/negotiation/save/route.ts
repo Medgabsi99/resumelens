@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import logger from "@/lib/logger";
@@ -10,6 +11,10 @@ export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
     const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "negotiation-save");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
   const supabase = await createServerComponentClient();
 
     // ── 2. Parse request ──────────────────────────────────────

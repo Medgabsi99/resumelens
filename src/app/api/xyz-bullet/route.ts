@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
@@ -12,10 +13,16 @@ const xyzModel = getSecureModel({
 });
 
 export async function POST(req: NextRequest) {
+  let _user;
   try {
-    await requireUser();
+    _user = await requireUser();
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimit(_user.id, "xyz-bullet");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
   }
 
   let body: Record<string, unknown>;

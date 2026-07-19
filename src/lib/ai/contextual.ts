@@ -15,7 +15,7 @@
  * Reference: https://www.anthropic.com/news/contextual-retrieval
  *
  * Implementation details:
- *  - Single batched Gemini call for all chunks (efficient — not one call/chunk)
+ *  - Single batched gemini-2.5 call for all chunks (efficient — not one call/chunk)
  *  - Context generation uses the full resume text as reference
  *  - Original chunk content is preserved in the DB for display
  *  - Only the embedding uses the contextualized version
@@ -46,7 +46,7 @@ export interface ContextualizedChunk extends ResumeChunk {
 
 /**
  * Enrich resume chunks with LLM-generated context prefixes (Contextual Retrieval).
- * Uses a single batched Gemini call for all chunks.
+ * Uses a single batched gemini-2.5 call for all chunks.
  * Falls back to rule-based context if LLM fails.
  */
 export async function contextualizeChunks(

@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
@@ -11,6 +12,10 @@ export const maxDuration = 60;
 export async function POST(req: NextRequest) {
   // â”€â”€ 1. Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "chat");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
   const supabase = await createServerComponentClient();
 
   // â”€â”€ 2. Quota check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

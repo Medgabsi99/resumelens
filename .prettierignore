@@ -1,0 +1,13 @@
+.next
+node_modules
+out
+dist
+build
+package-lock.json
+public
+.gemini-2.5
+.agents
+CVS
+.svn
+.git
+.hg

@@ -2,6 +2,7 @@
 import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useMemo } from "react";
+import { Globe, ArrowDown, Loader2, Sparkles, AlertTriangle, Palette, PenLine, RefreshCw, Monitor, Smartphone, ChevronUp, ChevronDown, CheckCircle } from "lucide-react";
 import { PortfolioData } from "@/lib/ai";
 import { generatePortfolioHtml } from "@/lib/portfolioTemplate";
 
@@ -28,7 +29,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [viewportMode, setViewportMode] = useState<"desktop" | "mobile">("desktop");
-  
+
   // Collapse state for forms
   const [expandedSection, setExpandedSection] = useState<string | null>("hero");
 
@@ -66,7 +67,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Generation failed");
-      
+
       setPortfolioData(data.data);
       // Try to save generated content immediately
       await savePortfolio(selectedTheme, data.data);
@@ -93,7 +94,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Save failed");
-      setSaveStatus("✓ Changes saved successfully");
+      setSaveStatus("Changes saved successfully");
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: unknown) {
       setError((err as Error).message || "Failed to save changes.");
@@ -213,7 +214,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
             color: "var(--ink)",
             fontFamily: "Instrument Sans, sans-serif",
           }}>
-            Personal Portfolio Site Generator 🌐
+            Personal Portfolio Site Generator <Globe size={14} style={{ display: "inline", verticalAlign: "middle" }} />
           </h3>
           <p style={{
             margin: "2px 0 0 0",
@@ -257,7 +258,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                   boxShadow: "0 2px 8px var(--brand-glow)",
                 }}
               >
-                ↓ Download HTML File
+                <ArrowDown size={13} style={{ display: "inline", verticalAlign: "middle" }} /> Download HTML File
               </button>
             </>
           )}
@@ -275,12 +276,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
           alignItems: "center",
           justifyContent: "center",
         }}>
-          <div style={{
-            fontSize: "36px",
-            marginBottom: "16px",
-          }}>
-            🌐
-          </div>
+            <Globe size={36} style={{ marginBottom: "16px", color: "var(--accent)" }} />
           <h4 style={{
             margin: "0 0 8px 0",
             fontSize: "16px",
@@ -296,7 +292,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
             maxWidth: "480px",
             lineHeight: 1.6,
           }}>
-            Gemini will analyze your work experience, metrics, and skills to write high-impact headlines, formatted bios, and project portfolios optimized for the web.
+            gemini-2.5 will analyze your work experience, metrics, and skills to write high-impact headlines, formatted bios, and project portfolios optimized for the web.
           </p>
           <button
             onClick={handleGenerate}
@@ -319,18 +315,16 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
           >
             {isGenerating ? (
               <>
-                <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⚙️</span>
+                <span style={{ display: "inline-flex", animation: "spin 1s linear infinite" }}><Loader2 size={15} /></span>
                 Writing Portfolio Site...
               </>
             ) : (
-              <>
-                ✨ Generate Portfolio Content
-              </>
+              <><Sparkles size={14} /> Generate Portfolio Content</>
             )}
           </button>
           {error && (
             <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "12px", fontWeight: 500 }}>
-              ⚠ {error}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={13} /> {error}</span>
             </p>
           )}
         </div>
@@ -364,7 +358,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                 display: "block",
                 marginBottom: "8px",
               }}>
-                🎨 Theme Preset
+                <Palette size={11} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Theme Preset
               </label>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {THEMES.map((theme) => {
@@ -421,9 +415,9 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                 display: "block",
                 marginBottom: "10px",
               }}>
-                📝 Edit Content Copy
+                <PenLine size={11} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Edit Content Copy
               </label>
-              
+
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {/* 1. Hero & Branding */}
                 <CollapsibleSection
@@ -539,11 +533,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                     opacity: isGenerating ? 0.7 : 1,
                   }}
                 >
-                  🔄 Regenerate copy with AI
+                  <RefreshCw size={13} /> Regenerate copy with AI
                 </button>
               </div>
             </div>
-            
+
             {saveStatus && (
               <div style={{
                 color: "#15803d",
@@ -611,7 +605,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                     cursor: "pointer",
                   }}
                 >
-                  🖥️ Desktop
+                  <Monitor size={13} /> Desktop
                 </button>
                 <button
                   onClick={() => setViewportMode("mobile")}
@@ -626,7 +620,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                     cursor: "pointer",
                   }}
                 >
-                  📱 Mobile
+                  <Smartphone size={13} /> Mobile
                 </button>
               </div>
             </div>
@@ -710,7 +704,7 @@ function CollapsibleSection({
           {title}
         </span>
         <span style={{ fontSize: "10px", color: "var(--ink-muted)" }}>
-          {isOpen ? "▲" : "▼"}
+          {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </span>
       </button>
       {isOpen && (

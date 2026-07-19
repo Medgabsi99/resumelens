@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { SkeletonHistoryCard } from "@/components/Skeleton";
 import { type SkillGapPathResult } from "@/lib/ai";
 import { useToast } from "@/components/ToastProvider";
+import { Settings2, BookMarked } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const LearningPathBoard = dynamic(() => import("@/components/LearningPathBoard"), {
@@ -272,12 +273,12 @@ export default function LearningPathsPage() {
   return (
     <DashboardLayout>
       <div className="fade-up max-w-5xl mx-auto space-y-8">
-        
+
         {/* Page Titles */}
         {!activePathData && !generating && (
           <div className="space-y-1.5">
             <h1 className="font-display text-4xl font-bold tracking-tight text-ink flex items-center gap-2">
-              Skill-Gap Learning Paths 🎓
+              Skill-Gap Learning Paths
             </h1>
             <p className="text-ink-muted text-sm max-w-3xl">
               Bridge technical gaps identified between your resume and a target job. Generate custom week-by-week learning curriculums and structured portfolio projects to demonstrate competency.
@@ -287,7 +288,7 @@ export default function LearningPathsPage() {
 
         {error && (
           <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -299,7 +300,7 @@ export default function LearningPathsPage() {
               {GENERATING_STEPS[genStep]}
             </h3>
             <p className="text-xs text-ink-muted">
-              Leveraging Gemini models to customize architecture configurations and Weekly timelines
+              Leveraging gemini-2.5 models to customize architecture configurations and Weekly timelines
             </p>
           </div>
         )}
@@ -307,16 +308,16 @@ export default function LearningPathsPage() {
         {/* Core Layout Setup */}
         {!activePathData && !generating && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Launcher Setup Form */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-5 shadow-lg">
                 <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                  🛠️ Configure Skill-Gap Plan
+                  <Settings2 size={14} /> Configure Skill-Gap Plan
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
+
                   {/* Select Resume */}
                   <div className="flex flex-col gap-1.5 md:col-span-2">
                     <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
@@ -385,7 +386,7 @@ export default function LearningPathsPage() {
                   disabled={!selectedResumeId || !roleTitle || !companyName || !jobDescription.trim()}
                   className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
                 >
-                  🚀 Build Learning Path & Project Roadmap
+                  Build Learning Path & Project Roadmap
                 </button>
 
               </div>
@@ -395,7 +396,7 @@ export default function LearningPathsPage() {
             <div className="space-y-6">
               <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-4 shadow-lg h-full">
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-border pb-3">
-                  🎓 Saved Pathways
+                  <BookMarked size={11} /> Saved Pathways
                 </h3>
 
                 {loading ? (
@@ -423,7 +424,7 @@ export default function LearningPathsPage() {
                             </h4>
                             <span className="text-[10px] text-ink-muted font-medium block">at {item.company_name}</span>
                           </div>
-                          
+
                           {item.isLocal && (
                             <span className="bg-slate-500/10 text-slate-400 text-[8px] font-bold px-1.5 py-0.5 rounded border border-slate-500/20" title="Saved locally in browser">
                               LOCAL

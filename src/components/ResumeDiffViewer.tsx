@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowLeftRight, X, Loader2, ArrowRight } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────
 interface AnalysisSnapshot {
@@ -401,10 +402,9 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
                 background: "var(--accent-bg)",
                 border: "1px solid var(--accent-border)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 16,
               }}
             >
-              ⟺
+              <ArrowLeftRight size={16} />
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Resume Diff Viewer</div>
@@ -431,14 +431,15 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             aria-label="Close"
             style={{
               background: "transparent", border: "none", cursor: "pointer",
-              fontSize: 20, lineHeight: 1, padding: "4px 6px", borderRadius: 6,
+              lineHeight: 1, padding: "4px 6px", borderRadius: 6,
               color: "var(--ink-faint)", transition: "color 0.15s",
               marginLeft: "auto",
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-faint)")}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 
@@ -486,10 +487,7 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             </select>
           </div>
 
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="2" strokeLinecap="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <ArrowRight size={18} color="var(--ink-faint)" />
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200 }}>
             <span
@@ -532,7 +530,9 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
               color: "var(--ink-faint)",
             }}
           >
-            <div style={{ fontSize: 36 }}>⟺</div>
+            <div style={{ fontSize: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)" }}>
+              <ArrowLeftRight size={36} />
+            </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-muted)" }}>
               Select two analyses to compare
             </div>
@@ -547,7 +547,9 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
               color: "var(--ink-faint)", gap: 10, fontSize: 13,
             }}
           >
-            <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
+            <span style={{ animation: "spin 1s linear infinite", display: "inline-flex" }}>
+              <Loader2 size={15} />
+            </span>
             Computing diff…
           </div>
         ) : (

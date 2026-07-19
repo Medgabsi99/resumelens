@@ -15,28 +15,28 @@ export interface Message {
 const RECRUITER_ARCHETYPES: Omit<RecruiterProfile, "hiddenCeilingBudget" | "concessionLimit">[] = [
   {
     name: "Stan Stubborn",
-    avatar: "👨‍💼",
+    avatar: "SS",
     personality: "Stubborn",
     description: "Stan is highly rigid, prefers adhering strictly to corporate benchmarks, and gets offended if you request too much above the base range.",
     flexibility: 0.08,
   },
   {
     name: "Fiona Friendly",
-    avatar: "👩‍💼",
+    avatar: "FF",
     personality: "Friendly",
     description: "Fiona is empathetic, collaborative, and wants you to succeed. She has a high budget limit and is easier to negotiate concessions with.",
     flexibility: 0.20,
   },
   {
     name: "Alan Analytical",
-    avatar: "👨‍💻",
+    avatar: "AA",
     personality: "Highly Analytical",
     description: "Alan respects precision and details. He makes granular concessions (precise dollars) and evaluates metrics and facts from your resume closely.",
     flexibility: 0.14,
   },
   {
     name: "Tina Tough",
-    avatar: "👩‍🎤",
+    avatar: "TT",
     personality: "Tough",
     description: "Tina is an aggressive negotiator with a strict stance. Pushing her too hard will immediately cause her to warn you or withdraw the offer entirely.",
     flexibility: 0.05,

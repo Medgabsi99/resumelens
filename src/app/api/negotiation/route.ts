@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
@@ -9,7 +10,11 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   try {
     // ── 1. Auth check ────────────────────────────────────────
-    await requireUser();
+    const _user = await requireUser();
+    const rateLimit = await checkRateLimit(_user.id, "negotiation");
+    if (!rateLimit.success) {
+      return rateLimitResponse();
+    }
 
     // ── 2. Parse request ──────────────────────────────────────
     const body = await req.json();

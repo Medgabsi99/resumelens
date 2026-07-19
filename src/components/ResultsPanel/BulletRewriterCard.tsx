@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { RefreshCw, Sparkles, X, AlertTriangle, Check, Copy } from "lucide-react";
 
 interface Props {
   bullet: string;
@@ -45,9 +46,12 @@ function CopyButton({ text }: { text: string }) {
         transition: "all 0.18s ease",
         whiteSpace: "nowrap",
         flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
       }}
     >
-      {copied ? "✓ Copied" : "Copy"}
+      {copied ? <><Check size={10} /><span>Copied</span></> : <><Copy size={10} /><span>Copy</span></>}
     </button>
   );
 }
@@ -187,9 +191,9 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
               Writing...
             </>
           ) : open && isComplete ? (
-            <>↺ Regenerate</>
+            <><RefreshCw size={11} /><span>Regenerate</span></>
           ) : (
-            <>✨ Rewrite</>
+            <><Sparkles size={11} /><span>Rewrite</span></>
           )}
         </button>
 
@@ -207,9 +211,12 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
               fontSize: 11,
               cursor: "pointer",
               flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            ✕
+            <X size={12} />
           </button>
         )}
       </div>
@@ -236,9 +243,13 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
               textTransform: "uppercase",
               letterSpacing: "0.1em",
               marginBottom: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
             }}
           >
-            ✨ AI-Powered Rewrites — pick your favourite
+            <Sparkles size={9} />
+            AI-Powered Rewrites — pick your favourite
           </div>
 
           {error && (
@@ -250,9 +261,13 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
                 border: "1px solid rgba(239,68,68,0.2)",
                 color: "#ef4444",
                 fontSize: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
               }}
             >
-              ⚠ {error}
+              <AlertTriangle size={12} />
+              <span>{error}</span>
             </div>
           )}
 

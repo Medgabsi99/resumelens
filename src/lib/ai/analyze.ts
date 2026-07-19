@@ -88,3 +88,56 @@ export async function analyzeResume(
 
   return parsed;
 }
+
+export function buildPreviewPrompt(
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string,
+): string {
+  let prompt = `Provide a quick overall preview score and summary for this resume`;
+  if (targetRole) prompt += ` for a ${targetRole} position`;
+  if (jobDescription) prompt += ` against this job description`;
+  prompt += `.\n\n[RESUME START]\n${resumeText.slice(0, 8000)}\n[RESUME END]`;
+
+  if (jobDescription) {
+    prompt += `\n\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 2000)}\n[JOB DESCRIPTION END]`;
+  }
+
+  prompt += `
+
+Return ONLY a JSON object with this exact structure:
+{
+  "score": <integer 1-100>,
+  "summary": "<2-3 sentence honest overall assessment — be specific, not generic>",
+  "strengths": ["<concrete strength 1>", "<concrete strength 2>"]
+}
+
+Scoring guide: 80-100 = exceptional, 65-79 = solid, 50-64 = average, below 50 = needs major work. Be honest.`;
+
+  return prompt;
+}
+
+export async function previewAnalyzeResume(
+  resumeText: string,
+  jobDescription?: string,
+  targetRole?: string,
+): Promise<{ score: number; summary: string; strengths: string[] }> {
+  const prompt = buildPreviewPrompt(resumeText, jobDescription, targetRole);
+
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const raw = result.response.text();
+  const clean = raw.replace(/```json|```/g, "").trim();
+
+  let parsed: { score: number; summary: string; strengths: string[] };
+  try {
+    parsed = JSON.parse(clean);
+  } catch {
+    throw new Error("AI returned malformed preview JSON. Please try again.");
+  }
+
+  parsed.score = Math.max(1, Math.min(100, parseInt(String(parsed.score)) || 50));
+  parsed.strengths = (parsed.strengths || []).slice(0, 2);
+
+  return parsed;
+}
+

@@ -1,3 +1,4 @@
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
@@ -11,6 +12,10 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
   const _user = await requireUser();
+  const rateLimit = await checkRateLimit(_user.id, "job-match");
+  if (!rateLimit.success) {
+    return rateLimitResponse();
+  }
   const supabase = await createServerComponentClient();
 
   // ── 2. Load user profile & check quota ───────────────────

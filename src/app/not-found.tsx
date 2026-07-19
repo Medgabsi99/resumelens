@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LayoutDashboard } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -26,9 +27,9 @@ export default function NotFound() {
         <div className="flex justify-center">
           <Link
             href="/dashboard"
-            className="btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 no-underline text-center"
+            className="btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 no-underline text-center flex items-center gap-2"
           >
-            🏠 Return to Dashboard
+            <LayoutDashboard size={14} /> Return to Dashboard
           </Link>
         </div>
       </div>

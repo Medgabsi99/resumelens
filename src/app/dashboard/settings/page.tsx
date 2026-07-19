@@ -8,6 +8,16 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { createBrowserClient } from "@/lib/supabase";
 import { useToast } from "@/components/ToastProvider";
 import OnboardingTour, { resetOnboardingTour } from "@/components/OnboardingTour";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Cpu,
+  Zap,
+  Mail,
+  Locate,
+  GraduationCap,
+  Compass
+} from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -167,7 +177,7 @@ export default function SettingsPage() {
       }
 
       toastSuccess("Your account and all associated data have been deleted.", "Account Deleted");
-      
+
       // Sign out client-side and redirect
       await supabase.auth.signOut();
       router.push("/");
@@ -247,7 +257,7 @@ export default function SettingsPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-7">
-            
+
             {/* PROFILE & SECURITY */}
             <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
@@ -300,8 +310,9 @@ export default function SettingsPage() {
                     {updatingEmail ? "Sending Links..." : "Update Email"}
                   </button>
                 </div>
-                <p style={{ margin: 0, fontSize: 11, color: "var(--ink-faint)", lineHeight: 1.4 }}>
-                  💡 <em>Note:</em> Supabase sends verification links to both the old and new email addresses. The email will not change until both links are clicked.
+                <p style={{ margin: 0, fontSize: 11, color: "var(--ink-faint)", lineHeight: 1.4, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                  <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
+                  <span><em>Note:</em> Supabase sends verification links to both the old and new email addresses. The email will not change until both links are clicked.</span>
                 </p>
               </form>
 
@@ -427,12 +438,16 @@ export default function SettingsPage() {
                           fontSize: 13,
                           fontWeight: 600,
                           textDecoration: "none",
-                          display: "inline-block",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                           textAlign: "center",
                           transition: "background 0.15s",
                         }}
                       >
-                        Upgrade to Pro ➔
+                        <span>Upgrade to Pro</span>
+                        <ArrowRight size={14} />
                       </Link>
                     ) : null}
                   </div>
@@ -445,7 +460,8 @@ export default function SettingsPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
-                    🔌 Chrome Extension Integration
+                    <Cpu size={18} className="text-accent" />
+                    <span>Chrome Extension Integration</span>
                   </h2>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
                     Analyze compatibility and track applications directly from LinkedIn, Indeed, Greenhouse, and Lever.
@@ -471,18 +487,22 @@ export default function SettingsPage() {
                 {/* Left col: value props */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>Key Capabilities:</h3>
-                  <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 8, color: "var(--ink-muted)" }}>
-                    <li>
-                      🎯 <strong>Live Scraping</strong>: Instantly captures job roles, companies, and requirements from active tabs.
+                  <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8, color: "var(--ink-muted)" }}>
+                    <li className="flex items-start gap-2">
+                      <Zap size={13} className="text-amber-500 shrink-0 mt-1" />
+                      <span><strong>Live Scraping</strong>: Instantly captures job roles, companies, and requirements from active tabs.</span>
                     </li>
-                    <li>
-                      ⚖️ <strong>Direct Match Scoring</strong>: Compares candidate resume with listings using Gemini algorithms.
+                    <li className="flex items-start gap-2">
+                      <Compass size={13} className="text-purple-500 shrink-0 mt-1" />
+                      <span><strong>Direct Match Scoring</strong>: Compares candidate resume with listings using gemini-2.5 algorithms.</span>
                     </li>
-                    <li>
-                      📬 <strong>Outreach Pitcher</strong>: Drafts customized recruiter cold-outreach templates on the fly.
+                    <li className="flex items-start gap-2">
+                      <Mail size={13} className="text-indigo-500 shrink-0 mt-1" />
+                      <span><strong>Outreach Pitcher</strong>: Drafts customized recruiter cold-outreach templates on the fly.</span>
                     </li>
-                    <li>
-                      📍 <strong>Board sync</strong>: Creates application tracker cards automatically.
+                    <li className="flex items-start gap-2">
+                      <Locate size={13} className="text-emerald-500 shrink-0 mt-1" />
+                      <span><strong>Board sync</strong>: Creates application tracker cards automatically.</span>
                     </li>
                   </ul>
                 </div>
@@ -519,8 +539,9 @@ export default function SettingsPage() {
               <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
                 style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}>
                 <div>
-                  <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
-                    🎓 Onboarding Tour
+                  <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <GraduationCap size={16} className="text-accent" />
+                    <span>Onboarding Tour</span>
                   </p>
                   <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}>
                     Replay the 4-step feature walkthrough shown on first login.
