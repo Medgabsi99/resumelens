@@ -8,6 +8,28 @@ import styles from "../ResultsPanel.module.css";
 import { useToast } from "../ToastProvider";
 import { usePdfExport, type PdfTemplate } from "./usePdfExport";
 import dynamic from "next/dynamic";
+import {
+  AlertTriangle,
+  Zap,
+  ArrowRight,
+  TrendingUp,
+  FileText,
+  Sparkles,
+  ClipboardList,
+  Mail,
+  Download,
+  Check,
+  X,
+  Target,
+  Send,
+  MessageSquare,
+  Bookmark,
+  Globe,
+  Mic,
+  Users,
+  PenTool
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 const ResumeEditor = dynamic(() => import("@/components/ResumeEditor"), {
   ssr: false,
@@ -38,6 +60,7 @@ import RewriteSuggestionCard from "./RewriteSuggestionCard";
 import BulletRewriterCard from "./BulletRewriterCard";
 import XyzBulletAuditor from "./XyzBulletAuditor";
 import ActiveVerbAuditor from "./ActiveVerbAuditor";
+import KeywordHighlighter from "./KeywordHighlighter";
 import ScoreRing from "@/components/ScoreRing";
 import StreamingText from "@/components/StreamingText";
 
@@ -68,6 +91,7 @@ export default function ResultsPanel({
 }: Props) {
   const componentRef = useRef<HTMLDivElement>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [highlightOpen, setHighlightOpen] = useState(false);
   const { success: toastSuccess, error: toastError } = useToast();
 
   // ── PDF / Score-bar hook ─────────────────────────────────
@@ -153,15 +177,17 @@ export default function ResultsPanel({
   return (
     <div ref={componentRef} className={`${styles.container} fade-up`}>
       {resumeText && resumeText.length > 16000 && (
-        <div style={{ margin: "12px 16px 0", padding: "10px 14px", borderRadius: 10, border: "1px solid #f59e0b", background: "#fffbeb", color: "#b45309", fontSize: "12px" }} className="print:hidden sm:[margin:16px_30px_0]">
-          ⚠️ <strong>Note:</strong> Your resume text was shortened for analysis. Some older experience might not be fully evaluated.
+        <div style={{ margin: "12px 16px 0", padding: "10px 14px", borderRadius: 10, border: "1px solid #f59e0b", background: "#fffbeb", color: "#b45309", fontSize: "12px", display: "flex", alignItems: "center", gap: 8 }} className="print:hidden sm:[margin:16px_30px_0]">
+          <AlertTriangle size={14} className="flex-shrink-0" />
+          <span><strong>Note:</strong> Your resume text was shortened for analysis. Some older experience might not be fully evaluated.</span>
         </div>
       )}
 
       {result.ats_breakdown && result.ats_breakdown.impact < 70 && (
         <div style={{ margin: "12px 16px 0", padding: "14px", borderRadius: 12, border: "1px solid #c084fc", background: "#faf5ff", color: "#581c87", display: "flex", flexDirection: "column", gap: 10 }} className="print:hidden">
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: "bold", fontSize: "13px" }}>
-            <span>⚡</span> Critical Priority: Add Quantified Achievements
+            <Zap size={14} className="text-purple-600" />
+            <span>Critical Priority: Add Quantified Achievements</span>
           </div>
           <p style={{ margin: 0, fontSize: "12px", lineHeight: 1.5 }}>
             Your impact score is low ({result.ats_breakdown.impact}/100) due to weak action verbs or missing metrics. Recruiters expect numbers (revenue, users, speedups). Use the <strong>AI Bullet Rewriter</strong> in the <strong>Areas to Improve</strong> section below to optimize your bullets before exporting.
@@ -172,15 +198,21 @@ export default function ResultsPanel({
                 const el = document.getElementById("areas-to-improve-section");
                 if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
-              style={{ padding: "6px 12px", background: "#8b5cf6", border: "none", color: "white", borderRadius: "8px", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}
+              style={{ padding: "8px 14px", background: "#8b5cf6", border: "none", color: "white", borderRadius: "8px", fontSize: "11px", fontWeight: "bold", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              Start Rewriting ➔
+              <span>Start Rewriting</span>
+              <ArrowRight size={12} />
             </button>
           </div>
         </div>
       )}
 
-      <div className={styles.header}>
+      <motion.div
+        className={styles.header}
+        initial={{ opacity: 0, y: -12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 28, delay: 0.05 }}
+      >
         <div className={styles.headerLeft}>
           <div className={styles.headerTitle}>Analysis Complete</div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -200,9 +232,10 @@ export default function ResultsPanel({
             <button
               onClick={handleDownloadPdf}
               disabled={isDownloading}
-              className={`${styles.btnPrimary} print:hidden`}
+              className={`${styles.btnPrimary} print:hidden flex items-center justify-center gap-2`}
             >
-              {isDownloading ? "Generating PDF..." : "Download PDF"}
+              <Download size={14} />
+              <span>{isDownloading ? "Generating PDF..." : "Download PDF"}</span>
             </button>
           </div>
         </div>
@@ -213,9 +246,15 @@ export default function ResultsPanel({
             <div className="text-[11px] text-ink-muted font-medium">ATS Match Level</div>
           </div>
           {/* Compact ring in the header */}
-          <ScoreRing score={result.score} size={72} showGrade={false} showLabel={false} />
+          <motion.div
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.15 }}
+          >
+            <ScoreRing score={result.score} size={72} showGrade={false} showLabel={false} />
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ATS Breakdown */}
       {result.ats_breakdown && (
@@ -237,26 +276,21 @@ export default function ResultsPanel({
             <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
           </div>
           <div className={styles.atsBarsGrid}>
-            <AtsBar
-              label="Format"
-              value={result.ats_breakdown.format}
-              hint="ATS-friendly structure"
-            />
-            <AtsBar
-              label="Keywords"
-              value={result.ats_breakdown.keywords}
-              hint={result.keywords_matched ? "vs job description" : "Industry relevance"}
-            />
-            <AtsBar
-              label="Impact"
-              value={result.ats_breakdown.impact}
-              hint="Action verbs + metrics"
-            />
-            <AtsBar
-              label="Readability"
-              value={result.ats_breakdown.readability}
-              hint="Scannability & structure"
-            />
+            {[
+              { label: "Format",      value: result.ats_breakdown.format,      hint: "ATS-friendly structure" },
+              { label: "Keywords",    value: result.ats_breakdown.keywords,    hint: result.keywords_matched ? "vs job description" : "Industry relevance" },
+              { label: "Impact",      value: result.ats_breakdown.impact,      hint: "Action verbs + metrics" },
+              { label: "Readability", value: result.ats_breakdown.readability, hint: "Scannability & structure" },
+            ].map(({ label, value, hint }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 280, damping: 26, delay: 0.25 + i * 0.08 }}
+              >
+                <AtsBar label={label} value={value} hint={hint} />
+              </motion.div>
+            ))}
           </div>
 
           {/* Launch ATS Structural Scanner & Heatmap */}
@@ -286,7 +320,8 @@ export default function ResultsPanel({
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                🔥 ATS Scanner ➔
+                <Target size={14} />
+                <span>ATS Scanner</span>
               </a>
               <a
                 href={`/dashboard/committee?analysisId=${analysisId}`}
@@ -312,7 +347,8 @@ export default function ResultsPanel({
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                👥 AI Peer Review ➔
+                <Users size={14} />
+                <span>AI Peer Review</span>
               </a>
             </div>
           )}
@@ -411,10 +447,49 @@ export default function ResultsPanel({
         </div>
 
         {hasJD && result.keywords_matched && (
-          <Section title="Keyword Analysis" delay={3}>
+          <Section
+            delay={3}
+            title={
+              <span className="flex items-center justify-between w-full gap-3">
+                <span>Keyword Analysis</span>
+                {resumeText && (
+                  <button
+                    type="button"
+                    onClick={() => setHighlightOpen(o => !o)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      padding: "3px 10px",
+                      borderRadius: 8,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      fontFamily: "DM Mono, monospace",
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      background: highlightOpen ? "var(--accent)" : "var(--accent-bg)",
+                      color: highlightOpen ? "#fff" : "var(--accent)",
+                      border: `1px solid ${highlightOpen ? "var(--accent)" : "var(--accent-border)"}`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                      <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5z" />
+                    </svg>
+                    {highlightOpen ? "Hide Highlights" : "Highlight in Resume"}
+                  </button>
+                )}
+              </span>
+            }
+          >
             {result.ats_breakdown && result.ats_breakdown.keywords < 70 && result.keywords_missing && result.keywords_missing.length > 0 && (
-              <div style={{ padding: "12px", border: "1px solid #fca5a5", background: "#fef2f2", borderRadius: "8px", color: "#991b1b", fontSize: "12px", marginBottom: "12px" }}>
-                <div style={{ fontWeight: "bold", marginBottom: "4px" }}>⚠️ Low Keyword Match Rate ({result.ats_breakdown.keywords}%)</div>
+              <div style={{ padding: "12px", border: "1px solid #fca5a5", background: "#fef2f2", borderRadius: "8px", color: "#991b1b", fontSize: "12px", marginBottom: "12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontWeight: "bold", display: "flex", alignItems: "center", gap: 6 }}>
+                  <AlertTriangle size={14} className="text-red-600" />
+                  <span>Low Keyword Match Rate ({result.ats_breakdown.keywords}%)</span>
+                </div>
                 <div>Your resume is missing critical keywords. To optimize ATS parsing, weave these terms into your <strong>Summary</strong> or <strong>Skills</strong> sections:</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                   {result.keywords_missing.slice(0, 6).map((kw) => (
@@ -425,14 +500,23 @@ export default function ResultsPanel({
             )}
             <div className={styles.tagWrap} style={{ marginBottom: 10 }}>
               {(result.keywords_matched || []).slice(0, 14).map((k) => (
-                <Chip key={k} label={`✓ ${k}`} variant="match" />
+                <Chip key={k} label={<span className="flex items-center gap-1"><Check size={10} /><span>{k}</span></span>} variant="match" />
               ))}
             </div>
             <div className={styles.tagWrap}>
               {(result.keywords_missing || []).slice(0, 10).map((k) => (
-                <Chip key={k} label={`✗ ${k}`} variant="miss" />
+                <Chip key={k} label={<span className="flex items-center gap-1"><X size={10} /><span>{k}</span></span>} variant="miss" />
               ))}
             </div>
+
+            {/* Inline keyword highlighter — shown when toggle is on */}
+            {highlightOpen && resumeText && (
+              <KeywordHighlighter
+                resumeText={resumeText}
+                matched={result.keywords_matched || []}
+                missing={result.keywords_missing || []}
+              />
+            )}
           </Section>
         )}
 
@@ -446,7 +530,7 @@ export default function ResultsPanel({
 
         {/* Google XYZ Bullet Auditor — AI-powered upgrader for each weak bullet */}
         {result.weaknesses && result.weaknesses.length > 0 && resumeText && (
-          <Section title="⭐ Google XYZ Bullet Auditor" delay={4.5}>
+          <Section title={<span className="flex items-center gap-1.5"><Sparkles size={16} className="text-amber-500" /><span>Google XYZ Bullet Auditor</span></span>} delay={4.5}>
             <p
               style={{
                 fontSize: 12.5,
@@ -459,9 +543,9 @@ export default function ResultsPanel({
                 border: "1px solid var(--border)",
               }}
             >
-              🔬 The <strong>Google XYZ formula</strong> rewrites each weak point using:{" "}
+              The <strong>Google XYZ formula</strong> rewrites each weak point using:{" "}
               <em>&quot;Accomplished [X] as measured by [Y] by doing [Z]&quot;</em>. Click{" "}
-              <strong>⚡ XYZ Audit</strong> on any bullet to get an AI-powered breakdown and 3
+              <strong>XYZ Audit</strong> on any bullet to get an AI-powered breakdown and 3
               recruiter-ready rewrites.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -535,17 +619,15 @@ export default function ResultsPanel({
               e.currentTarget.style.background = "transparent";
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-            Save to Resume Library
+            <Bookmark size={14} />
+            <span>Save to Resume Library</span>
           </button>
         </div>
 
         {/* Job Match — Resume vs Job Description */}
         {resumeText && (
           <div className="print:hidden">
-            <Section title="Job Match 🎯" delay={5}>
+            <Section title={<span className="flex items-center gap-1.5"><Target size={16} /><span>Job Match</span></span>} delay={5}>
               <JobMatchPanel
                 resumeText={resumeText}
                 defaultJobDescription={jobDescription}
@@ -566,7 +648,7 @@ export default function ResultsPanel({
                 <button
                   onClick={handleGenerateCoverLetter}
                   disabled={isGeneratingCL}
-                  className={styles.coverBtn}
+                  className={`${styles.coverBtn} flex items-center justify-center gap-2`}
                 >
                   {isGeneratingCL ? (
                     <span className="flex items-center justify-center gap-2">
@@ -578,7 +660,10 @@ export default function ResultsPanel({
                       </span>
                     </span>
                   ) : (
-                    "Generate Cover Letter ✉️"
+                    <>
+                      <Mail size={14} />
+                      <span>Generate Cover Letter</span>
+                    </>
                   )}
                 </button>
                 {clError && (
@@ -594,10 +679,11 @@ export default function ResultsPanel({
                     onClick={handleCopyCoverLetter}
                     className={styles.btn}
                   >
-                    {clCopied ? "Copied! ✓" : "Copy to Clipboard"}
+                    {clCopied ? <><Check size={12} /><span>Copied!</span></> : "Copy to Clipboard"}
                   </button>
-                  <button onClick={handleDownloadCoverLetter} className={styles.btnPrimary}>
-                    ↓ Download Cover Letter (.txt)
+                  <button onClick={handleDownloadCoverLetter} className={`${styles.btnPrimary} flex items-center gap-2`}>
+                    <Download size={14} />
+                    <span>Download Cover Letter (.txt)</span>
                   </button>
                 </div>
                 <div className="print-cover-letter">
@@ -627,7 +713,7 @@ export default function ResultsPanel({
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      })}
+                        })}
                     </div>
                     {coverLetter}
                   </div>
@@ -691,14 +777,17 @@ export default function ResultsPanel({
                 <button
                   onClick={handleGenerateOutreach}
                   disabled={isGeneratingOutreach}
-                  className={styles.coverBtn}
+                  className={`${styles.coverBtn} flex items-center justify-center gap-2`}
                 >
                   {isGeneratingOutreach ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="animate-pulse">Generating Outreach Note...</span>
                     </span>
                   ) : (
-                    "Generate Outreach Note 🚀"
+                    <>
+                      <Send size={14} />
+                      <span>Generate Outreach Note</span>
+                    </>
                   )}
                 </button>
                 {outreachError && (
@@ -714,13 +803,14 @@ export default function ResultsPanel({
                     onClick={handleCopyOutreach}
                     className={styles.btn}
                   >
-                    {outreachCopied ? "Copied! ✓" : "Copy to Clipboard"}
+                    {outreachCopied ? <><Check size={12} /><span>Copied!</span></> : "Copy to Clipboard"}
                   </button>
                   <button
                     onClick={() => setOutreachMessage(null)}
-                    className={styles.btnPrimary}
+                    className={`${styles.btnPrimary} flex items-center gap-2`}
                   >
-                    ✏️ Edit Options / Generate New
+                    <PenTool size={14} />
+                    <span>Edit Options / Generate New</span>
                   </button>
                 </div>
                 <div className={styles.coverBox} style={{ whiteSpace: "pre-wrap" }}>
@@ -742,20 +832,23 @@ export default function ResultsPanel({
                   <button
                     onClick={handleGenerateInterviewQuestions}
                     disabled={isGeneratingIQ}
-                    className={styles.coverBtn}
+                    className={`${styles.coverBtn} flex items-center gap-2`}
                   >
                     {isGeneratingIQ ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="animate-pulse">Generating...</span>
                       </span>
                     ) : (
-                      "Generate Questions 🎯"
+                      <>
+                        <Target size={14} />
+                        <span>Generate Questions</span>
+                      </>
                     )}
                   </button>
                   <button
                     onClick={handleStartMockInterview}
                     disabled={isFetchingMock}
-                    className={styles.coverBtn}
+                    className={`${styles.coverBtn} flex items-center gap-2`}
                     style={{
                       background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
                       border: "none",
@@ -763,7 +856,8 @@ export default function ResultsPanel({
                       boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
                     }}
                   >
-                    {isFetchingMock ? "Preparing Room..." : "🎙️ Start Interactive Simulator"}
+                    <Mic size={14} />
+                    <span>Start Interactive Simulator</span>
                   </button>
                 </div>
                 {iqError && (
@@ -787,14 +881,15 @@ export default function ResultsPanel({
                   <button
                     onClick={handleStartMockInterview}
                     disabled={isFetchingMock}
-                    className={styles.btnPrimary}
+                    className={`${styles.btnPrimary} flex items-center gap-2`}
                     style={{
                       background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
                       border: "none",
                       boxShadow: "0 2px 10px rgba(99, 102, 241, 0.25)",
                     }}
                   >
-                    {isFetchingMock ? "Preparing Room..." : "🎙️ Start Interactive Simulator"}
+                    <Mic size={14} />
+                    <span>Start Interactive Simulator</span>
                   </button>
                 </div>
                 <div className={styles.coverBox}>
@@ -811,7 +906,7 @@ export default function ResultsPanel({
 
         {resumeText && analysisId && (
           <div className="print:hidden">
-            <Section title="Personal Portfolio Generator 🌐" delay={6.5}>
+            <Section title={<span className="flex items-center gap-1.5"><Globe size={16} /><span>Personal Portfolio Generator</span></span>} delay={6.5}>
               <PersonalPortfolioGenerator
                 analysisId={analysisId}
                 resumeText={resumeText}
@@ -821,7 +916,7 @@ export default function ResultsPanel({
         )}
 
         <div className="print:hidden">
-          <Section title="Chat with your Resume" delay={7}>
+          <Section title={<span className="flex items-center gap-1.5"><MessageSquare size={16} /><span>Chat with your Resume</span></span>} delay={7}>
             <div className={styles.chatBox}>
               <div
                 ref={chatScrollRef}
