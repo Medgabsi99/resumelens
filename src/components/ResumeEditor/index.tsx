@@ -13,10 +13,32 @@ import { useResumeVersions } from "./useResumeVersions";
 import ToolbarButton from "./ToolbarButton";
 import ScoreTrendChart from "./ScoreTrendChart";
 import VersionDiffModal from "./VersionDiffModal";
+import EditorHistorySidebar from "./EditorHistorySidebar";
 import { TemplateId, ResumeVersion, ResumeCustomStyle } from "./types";
 import { useSmartEnhance } from "./useSmartEnhance";
 import { useSelectionOptimizer } from "./useSelectionOptimizer";
 import { useDesignCustomizer } from "./useDesignCustomizer";
+import {
+  Palette,
+  Download,
+  Sparkles,
+  RotateCcw,
+  History,
+  Check,
+  Copy,
+  AlertTriangle,
+  FileText,
+  Loader2,
+  PenTool,
+  Bot,
+  Edit3,
+  Trash,
+  Plus,
+  TrendingUp,
+  Zap,
+  X,
+  Target
+} from "lucide-react";
 
 interface Props {
   initialText: string;
@@ -294,7 +316,7 @@ export default function ResumeEditor({
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        {editorOpen ? "Close Editor" : "✏️ Open Side-by-Side Editor"}
+        {editorOpen ? "Close Editor" : "Open Side-by-Side Editor"}
         {hasEdits && !editorOpen && (
           <span style={{
             background: "rgba(16, 185, 129, 0.1)",
@@ -314,28 +336,30 @@ export default function ResumeEditor({
       {editorOpen && (
         <div className="sbs-editor-grid animate-fadeIn" style={{ marginTop: 16 }}>
           {/* Mobile Tab Switcher */}
-          <div className="lg:hidden flex border-b border-border bg-paper-card p-2 gap-2 w-full col-span-2">
+          <div className="flex lg:hidden bg-paper border-b border-border p-2 gap-2">
             <button
               type="button"
               onClick={() => setMobileTab("edit")}
-              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
                 mobileTab === "edit"
                   ? "bg-accent text-white shadow-sm"
                   : "text-ink-muted hover:text-ink hover:bg-paper-warm"
               }`}
             >
-              ✏️ Edit Draft
+              <PenTool size={13} />
+              <span>Edit Draft</span>
             </button>
             <button
               type="button"
               onClick={() => setMobileTab("preview")}
-              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
                 mobileTab === "preview"
                   ? "bg-accent text-white shadow-sm"
                   : "text-ink-muted hover:text-ink hover:bg-paper-warm"
               }`}
             >
-              👁️ View Preview
+              <FileText size={13} />
+              <span>View Preview</span>
             </button>
           </div>
 
@@ -384,8 +408,12 @@ export default function ResumeEditor({
                     marginLeft: 4,
                     letterSpacing: "0.03em",
                     animation: "fadeIn 0.3s ease",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                   }}>
-                    ✨ AI Enhanced
+                    <Sparkles size={11} className="text-white" />
+                    <span>AI Enhanced</span>
                   </span>
                 )}
               </div>
@@ -409,7 +437,8 @@ export default function ResumeEditor({
                     gap: 4,
                   }}
                 >
-                  🎨 Style
+                  <Palette size={12} />
+                  <span>Style</span>
                 </button>
                 <button
                   type="button"
@@ -433,12 +462,8 @@ export default function ResumeEditor({
                     opacity: isDownloading ? 0.7 : 1,
                   }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  {isDownloading ? "..." : "PDF"}
+                  <Download size={12} />
+                  <span>{isDownloading ? "..." : "PDF"}</span>
                 </button>
               </div>
             </div>
@@ -595,7 +620,8 @@ export default function ResumeEditor({
                 alignItems: "center",
                 gap: 8,
               }}>
-                <span>✏️ Editor</span>
+                <PenTool size={12} className="text-accent" />
+                <span>Editor</span>
                 {appliedCount > 0 && (
                   <span style={{
                     background: "rgba(16, 185, 129, 0.1)",
@@ -636,42 +662,68 @@ export default function ResumeEditor({
                 >
                   {isGenerating ? (
                     <>
-                      <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⚙️</span>
-                      Generating...
+                      <Loader2 size={12} className="animate-spin" />
+                      <span>Generating...</span>
                     </>
                   ) : (
                     <>
-                      ✨ Smart Generate
+                      <Sparkles size={12} />
+                      <span>Smart Generate</span>
                     </>
                   )}
                 </button>
                 <ToolbarButton
                   onClick={handleReset}
                   disabled={!hasEdits && !isEnhanced}
-                  label="↺ Reset"
+                  label={
+                    <span className="flex items-center gap-1">
+                      <RotateCcw size={11} />
+                      <span>Reset</span>
+                    </span>
+                  }
                   variant="danger"
                   active={hasEdits || isEnhanced}
                 />
                 {analysisId && (
                   <ToolbarButton
                     onClick={() => setShowHistory(prev => !prev)}
-                    label={showHistory ? "🕒 Hide History" : "🕒 History"}
+                    label={
+                      <span className="flex items-center gap-1">
+                        <History size={11} />
+                        <span>{showHistory ? "Hide History" : "History"}</span>
+                      </span>
+                    }
                     variant={showHistory ? "primary" : "default"}
                   />
                 )}
                 <ToolbarButton
                   onClick={handleCopyAll}
-                  label={copied ? "✓ Copied" : "Copy"}
+                  label={
+                    <span className="flex items-center gap-1">
+                      {copied ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
+                      <span>{copied ? "Copied" : "Copy"}</span>
+                    </span>
+                  }
                   variant="default"
                 />
                 <ToolbarButton
                   onClick={handleDownloadTxt}
-                  label="↓ .txt"
+                  label={
+                    <span className="flex items-center gap-1">
+                      <Download size={11} />
+                      <span>.txt</span>
+                    </span>
+                  }
                   variant="primary"
                 />
                 <ToolbarButton
                   onClick={() => setShowAtsView((v) => !v)}
-                  label={showAtsView ? "✏️ Edit" : "🤖 ATS View"}
+                  label={
+                    <span className="flex items-center gap-1">
+                      {showAtsView ? <PenTool size={11} /> : <Bot size={11} />}
+                      <span>{showAtsView ? "Edit" : "ATS View"}</span>
+                    </span>
+                  }
                   variant={showAtsView ? "primary" : "default"}
                 />
               </div>
@@ -682,8 +734,12 @@ export default function ResumeEditor({
                   fontWeight: 500,
                   marginTop: 4,
                   width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}>
-                  ⚠ {smartError}
+                  <AlertTriangle size={12} />
+                  <span>{smartError}</span>
                 </div>
               )}
             </div>
@@ -728,13 +784,14 @@ export default function ResumeEditor({
                           fontWeight: 700,
                         }}
                       >
-                        🤖 ATS Parser Simulation
+                        <Bot size={11} />
+                        <span>ATS Parser Simulation</span>
                       </span>
                       <span style={{ fontSize: 10.5, color: "#8b949e", fontFamily: "DM Mono, monospace" }}>
                         This is what machines see — no formatting, no icons
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <span
                         style={{
                           background: "#1f6feb",
@@ -757,9 +814,22 @@ export default function ResumeEditor({
                           fontSize: 9.5,
                           fontWeight: 700,
                           fontFamily: "DM Mono, monospace",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
                         }}
                       >
-                        {text.length > 10000 ? "⚠ Too Long" : "✓ Char Count OK"}
+                        {text.length > 10000 ? (
+                          <>
+                            <AlertTriangle size={11} />
+                            <span>Too Long</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check size={11} />
+                            <span>Char Count OK</span>
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -826,7 +896,8 @@ export default function ResumeEditor({
                           fontWeight: 700,
                         }}
                       >
-                        {item.check ? "✓" : "✗"} {item.label}
+                        {item.check ? <Check size={10} /> : <X size={10} />}
+                        <span>{item.label}</span>
                       </span>
                     ))}
                   </div>
@@ -861,16 +932,17 @@ export default function ResumeEditor({
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 10, fontFamily: "DM Mono, monospace", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      ✨ Bullet Optimizer
+                    <span style={{ fontSize: 10, fontFamily: "DM Mono, monospace", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Sparkles size={11} />
+                      <span>Bullet Optimizer</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => closeOptimizer()}
                       aria-label="Close optimizer panel"
-                      style={{ background: "transparent", border: "none", color: "var(--ink-faint)", cursor: "pointer", fontSize: 11, fontWeight: 700 }}
+                      style={{ background: "transparent", border: "none", color: "var(--ink-faint)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
-                      ✕
+                      <X size={12} />
                     </button>
                   </div>
 
@@ -892,16 +964,21 @@ export default function ResumeEditor({
                           fontSize: 12,
                           fontWeight: 600,
                           cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                       >
-                        Optimize Selected Text ✨
+                        <span>Optimize Selected Text</span>
+                        <Sparkles size={12} />
                       </button>
                     </div>
                   )}
 
                   {isOptimizing && (
                     <div style={{ textAlign: "center", padding: "12px 0" }}>
-                      <span style={{ display: "inline-block", animation: "spin 1s linear infinite", fontSize: 16 }}>⚙️</span>
+                      <Loader2 size={16} className="animate-spin text-accent mx-auto" />
                       <div style={{ fontSize: 11, color: "var(--ink-muted)", marginTop: 6, fontWeight: 500 }}>
                         Hiring Manager is drafting alternatives...
                       </div>
@@ -909,17 +986,18 @@ export default function ResumeEditor({
                   )}
 
                   {optimizeError && (
-                    <div style={{ color: "#dc2626", fontSize: 11, fontWeight: 500, padding: "4px 0" }}>
-                      ⚠ {optimizeError}
+                    <div style={{ color: "#dc2626", fontSize: 11, fontWeight: 500, padding: "4px 0", display: "flex", alignItems: "center", gap: 4 }}>
+                      <AlertTriangle size={12} />
+                      <span>{optimizeError}</span>
                     </div>
                   )}
 
                   {optimizedAlternatives && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "240px", overflowY: "auto", paddingRight: 4 }}>
                       {[
-                        { key: "metricDriven", label: "📈 Metric-Driven", text: optimizedAlternatives.metricDriven },
-                        { key: "actionFocused", label: "⚡ Action-Focused", text: optimizedAlternatives.actionFocused },
-                        { key: "skillsTargeted", label: "🎯 Skills-Targeted", text: optimizedAlternatives.skillsTargeted },
+                        { key: "metricDriven", label: "Metric-Driven", icon: <TrendingUp size={11} />, text: optimizedAlternatives.metricDriven },
+                        { key: "actionFocused", label: "Action-Focused", icon: <Zap size={11} />, text: optimizedAlternatives.actionFocused },
+                        { key: "skillsTargeted", label: "Skills-Targeted", icon: <Target size={11} />, text: optimizedAlternatives.skillsTargeted },
                       ].map((alt) => (
                         <div
                           key={alt.key}
@@ -934,7 +1012,10 @@ export default function ResumeEditor({
                           }}
                           className="hover:border-accent hover:bg-accent-bg"
                         >
-                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>{alt.label}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                            {alt.icon}
+                            <span>{alt.label}</span>
+                          </div>
                           <div style={{ fontSize: 11, color: "var(--ink)", lineHeight: 1.4 }}>{alt.text}</div>
                         </div>
                       ))}
@@ -945,233 +1026,20 @@ export default function ResumeEditor({
 
               {/* History Sidebar */}
               {showHistory && analysisId && (
-                <div style={{
-                  width: "320px",
-                  flexShrink: 0,
-                  borderLeft: "1px solid var(--border)",
-                  background: "var(--paper-card)",
-                  display: "flex",
-                  flexDirection: "column",
-                  animation: "fadeIn 0.15s ease",
-                  overflowY: "auto",
-                  padding: "16px",
-                  boxSizing: "border-box",
-                }}>
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "16px",
-                    borderBottom: "1px solid var(--border)",
-                    paddingBottom: "8px",
-                  }}>
-                    <h3 style={{
-                      margin: 0,
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      color: "var(--ink)",
-                      fontFamily: "Instrument Sans, sans-serif",
-                    }}>
-                      Version History
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setShowHistory(false)}
-                      aria-label="Close history panel"
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "var(--ink-muted)",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Score progression chart */}
-                  <ScoreTrendChart versions={versions} />
-
-                  {/* Save current draft version */}
-                  <form onSubmit={handleSaveVersion} style={{ marginBottom: "20px" }}>
-                    <div style={{
-                      fontSize: 10,
-                      fontFamily: "DM Mono, monospace",
-                      color: "var(--ink-muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      marginBottom: 6,
-                    }}>
-                      💾 Create Save Point
-                    </div>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <input
-                        type="text"
-                        placeholder="e.g. Initial draft, Post review..."
-                        value={newVersionName}
-                        onChange={(e) => setNewVersionName(e.target.value)}
-                        required
-                        disabled={isSavingVersion}
-                        style={{
-                          flex: 1,
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          border: "1.5px solid var(--accent-border)",
-                          background: "var(--paper)",
-                          color: "var(--ink)",
-                          fontSize: "12px",
-                          outline: "none",
-                        }}
-                      />
-                      <button
-                        type="submit"
-                        disabled={isSavingVersion || !newVersionName.trim()}
-                        style={{
-                          background: "var(--accent)",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "6px",
-                          padding: "6px 12px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          opacity: isSavingVersion ? 0.7 : 1,
-                        }}
-                      >
-                        {isSavingVersion ? "Saving..." : "Save"}
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Version Timeline */}
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: 10,
-                      fontFamily: "DM Mono, monospace",
-                      color: "var(--ink-muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      marginBottom: 10,
-                      borderBottom: "1px solid var(--border)",
-                      paddingBottom: "4px",
-                    }}>
-                      🕒 Saved Versions ({versions.length})
-                    </div>
-
-                    {versionError && (
-                      <div style={{
-                        color: "#dc2626",
-                        fontSize: "11px",
-                        marginBottom: "10px",
-                        padding: "6px",
-                        background: "rgba(220, 38, 38, 0.05)",
-                        borderRadius: "4px",
-                      }}>
-                        ⚠ {versionError}
-                      </div>
-                    )}
-
-                    {isLoadingVersions && versions.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "20px", color: "var(--ink-faint)", fontSize: "12px" }}>
-                        Loading version timeline...
-                      </div>
-                    ) : versions.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "20px", color: "var(--ink-faint)", fontSize: "12px" }}>
-                        No saved versions yet.
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        {versions.map((v) => (
-                          <div
-                            key={v.id}
-                            style={{
-                              border: "1px solid var(--border)",
-                              borderRadius: "8px",
-                              padding: "10px",
-                              background: "var(--paper)",
-                              transition: "all 0.15s ease",
-                            }}
-                          >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
-                              <div style={{ fontWeight: 600, fontSize: "12px", color: "var(--ink)", wordBreak: "break-word" }}>
-                                {v.version_name}
-                              </div>
-                              {v.score !== null && (
-                                <span style={{
-                                  background: "var(--accent-bg)",
-                                  color: "var(--accent)",
-                                  fontSize: "9px",
-                                  fontWeight: 700,
-                                  padding: "2px 6px",
-                                  borderRadius: "10px",
-                                  whiteSpace: "nowrap",
-                                }}>
-                                  {v.score} pts
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ fontSize: "10px", color: "var(--ink-muted)", marginBottom: "8px", fontFamily: "DM Mono, monospace" }}>
-                              {new Date(v.created_at).toLocaleString()}
-                            </div>
-                            <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-                              <button
-                                type="button"
-                                onClick={() => setCompareVersion(v)}
-                                style={{
-                                  background: "transparent",
-                                  color: "var(--accent)",
-                                  border: "1px solid var(--accent-border)",
-                                  borderRadius: "4px",
-                                  padding: "3px 8px",
-                                  fontSize: "10px",
-                                  fontWeight: 600,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                🔍 Diff
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRestoreVersion(v)}
-                                style={{
-                                  background: "transparent",
-                                  color: "var(--ink)",
-                                  border: "1px solid var(--border)",
-                                  borderRadius: "4px",
-                                  padding: "3px 8px",
-                                  fontSize: "10px",
-                                  fontWeight: 600,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                ↺ Restore
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteVersion(v.id)}
-                                aria-label="Delete saved version"
-                                style={{
-                                  background: "transparent",
-                                  color: "#dc2626",
-                                  border: "1px solid rgba(220,38,38,0.15)",
-                                  borderRadius: "4px",
-                                  padding: "3px 6px",
-                                  fontSize: "10px",
-                                  fontWeight: 600,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <EditorHistorySidebar
+                  versions={versions}
+                  isLoadingVersions={isLoadingVersions}
+                  isSavingVersion={isSavingVersion}
+                  versionError={versionError}
+                  newVersionName={newVersionName}
+                  setNewVersionName={setNewVersionName}
+                  handleSaveVersion={handleSaveVersion}
+                  setShowHistory={setShowHistory}
+                  compareVersion={compareVersion}
+                  setCompareVersion={setCompareVersion}
+                  handleRestoreVersion={handleRestoreVersion}
+                  handleDeleteVersion={handleDeleteVersion}
+                />
               )}
             </div>
 
@@ -1211,7 +1079,10 @@ export default function ResumeEditor({
                         disabled={applied}
                         title={`Replace "${s.before.slice(0, 60)}…" with "${s.after.slice(0, 60)}…"`}
                       >
-                        {applied ? "✓ Applied" : `Apply: ${s.section}`}
+                        <span className="flex items-center gap-1">
+                          {applied && <Check size={10} />}
+                          <span>{applied ? "Applied" : `Apply: ${s.section}`}</span>
+                        </span>
                       </button>
                     );
                   })}

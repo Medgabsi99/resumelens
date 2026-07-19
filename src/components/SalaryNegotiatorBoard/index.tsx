@@ -7,6 +7,7 @@ import { useNegotiationSession } from "./useNegotiationSession";
 import { useSpeechIO } from "./useSpeechIO";
 import { useTacticTracker } from "./useTacticTracker";
 import { playSynthSound } from "./playSynthSound";
+import NegotiatorScorecardModal from "./NegotiatorScorecardModal";
 
 interface Props {
   resumeText: string;
@@ -642,160 +643,26 @@ export default function SalaryNegotiatorBoard({
           <div className="absolute inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-6 backdrop-blur-sm text-center">
             <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin mb-4" />
             <h3 className="font-display text-lg font-bold text-ink mt-2">Compiling Scorecard...</h3>
-            <p className="text-xs text-ink-muted mt-2 max-w-sm">
-              Analyzing negotiation strategies, sentiment transitions, achievements highlighted, and final package value gains.
-            </p>
+            <p className="text-xs text-ink-muted mt-2 max-w-sm">Analyzing negotiation strategies, sentiment transitions, achievements highlighted, and final package value gains.</p>
           </div>
         )}
 
-        {/* Scorecard Modal Overlay */}
+        {/* Scorecard Modal */}
         {isConcluded && scorecard && (
-          <div className="absolute inset-0 bg-black/85 z-50 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-sm">
-            <SpotlightCard className="w-full max-w-2xl bg-paper border border-border rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 max-h-[85vh] overflow-y-auto animate-scale-up">
-              
-              {/* Header */}
-              <div className="text-center border-b border-border pb-5">
-                <div className="text-4xl mb-2">🏆</div>
-                <h3 className="font-display text-2xl font-bold text-ink">Salary Negotiation Scorecard</h3>
-                <p className="text-ink-muted text-sm mt-1">
-                  Outcome: <span className="font-semibold uppercase tracking-wider text-accent">{verdict}</span>
-                </p>
-              </div>
-
-              {/* Performance Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                {/* Score */}
-                <div className="bg-paper-card border border-border p-4 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Score</span>
-                  <span className="text-3xl font-extrabold text-accent mt-1">{scorecard.score}%</span>
-                  <span className="text-[9px] text-ink-muted mt-0.5">Negotiation Skill</span>
-                </div>
-
-                {/* Financial Gain */}
-                <div className="bg-paper-card border border-border p-4 rounded-xl flex flex-col items-center justify-center md:col-span-2">
-                  <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Negotiated Package Value Gain</span>
-                  <span className="text-3xl font-extrabold text-emerald-400 mt-1">
-                    +${scorecard.financialGain.toLocaleString()}
-                  </span>
-                  <span className="text-[9px] text-ink-muted mt-0.5">Incremental Annual Value Negotiated</span>
-                </div>
-
-              </div>
-
-              {/* Recruiter Deal Parameters & Hidden Budget Gap */}
-              {recruiter && (
-                <div className="bg-paper-card border border-border p-5 rounded-xl space-y-3">
-                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
-                    Recruiter Deal Parameters (Game Results)
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className="space-y-1">
-                      <span className="text-ink-muted">Recruiter ceiling budget (Hidden):</span>
-                      <div className="font-bold text-sm text-ink">
-                        ${recruiter.hiddenCeilingBudget.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-ink-muted">Your final base salary:</span>
-                      <div className="font-bold text-sm text-accent">
-                        ${currentOffer.base.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Proximity / Leaving money on the table evaluation */}
-                  <div className="border-t border-border/50 pt-2.5 mt-2.5">
-                    {currentOffer.base >= recruiter.hiddenCeilingBudget ? (
-                      <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-                        🏆 Outstanding! You maxed out the recruiter&apos;s budget ceiling of ${recruiter.hiddenCeilingBudget.toLocaleString()}!
-                      </div>
-                    ) : recruiter.hiddenCeilingBudget - currentOffer.base <= 5000 ? (
-                      <div className="text-xs text-emerald-400/80 font-medium flex items-center gap-1.5">
-                        ⭐ Great job! You got extremely close to their corporate budget limit (within $5,000).
-                      </div>
-                    ) : (
-                      <div className="text-xs text-amber-400 font-medium flex flex-col gap-1">
-                        <span className="flex items-center gap-1.5 font-bold">💸 Money Left on the Table: ${Math.max(0, recruiter.hiddenCeilingBudget - currentOffer.base).toLocaleString()}</span>
-                        <span className="text-[11px] text-ink-muted font-normal leading-relaxed">
-                          The corporate limit was ${recruiter.hiddenCeilingBudget.toLocaleString()}. You could have pushed for a higher base salary. See the coach evaluation note below to improve your anchoring.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Tactics Badges */}
-              {scorecard.tacticsUsed && scorecard.tacticsUsed.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">Tactics Employed</h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {scorecard.tacticsUsed.map((tac) => (
-                      <span
-                        key={tac}
-                        className="bg-accent/10 text-accent border border-accent/20 px-2.5 py-1 rounded-lg text-xs font-medium"
-                      >
-                        {tac}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Strengths & Weaknesses */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider text-emerald-400">Strengths</h4>
-                  <ul className="space-y-1.5 text-xs text-ink-muted list-disc pl-4">
-                    {scorecard.strengths?.map((str, i) => (
-                      <li key={i}>{str}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider text-rose-400">Areas to Improve</h4>
-                  <ul className="space-y-1.5 text-xs text-ink-muted list-disc pl-4">
-                    {scorecard.weaknesses?.map((wk, i) => (
-                      <li key={i}>{wk}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Coaches Note */}
-              <div className="space-y-2">
-                <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">Coach Evaluation</h4>
-                <p className="text-xs text-ink-muted leading-relaxed bg-paper-warm border border-border p-3.5 rounded-xl font-mono">
-                  {scorecard.coachesNote}
-                </p>
-              </div>
-
-              {/* Save Status */}
-              <div className="flex justify-between items-center border-t border-border pt-4 text-[11px] text-ink-muted">
-                <div>
-                  {savingStatus === "saving" && <span>Saving simulation data...</span>}
-                  {savingStatus === "saved" && (
-                    <span className="text-emerald-400 font-medium">
-                      ✓ Scorecard logged successfully to {savedMethod === "db" ? "user dashboard history" : "local storage fallback"}!
-                    </span>
-                  )}
-                  {savingStatus === "error" && (
-                    <span className="text-rose-400">⚠️ Failed to save: {savingError}</span>
-                  )}
-                </div>
-                <button
-                  onClick={onClose}
-                  className="bg-accent hover:bg-accent/90 text-white font-semibold px-6 py-2 rounded-xl text-xs transition cursor-pointer"
-                >
-                  Return to Negotiator Page ➔
-                </button>
-              </div>
-
-            </SpotlightCard>
-          </div>
+          <NegotiatorScorecardModal
+            scorecard={scorecard}
+            recruiter={recruiter}
+            currentOffer={currentOffer}
+            verdict={verdict}
+            savingStatus={savingStatus}
+            savingError={savingError}
+            savedMethod={savedMethod}
+            onClose={onClose}
+          />
         )}
 
       </div>
     </div>
   );
 }
+
