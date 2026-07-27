@@ -217,12 +217,14 @@ export default function ResumeEditor({
   const applySuggestion = useCallback(
     (index: number, before: string, after: string) => {
       setText((prev) => {
+        // 1. Try exact match
         const idx = prev.indexOf(before);
         if (idx !== -1) {
           setAppliedIndices((prevSet) => new Set(prevSet).add(index));
           return prev.slice(0, idx) + after + prev.slice(idx + before.length);
         }
-        // case-insensitive fallback
+
+        // 2. Try case-insensitive exact match
         const lower = prev.toLowerCase();
         const lowerBefore = before.toLowerCase();
         const ciIdx = lower.indexOf(lowerBefore);
@@ -230,6 +232,32 @@ export default function ResumeEditor({
           setAppliedIndices((prevSet) => new Set(prevSet).add(index));
           return prev.slice(0, ciIdx) + after + prev.slice(ciIdx + before.length);
         }
+
+        // 3. Robust case-insensitive and whitespace-insensitive match using regular expressions
+        try {
+          // Escape regular expression special characters in "before" text
+          const escaped = before.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
+          
+          // Replace any sequences of whitespace with a regex matcher that matches any layout changes (\s+)
+          const cleanEscaped = escaped.trim().replace(/\s+/g, "\\s+");
+          
+          if (cleanEscaped.length > 3) {
+            const regex = new RegExp(cleanEscaped, "i");
+            const match = prev.match(regex);
+            
+            if (match && match.index !== undefined) {
+              setAppliedIndices((prevSet) => new Set(prevSet).add(index));
+              return (
+                prev.slice(0, match.index) +
+                after +
+                prev.slice(match.index + match[0].length)
+              );
+            }
+          }
+        } catch (e) {
+          logger.error("Suggestion match error:", e);
+        }
+
         return prev;
       });
     },

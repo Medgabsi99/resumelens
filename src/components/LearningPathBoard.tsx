@@ -97,6 +97,13 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
 
         {/* Back and Progress actions */}
         <div className="flex items-center gap-4 shrink-0 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
+            <div className="text-right">
+              <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Est. ATS Score Boost</div>
+              <div className="text-xs text-emerald-400 font-black">+{Math.min(25, (data.missingSkills.length || 2) * 8)} pts ATS Boost 🚀</div>
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <div className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Learning Progress</div>
@@ -237,6 +244,23 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                         <p className="text-xs text-ink-muted leading-relaxed italic">
                           &quot;{milestone.handsOnExercise}&quot;
                         </p>
+                      </div>
+
+                      {/* 1-Click Resume Bullet Injector */}
+                      <div className="bg-paper-warm border border-border p-2.5 rounded-xl flex items-center justify-between gap-3">
+                        <div className="text-[11px] text-ink-muted font-medium truncate">
+                          <strong className="text-accent font-semibold">Resume Bullet:</strong> &quot;Mastered {milestone.topics.slice(0, 2).join(" & ")} by building {data.project.title || "portfolio modules"}&quot;
+                        </div>
+                        <button
+                          onClick={() => {
+                            const bulletText = `Architected and implemented ${milestone.topics.join(", ")} as part of ${data.project.title}, enhancing application efficiency.`;
+                            navigator.clipboard.writeText(bulletText);
+                          }}
+                          className="shrink-0 bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 px-2.5 py-1 rounded-lg text-[10.5px] font-bold cursor-pointer transition flex items-center gap-1"
+                        >
+                          <Copy size={11} />
+                          <span>Copy Bullet</span>
+                        </button>
                       </div>
                     </div>
                   </div>

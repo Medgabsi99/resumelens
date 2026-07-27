@@ -36,6 +36,48 @@ export default function AbTestingPage() {
   const [selectedIdA, setSelectedIdA] = useState<string>("");
   const [selectedIdB, setSelectedIdB] = useState<string>("");
 
+  // Fetched full analysis states for "saved" mode
+  const [fetchedAnalysisA, setFetchedAnalysisA] = useState<SavedAnalysis | null>(null);
+  const [fetchedAnalysisB, setFetchedAnalysisB] = useState<SavedAnalysis | null>(null);
+  const [loadingA, setLoadingA] = useState(false);
+  const [loadingB, setLoadingB] = useState(false);
+
+  // Load baseline full details when selectedIdA changes
+  useEffect(() => {
+    if (!selectedIdA) {
+      setFetchedAnalysisA(null);
+      return;
+    }
+    setLoadingA(true);
+    fetch(`/api/analyses/${selectedIdA}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && resData.data) {
+          setFetchedAnalysisA(resData.data);
+        }
+      })
+      .catch(err => console.error("Error fetching analysis A:", err))
+      .finally(() => setLoadingA(false));
+  }, [selectedIdA]);
+
+  // Load comparison full details when selectedIdB changes
+  useEffect(() => {
+    if (!selectedIdB) {
+      setFetchedAnalysisB(null);
+      return;
+    }
+    setLoadingB(true);
+    fetch(`/api/analyses/${selectedIdB}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && resData.data) {
+          setFetchedAnalysisB(resData.data);
+        }
+      })
+      .catch(err => console.error("Error fetching analysis B:", err))
+      .finally(() => setLoadingB(false));
+  }, [selectedIdB]);
+
   // Mode states: "saved" (compare 2 existing) vs "test-jd" (test 2 resumes against a new JD)
   const [mode, setMode] = useState<"saved" | "test-jd">("saved");
 
@@ -55,46 +97,46 @@ export default function AbTestingPage() {
 
   const resultA = useMemo<AnalysisResult | null>(() => {
     if (mode === "test-jd") return testResultA;
-    if (!selectedIdA) return null;
-    const item = analyses.find(a => a.id === selectedIdA);
-    if (!item) return null;
+    if (!fetchedAnalysisA) return null;
     try {
-      return JSON.parse(item.result_json) as AnalysisResult;
+      return typeof fetchedAnalysisA.result_json === "string"
+        ? JSON.parse(fetchedAnalysisA.result_json)
+        : (fetchedAnalysisA.result_json as unknown as AnalysisResult);
     } catch {
       return null;
     }
-  }, [mode, selectedIdA, analyses, testResultA]);
+  }, [mode, fetchedAnalysisA, testResultA]);
 
   const resultB = useMemo<AnalysisResult | null>(() => {
     if (mode === "test-jd") return testResultB;
-    if (!selectedIdB) return null;
-    const item = analyses.find(a => a.id === selectedIdB);
-    if (!item) return null;
+    if (!fetchedAnalysisB) return null;
     try {
-      return JSON.parse(item.result_json) as AnalysisResult;
+      return typeof fetchedAnalysisB.result_json === "string"
+        ? JSON.parse(fetchedAnalysisB.result_json)
+        : (fetchedAnalysisB.result_json as unknown as AnalysisResult);
     } catch {
       return null;
     }
-  }, [mode, selectedIdB, analyses, testResultB]);
+  }, [mode, fetchedAnalysisB, testResultB]);
 
   // Target info for headers
   const infoA = useMemo(() => {
     if (mode === "test-jd") return { title: "Resume A", role: targetRole || "Target Role" };
-    const item = analyses.find(a => a.id === selectedIdA);
+    if (!fetchedAnalysisA) return { title: "Resume A", role: "General Review" };
     return {
-      title: item ? `Review (${new Date(item.created_at).toLocaleDateString()})` : "Resume A",
-      role: item?.target_role || "General Review",
+      title: `Review (${new Date(fetchedAnalysisA.created_at).toLocaleDateString()})`,
+      role: fetchedAnalysisA.target_role || "General Review",
     };
-  }, [mode, selectedIdA, analyses, targetRole]);
+  }, [mode, fetchedAnalysisA, targetRole]);
 
   const infoB = useMemo(() => {
     if (mode === "test-jd") return { title: "Resume B", role: targetRole || "Target Role" };
-    const item = analyses.find(a => a.id === selectedIdB);
+    if (!fetchedAnalysisB) return { title: "Resume B", role: "General Review" };
     return {
-      title: item ? `Review (${new Date(item.created_at).toLocaleDateString()})` : "Resume B",
-      role: item?.target_role || "General Review",
+      title: `Review (${new Date(fetchedAnalysisB.created_at).toLocaleDateString()})`,
+      role: fetchedAnalysisB.target_role || "General Review",
     };
-  }, [mode, selectedIdB, analyses, targetRole]);
+  }, [mode, fetchedAnalysisB, targetRole]);
 
   // ── Trigger A/B Test ────────────────────────────────────────────────────────
 
@@ -392,7 +434,12 @@ export default function AbTestingPage() {
 
         {/* ── COMPARATIVE SCORECARD VIEW ─────────────────────────────────────── */}
         <AnimatePresence mode="wait">
-          {resultA && resultB ? (
+          {loadingA || loadingB ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton h={400} />
+              <Skeleton h={400} />
+            </div>
+          ) : resultA && resultB ? (
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}

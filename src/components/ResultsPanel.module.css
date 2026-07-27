@@ -326,106 +326,174 @@
 
 .chatInputRow {
   border-top: 1px solid var(--border);
-  padding: 14px;
+  padding: 16px 20px;
   background: var(--paper-card);
   display: flex;
-  gap: 12px;
+  align-items: center;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 28px;
+  padding: 4px 6px 4px 16px;
+  flex: 1;
+  transition: all 0.25s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-border);
+  background: var(--paper-card);
 }
 
 .input {
   flex: 1;
-  background: var(--paper);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
   font-size: 14px;
   font-family: "Instrument Sans", sans-serif;
   color: var(--ink);
   outline: none;
-  transition: all 0.2s;
-}
-
-.input:focus {
-  border-color: var(--accent);
-  background: var(--paper-card);
-  box-shadow: 0 0 0 3px var(--accent-border);
 }
 
 .sendBtn {
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: var(--radius);
-  padding: 0 24px;
-  font-weight: 600;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  min-height: 32px; /* overwrite touch target constraint here to fit inside input bar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 10px var(--brand-glow);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  box-shadow: none;
 }
 
 .sendBtn:hover:not(:disabled) {
-  filter: brightness(1.05);
+  background: var(--accent-hover);
+  transform: scale(1.05);
 }
 
 .sendBtn:disabled {
+  background: var(--border);
+  color: var(--ink-faint);
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.userBubble {
+.userMessageRow {
+  display: flex;
+  flex-direction: row-reverse;
   align-self: flex-end;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 90%;
+  animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .userMessageRow {
+    max-width: 80%;
+  }
+}
+
+.aiMessageRow {
+  display: flex;
+  flex-direction: row;
+  align-self: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 90%;
+  animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .aiMessageRow {
+    max-width: 80%;
+  }
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+  color: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px var(--shadow-color);
+}
+
+.aiAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px var(--shadow-color);
+}
+
+.userBubble {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   color: white;
   padding: 10px 14px;
-  border-radius: 16px 16px 4px 16px;
-  max-width: 90%;
+  border-radius: 18px 4px 18px 18px;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
   box-shadow: 0 4px 12px var(--brand-glow);
   border: none;
-  animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (min-width: 640px) {
   .userBubble {
     padding: 12px 18px;
-    max-width: 80%;
     font-size: 13.5px;
   }
 }
 
 .aiBubble {
-  align-self: flex-start;
   background: var(--paper-card);
   color: var(--ink);
   border: 1px solid var(--border);
   padding: 10px 14px;
-  border-radius: 16px 16px 16px 4px;
-  max-width: 90%;
+  border-radius: 4px 18px 18px 18px;
   font-size: 13px;
   line-height: 1.6;
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
   box-shadow: 0 4px 12px var(--shadow-color);
-  animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (min-width: 640px) {
   .aiBubble {
     padding: 12px 18px;
-    max-width: 80%;
     font-size: 13.5px;
   }
 }
 
 .typingIndicator {
-  align-self: flex-start;
   background: var(--paper-card);
   border: 1px solid var(--border);
   padding: 12px 20px;
-  border-radius: 16px 16px 16px 4px;
+  border-radius: 4px 18px 18px 18px;
   display: flex;
   align-items: center;
   gap: 4px;

@@ -9,4 +9,3 @@ export * from "./ai/outreach";
 export * from "./ai/negotiation";
 export * from "./ai/pdfStructure";
 export * from "./ai/learningPaths";
-export * from "./ai/committee";

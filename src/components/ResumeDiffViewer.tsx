@@ -288,6 +288,8 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
   const [rightDetail, setRightDetail] = useState<AnalysisDetail | null>(null);
   const [loadingLeft, setLoadingLeft] = useState(false);
   const [loadingRight, setLoadingRight] = useState(false);
+  const [leftError, setLeftError] = useState<string | null>(null);
+  const [rightError, setRightError] = useState<string | null>(null);
   const [tokens, setTokens] = useState<DiffToken[]>([]);
 
   // Fetch analysis list
@@ -303,21 +305,45 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
 
   // Fetch left detail
   useEffect(() => {
-    if (!leftId) { setLeftDetail(null); return; }
+    if (!leftId) { setLeftDetail(null); setLeftError(null); return; }
     setLoadingLeft(true);
+    setLeftError(null);
     fetch(`/api/analyses/${leftId}`)
       .then((r) => r.json())
-      .then((j) => { if (j.success) setLeftDetail(j.data); })
+      .then((j) => {
+        if (j.success && j.data) {
+          setLeftDetail({
+            resumeText: j.data.resume_text || "",
+            score: j.data.score,
+            targetRole: j.data.target_role || "",
+          });
+        } else {
+          setLeftError(j.error || "Failed to load analysis details");
+        }
+      })
+      .catch((err) => setLeftError(err.message || "Failed to load analysis details"))
       .finally(() => setLoadingLeft(false));
   }, [leftId]);
 
   // Fetch right detail
   useEffect(() => {
-    if (!rightId) { setRightDetail(null); return; }
+    if (!rightId) { setRightDetail(null); setRightError(null); return; }
     setLoadingRight(true);
+    setRightError(null);
     fetch(`/api/analyses/${rightId}`)
       .then((r) => r.json())
-      .then((j) => { if (j.success) setRightDetail(j.data); })
+      .then((j) => {
+        if (j.success && j.data) {
+          setRightDetail({
+            resumeText: j.data.resume_text || "",
+            score: j.data.score,
+            targetRole: j.data.target_role || "",
+          });
+        } else {
+          setRightError(j.error || "Failed to load analysis details");
+        }
+      })
+      .catch((err) => setRightError(err.message || "Failed to load analysis details"))
       .finally(() => setLoadingRight(false));
   }, [rightId]);
 
@@ -566,15 +592,26 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
                 />
               )}
               <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
-                {hasDiff
-                  ? <DiffContent tokens={tokens} side="left" />
-                  : <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)" }}>{leftDetail?.resumeText}</pre>
-                }
+                {leftError ? (
+                  <div style={{ color: "#ef4444", fontSize: 12, padding: "12px", background: "rgba(239,68,68,0.08)", borderRadius: 8 }}>
+                    {leftError}
+                  </div>
+                ) : hasDiff ? (
+                  <DiffContent tokens={tokens} side="left" />
+                ) : leftDetail?.resumeText ? (
+                  <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)", margin: 0 }}>
+                    {leftDetail.resumeText}
+                  </pre>
+                ) : (
+                  <div style={{ color: "var(--ink-faint)", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "32px 0" }}>
+                    No resume text recorded for this analysis.
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Score delta column */}
-            {hasDiff && (
+            {(hasDiff || (leftSnap && rightSnap)) && (
               <div
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center",
@@ -602,10 +639,21 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
                 />
               )}
               <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
-                {hasDiff
-                  ? <DiffContent tokens={tokens} side="right" />
-                  : <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)" }}>{rightDetail?.resumeText}</pre>
-                }
+                {rightError ? (
+                  <div style={{ color: "#ef4444", fontSize: 12, padding: "12px", background: "rgba(239,68,68,0.08)", borderRadius: 8 }}>
+                    {rightError}
+                  </div>
+                ) : hasDiff ? (
+                  <DiffContent tokens={tokens} side="right" />
+                ) : rightDetail?.resumeText ? (
+                  <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)", margin: 0 }}>
+                    {rightDetail.resumeText}
+                  </pre>
+                ) : (
+                  <div style={{ color: "var(--ink-faint)", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "32px 0" }}>
+                    No resume text recorded for this analysis.
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import SpotlightCard from "./SpotlightCard";
+import AudioSpectrumVisualizer from "./AudioSpectrumVisualizer";
 import { type MockInterviewTranscriptEntry, type MockInterviewScorecard } from "@/lib/ai";
 import ConfettiCannon from "@/components/ConfettiCannon";
 import MockInterviewReport from "./MockInterviewReport";
@@ -553,6 +554,8 @@ export default function MockInterviewSimulatorBoard({
                     </div>
                   )}
                 </div>
+
+                <AudioSpectrumVisualizer isRecording={isRecording} transcriptText={answerText} />
 
                 <textarea
                   value={answerText}

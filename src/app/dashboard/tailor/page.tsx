@@ -2,12 +2,14 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { parseResume } from "@/lib/parseResume";
 import { useToast } from "@/components/ToastProvider";
 import { downloadResumePdf } from "@/lib/pdf/downloadPdf";
 import * as Diff from "diff";
-import { Settings, Sparkles, Wrench, Loader2, ScanSearch, Target, BookOpen, FileText, X, ArrowLeft, ArrowRight, Download, Check } from "lucide-react";
+import { Settings, Sparkles, Wrench, Loader2, ScanSearch, Target, BookOpen, FileText, X, ArrowLeft, ArrowRight, Download, Check, Layers } from "lucide-react";
+import MultiJobMatrixModal from "@/components/MultiJobMatrixModal";
 
 interface ResumeItem {
   id: string;
@@ -23,11 +25,14 @@ interface KeywordItem {
 }
 
 export default function TailorSandboxPage() {
+  const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [mounted, setMounted] = useState(false);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
+  const [showMatrixModal, setShowMatrixModal] = useState(false);
+  const [originAnalysisId, setOriginAnalysisId] = useState<string | null>(null);
 
   // Setup Form States
   const [selectedResumeId, setSelectedResumeId] = useState("");
@@ -67,6 +72,12 @@ export default function TailorSandboxPage() {
   useEffect(() => {
     setMounted(true);
     fetchResumes();
+
+    const params = new URLSearchParams(window.location.search);
+    const analysisId = params.get("analysisId");
+    if (analysisId) {
+      setOriginAnalysisId(analysisId);
+    }
   }, []);
 
   const fetchResumes = async () => {
@@ -270,13 +281,31 @@ export default function TailorSandboxPage() {
         {/* Launcher Configuration (Setup View) */}
         {!activeSandbox && (
           <div className="max-w-3xl mx-auto fade-up space-y-6">
-            <div>
-              <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2.5">
-                AI Tailoring Sandbox
-              </h1>
-              <p className="text-ink-muted text-sm leading-relaxed">
-                Optimize and match your baseline resume to target roles. Write manual edits inside a side-by-side sandbox, track matching keywords, and evaluate ATS fit in real-time.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2.5">
+                  AI Tailoring Sandbox
+                </h1>
+                <p className="text-ink-muted text-sm leading-relaxed">
+                  Optimize and match your baseline resume to target roles. Write manual edits inside a side-by-side sandbox, track matching keywords, and evaluate ATS fit in real-time.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  const sel = resumes.find((r) => r.id === selectedResumeId);
+                  setOriginalText(sel ? sel.resume_text : "");
+                  setShowMatrixModal(true);
+                }}
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
+                  border: "none",
+                }}
+              >
+                <Layers size={14} />
+                <span>Multi-Job Matrix v2 🚀</span>
+              </button>
             </div>
 
             <div className="glass-card bg-paper-card border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
@@ -539,14 +568,18 @@ export default function TailorSandboxPage() {
               <button
                 onClick={() => {
                   if (confirm("Are you sure you want to quit the sandbox? Current edits will be lost.")) {
-                    setActiveSandbox(false);
-                    setOriginalText("");
-                    setTailoredText("");
-                    setKeywords([]);
-                    setScore(null);
+                    if (originAnalysisId) {
+                      router.push(`/dashboard/${originAnalysisId}`);
+                    } else {
+                      setActiveSandbox(false);
+                      setOriginalText("");
+                      setTailoredText("");
+                      setKeywords([]);
+                      setScore(null);
+                    }
                   }
                 }}
-                className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer"
+                className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer flex items-center gap-1.5"
               >
                 <ArrowLeft size={13} /> Exit Sandbox
               </button>
@@ -678,6 +711,14 @@ export default function TailorSandboxPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Multi-Job Matrix Modal */}
+        {showMatrixModal && (
+          <MultiJobMatrixModal
+            resumeText={originalText || "Sample Resume Content"}
+            onClose={() => setShowMatrixModal(false)}
+          />
         )}
 
       </div>

@@ -255,8 +255,9 @@ export function generatePortfolioHtml(
     a { color: inherit; text-decoration: none; }
 
     /* ── NAV ── */
+    html { scroll-behavior: smooth; }
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
       background: var(--nav-bg);
       border-bottom: 1px solid var(--border);
       backdrop-filter: blur(14px);
@@ -266,6 +267,7 @@ export function generatePortfolioHtml(
       max-width: 1024px; margin: 0 auto;
       padding: 0 24px; height: 64px;
       display: flex; justify-content: space-between; align-items: center;
+      position: relative;
     }
     .nav-brand {
       font-family: ${t.headingFont};
@@ -291,6 +293,17 @@ export function generatePortfolioHtml(
       transition: opacity .15s, transform .15s !important;
     }
     .nav-cta:hover { opacity: .9 !important; transform: translateY(-1px); }
+    .nav-toggle {
+      display: none;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
 
     /* ── HERO ── */
     header.hero {
@@ -452,7 +465,22 @@ export function generatePortfolioHtml(
     .hover-lift { transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s; }
 
     @media (max-width: 680px) {
-      .nav-links { display: none; }
+      .nav-toggle { display: flex; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 64px; left: 0; right: 0;
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px 24px;
+        gap: 18px;
+        box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .nav-links.mobile-open { display: flex !important; }
       .about-inner, .exp-inner { grid-template-columns: 1fr; gap: 28px; }
     }
   `;
@@ -474,7 +502,14 @@ export function generatePortfolioHtml(
   <nav>
     <div class="nav-inner">
       <a href="#" class="nav-brand">${escapeHtml(content.fullName)}</a>
-      <div class="nav-links">
+      <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle Navigation">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="nav-links" id="nav-links">
         <a href="#about">About</a>
         <a href="#skills">Skills</a>
         <a href="#experience">Experience</a>
@@ -598,9 +633,20 @@ export function generatePortfolioHtml(
   </footer>
 
   <script>
-    // Smooth scroll for anchor links inside iframe
+    function toggleMobileNav() {
+      const navLinks = document.getElementById('nav-links');
+      if (navLinks) {
+        navLinks.classList.toggle('mobile-open');
+      }
+    }
+
+    // Smooth scroll for anchor links inside iframe & close mobile drawer
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
+        const navLinks = document.getElementById('nav-links');
+        if (navLinks && navLinks.classList.contains('mobile-open')) {
+          navLinks.classList.remove('mobile-open');
+        }
         const href = this.getAttribute('href');
         if (!href || href === '#') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
         const target = document.querySelector(href);

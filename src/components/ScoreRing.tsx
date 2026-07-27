@@ -68,12 +68,13 @@ function easeOutExpo(t: number) {
 }
 
 export default function ScoreRing({
-  score,
+  score: rawScore,
   size = 200,
   animate = true,
   showGrade = true,
   showLabel = true,
 }: Props) {
+  const score = typeof rawScore === "number" && !isNaN(rawScore) ? rawScore : 0;
   const RADIUS = 78;
   const STROKE = 10;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -114,8 +115,8 @@ export default function ScoreRing({
         const t = easeOutExpo(rawT);
 
         const currentScore = Math.round(t * score);
-        setDisplayScore(currentScore);
-        setProgress(t * score);
+        setDisplayScore(isNaN(currentScore) ? 0 : currentScore);
+        setProgress(isNaN(t * score) ? 0 : t * score);
 
         if (rawT < 1) {
           rafRef.current = requestAnimationFrame(tick);
@@ -134,7 +135,11 @@ export default function ScoreRing({
     };
   }, [score, animate]);
 
-  const strokeDashoffset = CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE;
+  const safeProgress = typeof progress === "number" && !isNaN(progress) ? progress : 0;
+  const strokeDashoffset = isNaN(CIRCUMFERENCE - (safeProgress / 100) * CIRCUMFERENCE)
+    ? CIRCUMFERENCE
+    : CIRCUMFERENCE - (safeProgress / 100) * CIRCUMFERENCE;
+  const safeDisplayScore = typeof displayScore === "number" && !isNaN(displayScore) ? displayScore : 0;
 
   return (
     <div
@@ -289,7 +294,7 @@ export default function ScoreRing({
             transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease",
           }}
         >
-          {displayScore}
+          {safeDisplayScore}
         </div>
 
         <div

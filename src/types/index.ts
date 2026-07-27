@@ -22,8 +22,6 @@ export interface AnalysisResult {
   keywords_missing?: string[];
   suggestions: RewriteSuggestion[];
   ats_breakdown?: AtsBreakdown;
-  /** Set to true when the saved JSON is actually a CommitteeDebriefResult wrapped in an analysis row */
-  isCommittee?: true;
 }
 
 // ─── API Request/Response ─────────────────────────────────
@@ -238,24 +236,7 @@ export interface SmartResumeResponse {
   error?: string;
 }
 
-// ─── Hiring Committee Debrief ────────────────────────────────
 
-export interface DebriefMessage {
-  speaker: "HR Recruiter" | "Engineering Manager" | "Product Manager";
-  message: string;
-}
-
-export interface CommitteeDebriefResult {
-  overallRecommendation: "Hire" | "No Hire" | "Strong Hire" | "Leaning No Hire";
-  hrScore: number;
-  techScore: number;
-  productScore: number;
-  debriefTranscript: DebriefMessage[];
-  strengthsDebated: string[];
-  weaknessesDebated: string[];
-  recommendedRemedies: string[];
-  isCommittee: true;
-}
 
 // ─── Salary Negotiation ──────────────────────────────────
 

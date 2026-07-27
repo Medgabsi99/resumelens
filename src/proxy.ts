@@ -60,13 +60,30 @@ export async function proxy(request: NextRequest) {
           errorRes.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         }
       }
+      
+      // Delete stale auth cookies to prevent infinite refresh error spam
+      request.cookies.getAll().forEach(c => {
+        if (c.name.startsWith("sb-")) {
+          errorRes.cookies.delete(c.name);
+        }
+      });
+      
       return errorRes;
     }
     
     if (pathname.startsWith("/dashboard")) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
-      return NextResponse.redirect(redirectUrl);
+      const redirectRes = NextResponse.redirect(redirectUrl);
+      
+      // Delete stale auth cookies to prevent infinite refresh error spam
+      request.cookies.getAll().forEach(c => {
+        if (c.name.startsWith("sb-")) {
+          redirectRes.cookies.delete(c.name);
+        }
+      });
+      
+      return redirectRes;
     }
   }
 

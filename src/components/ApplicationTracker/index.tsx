@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Send } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import {
   ApplicationStatus,
@@ -10,6 +10,7 @@ import {
 } from "@/types";
 import AddApplicationModal from "@/components/AddApplicationModal";
 import SharedEmptyState from "@/components/EmptyState";
+import RecruiterOutreachModal from "@/components/RecruiterOutreachModal";
 
 // Extracted Subcomponents
 import StatCard from "./StatCard";
@@ -39,6 +40,7 @@ export default function ApplicationTracker() {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
+  const [outreachApp, setOutreachApp] = useState<JobApplication | null>(null);
 
   // View state: default to board view
   const [viewMode, setViewMode] = useState<"list" | "board">("board");
@@ -105,13 +107,40 @@ export default function ApplicationTracker() {
             Track every job opportunity and follow-up in your pipeline.
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-premium"
-        >
-          <span className="text-lg font-bold">+</span>
-          Add Application
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => {
+              if (applications.length > 0) {
+                setOutreachApp(applications[0]);
+              } else {
+                setOutreachApp({
+                  id: "demo",
+                  company_name: "Stripe",
+                  job_title: "Senior Software Engineer",
+                  status: "applied",
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                } as JobApplication);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition cursor-pointer"
+            style={{
+              background: "linear-gradient(135deg, #06b6d4, #8b5cf6)",
+              border: "none",
+            }}
+          >
+            <Send size={14} />
+            <span>Outreach CRM 🚀</span>
+          </button>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-premium"
+          >
+            <span className="text-lg font-bold">+</span>
+            Add Application
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -392,6 +421,16 @@ export default function ApplicationTracker() {
           />
         )}
       </AnimatePresence>
+
+      {/* Recruiter Outreach Modal */}
+      {outreachApp && (
+        <RecruiterOutreachModal
+          companyName={outreachApp.company_name}
+          jobTitle={outreachApp.job_title}
+          contactName={outreachApp.contact_name || undefined}
+          onClose={() => setOutreachApp(null)}
+        />
+      )}
     </div>
   );
 }

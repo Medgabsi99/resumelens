@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef } from "react";
 import SpotlightCard from "./SpotlightCard";
+import AudioSpectrumVisualizer from "./AudioSpectrumVisualizer";
 import { type EvaluateResponse } from "@/lib/ai";
 import StreamingText from "@/components/StreamingText";
 import InterviewSummary from "./InterviewSummary";
@@ -441,6 +442,8 @@ const toggleRecording = async () => {
                     </div>
                   )}
                 </div>
+
+                <AudioSpectrumVisualizer isRecording={isRecording} transcriptText={answerText} />
 
                 <textarea
                   value={answerText}

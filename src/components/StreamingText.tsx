@@ -77,7 +77,7 @@ function markdownToHtml(raw: string): string {
 
     // Empty line — paragraph break
     if (line.trim() === "") {
-      html.push('<div class="sl-spacer" />');
+      html.push('<div class="sl-spacer"></div>');
       continue;
     }
 

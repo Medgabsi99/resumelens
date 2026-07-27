@@ -16,6 +16,8 @@ const SalaryNegotiatorBoard = dynamic(() => import("@/components/SalaryNegotiato
   loading: () => <div className="p-8 text-center text-muted">Loading Negotiator Board...</div>,
 });
 
+import CounterOfferScriptGenerator from "@/components/CounterOfferScriptGenerator";
+
 interface ResumeItem {
   id: string;
   name: string;
@@ -397,6 +399,15 @@ export default function NegotiatorPage() {
               </button>
 
             </div>
+
+            {/* Instant Counter-Offer Script & Market Benchmark Generator */}
+            <CounterOfferScriptGenerator
+              roleTitle={roleTitle || "Software Engineer"}
+              companyName={companyName || "Tech Corp"}
+              offeredBase={base}
+              offeredEquity={equity}
+              offeredSignOn={signOn}
+            />
           </div>
 
           {/* Right Column: Scorecard History Logs */}
