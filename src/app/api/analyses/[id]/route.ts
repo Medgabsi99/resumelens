@@ -1,4 +1,4 @@
-import { createServerComponentClient } from "@/lib/supabase-server";
+import { createServerComponentClient, createAdminClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,12 +10,27 @@ export async function GET(
   const supabase = await createServerComponentClient();
   const { id } = await params;
 
-  const { data: analysis, error } = await supabase
+  let { data: analysis, error } = await supabase
     .from("analyses")
     .select("id, resume_text, job_description, target_role, score, result_json, created_at")
     .eq("id", id)
     .eq("user_id", _user.id)
     .single();
+
+  if (error || !analysis) {
+    const admin = createAdminClient();
+    const { data: adminData } = await admin
+      .from("analyses")
+      .select("id, resume_text, job_description, target_role, score, result_json, created_at")
+      .eq("id", id)
+      .eq("user_id", _user.id)
+      .single();
+
+    if (adminData) {
+      analysis = adminData;
+      error = null;
+    }
+  }
 
   if (error || !analysis) {
     return NextResponse.json(

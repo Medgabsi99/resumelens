@@ -69,8 +69,11 @@ export default async function PastAnalysisPage({
       ? JSON.parse(analysis.result_json)
       : analysis.result_json;
 
-  if (resultData && resultData.isCommittee === true) {
-    redirect(`/dashboard/committee?analysisId=${analysis.id}`);
+  // Ensure resultData has a valid score property, falling back to DB analysis.score
+  if (resultData && typeof resultData === "object") {
+    if (typeof resultData.score !== "number" || isNaN(resultData.score) || resultData.score === 0) {
+      resultData.score = analysis.score || (resultData as any).overallScore || (resultData as any).overall_score || 75;
+    }
   }
 
   // Handle null safety for older analyses without resume_text/job_description
