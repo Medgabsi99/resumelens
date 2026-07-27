@@ -57,7 +57,7 @@ export default function ExecutiveTemplate({
             Key Strengths
           </h3>
           <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "10.5pt", color: "#1f2937" }}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <li key={i} style={{ marginBottom: "4px" }}>{s}</li>
             ))}
           </ul>
@@ -67,7 +67,7 @@ export default function ExecutiveTemplate({
             Areas to Improve
           </h3>
           <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "10.5pt", color: "#1f2937" }}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <li key={i} style={{ marginBottom: "4px" }}>{w}</li>
             ))}
           </ul>
@@ -79,7 +79,7 @@ export default function ExecutiveTemplate({
           Actionable Suggestions
         </h2>
         <div>
-          {result.suggestions.slice(0, 5).map((s, i) => (
+          {(result.suggestions || []).slice(0, 5).map((s, i) => (
             <div key={i} style={{ marginBottom: "14px", borderBottom: "1px solid #e5e7eb", paddingBottom: "10px" }}>
               <div style={{ fontWeight: "bold", color: "#111827", fontSize: "10.5pt" }}>{s.section}</div>
               <div style={{ color: "#6b7280", marginTop: "4px", fontSize: "10pt" }}>

@@ -13,7 +13,7 @@ export default function TagList({ tags, variant }: TagListProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {tags.map((tag) => (
+      {(tags || []).map((tag) => (
         <span
           key={tag}
           className="text-xs px-3.5 py-2 rounded-xl border font-medium leading-relaxed"

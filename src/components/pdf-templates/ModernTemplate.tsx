@@ -61,7 +61,7 @@ export default function ModernTemplate({
           </p>
 
           <h4 style={{ marginTop: 12 }}>Suggestions</h4>
-          {result.suggestions.slice(0, 6).map((s, i) => (
+          {(result.suggestions || []).slice(0, 6).map((s, i) => (
             <div
               key={i}
               style={{
@@ -81,7 +81,7 @@ export default function ModernTemplate({
         <aside className={styles.aside}>
           <h4 style={{ marginTop: 0 }}>Strengths</h4>
           <ul className={styles.asideList}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <li key={i} style={{ marginBottom: 6 }}>
                 {s}
               </li>
@@ -90,7 +90,7 @@ export default function ModernTemplate({
 
           <h4 style={{ marginTop: 10 }}>Weaknesses</h4>
           <ul className={styles.asideList}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <li key={i} style={{ marginBottom: 6 }}>
                 {w}
               </li>

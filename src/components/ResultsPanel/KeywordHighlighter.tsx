@@ -111,7 +111,7 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {trulyMissing.map(kw => (
+            {(trulyMissing || []).map(kw => (
               <button
                 key={kw}
                 type="button"

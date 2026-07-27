@@ -57,7 +57,7 @@ export default function ProfessionalTemplate({
         <div className={styles.col}>
           <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Strengths</h3>
           <ul className={styles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <li key={i} className={styles.listItem}>
                 {s}
               </li>
@@ -67,7 +67,7 @@ export default function ProfessionalTemplate({
         <div className={styles.col}>
           <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Areas to Improve</h3>
           <ul className={styles.list}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <li key={i} className={styles.listItem}>
                 {w}
               </li>
@@ -79,7 +79,7 @@ export default function ProfessionalTemplate({
       <section className={styles.section}>
         <h3 style={{ fontSize: 13, marginBottom: 8, color: tokens.primaryColor, fontWeight: "bold" }}>Top Suggestions</h3>
         <div>
-          {result.suggestions.slice(0, 6).map((s, i) => (
+          {(result.suggestions || []).slice(0, 6).map((s, i) => (
             <div key={i} className={styles.suggestion}>
               <div className={styles.suggestionHeader}>{s.section}</div>
               <div className={styles.suggestionBefore}>

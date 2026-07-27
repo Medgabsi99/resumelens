@@ -45,7 +45,7 @@ export default function CreativeTemplate({
           </p>
 
           <h4 style={{ marginTop: 12 }}>Key Rewrites</h4>
-          {result.suggestions.slice(0, 4).map((s, i) => (
+          {(result.suggestions || []).slice(0, 4).map((s, i) => (
             <div key={i} style={{ marginBottom: 8 }}>
               <div style={{ fontWeight: 700 }}>{s.section}</div>
               <div style={{ color: "#4b2e2e" }}>{s.after}</div>
@@ -56,7 +56,7 @@ export default function CreativeTemplate({
         <aside className={styles.creativeAside}>
           <h4 style={{ marginTop: 0 }}>Strengths</h4>
           <ul>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <li key={i} style={{ marginBottom: 6 }}>
                 {s}
               </li>
@@ -64,7 +64,7 @@ export default function CreativeTemplate({
           </ul>
           <h4 style={{ marginTop: 8 }}>Weaknesses</h4>
           <ul>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <li key={i} style={{ marginBottom: 6 }}>
                 {w}
               </li>

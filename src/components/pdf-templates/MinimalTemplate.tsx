@@ -38,7 +38,7 @@ export default function MinimalTemplate({
         <div style={{ flex: 1 }}>
           <h4 style={{ margin: "0 0 8px 0" }}>Suggestions</h4>
           <ol style={{ marginTop: 6 }}>
-            {result.suggestions.slice(0, 4).map((s, i) => (
+            {(result.suggestions || []).slice(0, 4).map((s, i) => (
               <li key={i} style={{ marginBottom: 8 }}>
                 {s.after}
               </li>
@@ -48,7 +48,7 @@ export default function MinimalTemplate({
         <div style={{ width: 220 }}>
           <h4 style={{ margin: "0 0 8px 0" }}>Highlights</h4>
           <ul>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <li key={i} style={{ marginBottom: 6 }}>
                 {s}
               </li>

@@ -6,8 +6,9 @@ interface AtsBarProps {
   hint: string;
 }
 
-export default function AtsBar({ label, value, hint }: AtsBarProps) {
-  const clamped = Math.max(1, Math.min(100, value));
+export default function AtsBar({ label, value: rawValue, hint }: AtsBarProps) {
+  const safeValue = typeof rawValue === "number" && !isNaN(rawValue) ? rawValue : 0;
+  const clamped = Math.max(0, Math.min(100, safeValue));
   const color =
     clamped >= 75 ? "#10b981" : clamped >= 55 ? "#f59e0b" : "#ef4444";
 

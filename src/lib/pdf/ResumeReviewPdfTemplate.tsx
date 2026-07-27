@@ -158,7 +158,7 @@ function ProfessionalReviewPdf({ result, targetRole, jobDescription }: Omit<Prop
         <View style={professionalStyles.col}>
           <Text style={professionalStyles.colTitle}>Strengths</Text>
           <View style={professionalStyles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <View key={i} style={professionalStyles.listItem}>
                 <Text style={professionalStyles.bullet}>+</Text>
                 <Text style={professionalStyles.listText}>{s}</Text>
@@ -169,7 +169,7 @@ function ProfessionalReviewPdf({ result, targetRole, jobDescription }: Omit<Prop
         <View style={professionalStyles.col}>
           <Text style={professionalStyles.colTitle}>Areas to Improve</Text>
           <View style={professionalStyles.list}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <View key={i} style={professionalStyles.listItem}>
                 <Text style={{ ...professionalStyles.bullet, color: "#7a2020" }}>-</Text>
                 <Text style={professionalStyles.listText}>{w}</Text>
@@ -182,7 +182,7 @@ function ProfessionalReviewPdf({ result, targetRole, jobDescription }: Omit<Prop
       <View style={professionalStyles.section}>
         <Text style={professionalStyles.sectionH2}>Top Suggestions</Text>
         <View>
-          {result.suggestions.slice(0, 6).map((s, i) => (
+          {(result.suggestions || []).slice(0, 6).map((s, i) => (
             <View key={i} style={professionalStyles.suggestion} wrap={false}>
               <Text style={professionalStyles.suggestionHeader}>{s.section}</Text>
               <Text style={professionalStyles.suggestionBefore}>
@@ -356,7 +356,7 @@ function ModernReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "te
 
           <View style={modernStyles.section}>
             <Text style={{ ...modernStyles.sectionTitle, marginTop: 12 }}>Suggestions</Text>
-            {result.suggestions.slice(0, 6).map((s, i) => (
+            {(result.suggestions || []).slice(0, 6).map((s, i) => (
               <View key={i} style={modernStyles.suggestion} wrap={false}>
                 <Text style={modernStyles.suggestionHeader}>{s.section}</Text>
                 <Text style={modernStyles.suggestionAfter}>
@@ -370,7 +370,7 @@ function ModernReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "te
         <View style={modernStyles.aside} wrap={false}>
           <Text style={modernStyles.asideTitleFirst}>Strengths</Text>
           <View style={modernStyles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <View key={i} style={modernStyles.listItem}>
                 <Text style={modernStyles.bullet}>•</Text>
                 <Text style={modernStyles.listText}>{s}</Text>
@@ -380,7 +380,7 @@ function ModernReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "te
 
           <Text style={modernStyles.asideTitle}>Weaknesses</Text>
           <View style={modernStyles.list}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <View key={i} style={modernStyles.listItem}>
                 <Text style={modernStyles.bullet}>•</Text>
                 <Text style={modernStyles.listText}>{w}</Text>
@@ -481,7 +481,7 @@ function MinimalReviewPdf({ result, targetRole }: Omit<Props, "templateId">) {
         <View style={minimalStyles.leftCol}>
           <Text style={minimalStyles.colTitle}>Suggestions</Text>
           <View style={minimalStyles.list}>
-            {result.suggestions.slice(0, 4).map((s, i) => (
+            {(result.suggestions || []).slice(0, 4).map((s, i) => (
               <View key={i} style={minimalStyles.listItem} wrap={false}>
                 <Text style={minimalStyles.bullet}>-</Text>
                 <Text style={minimalStyles.listText}>{s.after}</Text>
@@ -493,7 +493,7 @@ function MinimalReviewPdf({ result, targetRole }: Omit<Props, "templateId">) {
         <View style={minimalStyles.rightCol} wrap={false}>
           <Text style={minimalStyles.colTitle}>Highlights</Text>
           <View style={minimalStyles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <View key={i} style={minimalStyles.listItem}>
                 <Text style={minimalStyles.bullet}>-</Text>
                 <Text style={minimalStyles.listText}>{s}</Text>
@@ -645,7 +645,7 @@ function CreativeReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "
 
           <View style={creativeStyles.section}>
             <Text style={creativeStyles.sectionTitle}>Key Rewrites</Text>
-            {result.suggestions.slice(0, 4).map((s, i) => (
+            {(result.suggestions || []).slice(0, 4).map((s, i) => (
               <View key={i} style={creativeStyles.suggestion} wrap={false}>
                 <Text style={creativeStyles.suggestionHeader}>{s.section}</Text>
                 <Text style={creativeStyles.suggestionAfter}>{s.after}</Text>
@@ -657,7 +657,7 @@ function CreativeReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "
         <View style={creativeStyles.aside} wrap={false}>
           <Text style={creativeStyles.asideTitleFirst}>Strengths</Text>
           <View style={creativeStyles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <View key={i} style={creativeStyles.listItem}>
                 <Text style={creativeStyles.bullet}>-</Text>
                 <Text style={creativeStyles.listText}>{s}</Text>
@@ -667,7 +667,7 @@ function CreativeReviewPdf({ result, targetRole, jobDescription }: Omit<Props, "
 
           <Text style={creativeStyles.asideTitle}>Weaknesses</Text>
           <View style={creativeStyles.list}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <View key={i} style={creativeStyles.listItem}>
                 <Text style={creativeStyles.bullet}>-</Text>
                 <Text style={creativeStyles.listText}>{w}</Text>
@@ -847,7 +847,7 @@ function ExecutiveReviewPdf({ result, targetRole, jobDescription }: Omit<Props, 
         <View style={executiveStyles.col}>
           <Text style={executiveStyles.colTitle}>Key Strengths</Text>
           <View style={executiveStyles.list}>
-            {result.strengths.map((s, i) => (
+            {(result.strengths || []).map((s, i) => (
               <View key={i} style={executiveStyles.listItem}>
                 <Text style={executiveStyles.bullet}>-</Text>
                 <Text style={executiveStyles.listText}>{s}</Text>
@@ -858,7 +858,7 @@ function ExecutiveReviewPdf({ result, targetRole, jobDescription }: Omit<Props, 
         <View style={executiveStyles.col}>
           <Text style={executiveStyles.colTitle}>Areas to Improve</Text>
           <View style={executiveStyles.list}>
-            {result.weaknesses.map((w, i) => (
+            {(result.weaknesses || []).map((w, i) => (
               <View key={i} style={executiveStyles.listItem}>
                 <Text style={executiveStyles.bullet}>-</Text>
                 <Text style={executiveStyles.listText}>{w}</Text>
@@ -871,7 +871,7 @@ function ExecutiveReviewPdf({ result, targetRole, jobDescription }: Omit<Props, 
       <View style={executiveStyles.section}>
         <Text style={executiveStyles.sectionTitle}>Actionable Suggestions</Text>
         <View>
-          {result.suggestions.slice(0, 5).map((s, i) => (
+          {(result.suggestions || []).slice(0, 5).map((s, i) => (
             <View key={i} style={executiveStyles.suggestion} wrap={false}>
               <Text style={executiveStyles.suggestionTitle}>{s.section}</Text>
               <Text style={executiveStyles.suggestionBefore}>
