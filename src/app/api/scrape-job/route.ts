@@ -3,7 +3,13 @@ import { getServerSession } from "@/lib/auth";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 
+// Max duration for route execution (30s)
 export const maxDuration = 30;
+
+interface ScrapedJobResult {
+  text: string;
+  title: string | null;
+}
 
 /**
  * Scrapes a job posting URL and extracts clean job description text.
@@ -44,26 +50,26 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    let text: string | null = null;
+    let result: ScrapedJobResult | null = null;
 
     // ── Stage 1: Site-Specific Public Guest API (LinkedIn / Indeed) ──────
     if (hostname.includes("linkedin.com")) {
-      text = await fetchLinkedInJob(url);
+      result = await fetchLinkedInJob(url);
     } else if (hostname.includes("indeed.com")) {
-      text = await fetchIndeedJob(url);
+      result = await fetchIndeedJob(url);
     }
 
     // ── Stage 2: Direct HTTP Fetch with realistic browser headers ────────
-    if (!text || text.length < 100 || isAuthWall(text)) {
-      text = await fetchDirect(url);
+    if (!result || !result.text || result.text.length < 100 || isAuthWall(result.text)) {
+      result = await fetchDirect(url);
     }
 
     // ── Stage 3: Jina Reader Fallback (handles JS rendering & CAPTCHAs) ──
-    if (!text || text.length < 100 || isAuthWall(text)) {
-      text = await fetchViaJinaReader(url);
+    if (!result || !result.text || result.text.length < 100 || isAuthWall(result.text)) {
+      result = await fetchViaJinaReader(url);
     }
 
-    if (!text || text.length < 80 || isAuthWall(text)) {
+    if (!result || !result.text || result.text.length < 80 || isAuthWall(result.text)) {
       return NextResponse.json(
         {
           success: false,
@@ -75,9 +81,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Truncate to 10k chars to stay within AI context limits
-    const trimmed = text.slice(0, 10000);
+    const trimmed = result.text.slice(0, 10000);
+    const extractedRole = result.title || extractJobTitle(trimmed);
 
-    return NextResponse.json({ success: true, jobDescription: trimmed, charCount: trimmed.length });
+    return NextResponse.json({
+      success: true,
+      jobDescription: trimmed,
+      targetRole: extractedRole,
+      charCount: trimmed.length,
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to fetch URL";
     logger.error("[job-scrape]", msg);
@@ -94,10 +106,8 @@ export async function POST(req: NextRequest) {
 
 /**
  * Special Handler: LinkedIn Guest API
- * Fetches https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{jobId} directly
- * and extracts the .show-more-less-html__markup description container.
  */
-async function fetchLinkedInJob(url: string): Promise<string | null> {
+async function fetchLinkedInJob(url: string): Promise<ScrapedJobResult | null> {
   try {
     const jobIdMatch = url.match(/currentJobId=(\d+)|jobs\/view\/(\d+)|jobs\/(\d+)/i);
     const jobId = jobIdMatch ? jobIdMatch[1] || jobIdMatch[2] || jobIdMatch[3] : null;
@@ -119,7 +129,12 @@ async function fetchLinkedInJob(url: string): Promise<string | null> {
 
     const html = await response.text();
 
-    // Target the exact LinkedIn description container
+    const titleMatch =
+      html.match(
+        /<h[12][^>]*class=["'][^"']*top-card-layout__title[^"']*["'][^>]*>([\s\S]*?)<\/h[12]>/i
+      ) || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch && titleMatch[1] ? cleanTitle(titleMatch[1]) : null;
+
     const match =
       html.match(/class=["'][^"']*show-more-less-html__markup[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ||
       html.match(/class=["'][^"']*description__text[^"']*["'][^>]*>([\s\S]*?)<\/section>/i) ||
@@ -128,17 +143,16 @@ async function fetchLinkedInJob(url: string): Promise<string | null> {
     if (match && match[1]) {
       const text = cleanHtmlText(match[1]);
       if (text.length >= 100 && !isAuthWall(text)) {
-        return text;
+        return { text, title };
       }
     }
 
-    // Fallback: try JSON-LD in Guest API response
     const jsonLd = extractFromJSONLD(html);
     if (jsonLd && jsonLd.length >= 100 && !isAuthWall(jsonLd)) {
-      return jsonLd;
+      return { text: jsonLd, title };
     }
   } catch {
-    // Ignore and let main pipeline attempt fallbacks
+    // Fallback
   }
   return null;
 }
@@ -146,7 +160,7 @@ async function fetchLinkedInJob(url: string): Promise<string | null> {
 /**
  * Special Handler: Indeed Job
  */
-async function fetchIndeedJob(url: string): Promise<string | null> {
+async function fetchIndeedJob(url: string): Promise<ScrapedJobResult | null> {
   try {
     const jkMatch = url.match(/[?&]jk=([a-f0-9]+)/i);
     if (!jkMatch) return null;
@@ -165,9 +179,14 @@ async function fetchIndeedJob(url: string): Promise<string | null> {
     if (!response.ok) return null;
 
     const html = await response.text();
+    const titleMatch =
+      html.match(/<h1[^>]*id=["']jobTitle["'][^>]*>([\s\S]*?)<\/h1>/i) ||
+      html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch && titleMatch[1] ? cleanTitle(titleMatch[1]) : null;
+
     const text = extractJobText(html, url);
     if (text && text.length >= 100 && !isAuthWall(text)) {
-      return text;
+      return { text, title };
     }
   } catch {
     // Fallback
@@ -178,7 +197,7 @@ async function fetchIndeedJob(url: string): Promise<string | null> {
 /**
  * Direct HTTP Fetch & Multi-Stage Extraction
  */
-async function fetchDirect(url: string): Promise<string | null> {
+async function fetchDirect(url: string): Promise<ScrapedJobResult | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -199,16 +218,23 @@ async function fetchDirect(url: string): Promise<string | null> {
     if (!response.ok) return null;
 
     const html = await response.text();
-    return extractJobText(html, url);
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch && titleMatch[1] ? cleanTitle(titleMatch[1]) : null;
+
+    const text = extractJobText(html, url);
+    if (text && text.length >= 100 && !isAuthWall(text)) {
+      return { text, title };
+    }
   } catch {
     return null;
   }
+  return null;
 }
 
 /**
- * Fallback via Jina AI Reader (handles JS rendering & anti-bot walls)
+ * Fallback via Jina AI Reader
  */
-async function fetchViaJinaReader(targetUrl: string): Promise<string | null> {
+async function fetchViaJinaReader(targetUrl: string): Promise<ScrapedJobResult | null> {
   try {
     const jinaUrl = `https://r.jina.ai/${targetUrl}`;
     const response = await fetch(jinaUrl, {
@@ -222,9 +248,17 @@ async function fetchViaJinaReader(targetUrl: string): Promise<string | null> {
     if (!response.ok) return null;
 
     let text = await response.text();
-    // Strip Jina headers/footers if present
+    let title: string | null = null;
+
+    const jinaTitleMatch = text.match(/^Title:\s*([^\n\r]+)/i);
+    if (jinaTitleMatch && jinaTitleMatch[1]) {
+      title = cleanTitle(jinaTitleMatch[1]);
+    }
+
     text = text.replace(/^Title:[\s\S]*?Markdown Content:\n/i, "").trim();
-    if (text.length >= 80 && !isAuthWall(text)) return text;
+    if (text.length >= 80 && !isAuthWall(text)) {
+      return { text, title };
+    }
   } catch {
     // Ignore Jina failure
   }
@@ -375,9 +409,12 @@ function extractFromMetaTags(html: string): string | null {
 function cleanHtmlText(raw: string): string {
   return raw
     .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<head[\s\S]*?<\/head>/gi, "")
     .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\s*on\w+=(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/javascript:[^\s"']+/gi, "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p>/gi, "\n\n")
     .replace(/<\/li>/gi, "\n")
@@ -452,4 +489,81 @@ function extractDensestBlock(html: string): string {
     result += p + "\n\n";
   }
   return result.trim();
+}
+
+/**
+ * Extracts job title / target role from structured JSON-LD, meta tags, or HTML content.
+ */
+function extractJobTitle(html: string): string | null {
+  // 1. Check JSON-LD JobPosting title
+  const matches = html.matchAll(
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  );
+  for (const match of matches) {
+    try {
+      const parsed = JSON.parse(match[1].trim());
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of items) {
+        if (item["@type"] === "JobPosting" || item["type"] === "JobPosting") {
+          if (item.title && typeof item.title === "string") {
+            const cleaned = cleanTitle(item.title);
+            if (cleaned) return cleaned;
+          }
+        }
+      }
+    } catch {
+      // Continue
+    }
+  }
+
+  // 2. Check OpenGraph / meta title
+  const ogTitleMatch =
+    html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:title["']/i) ||
+    html.match(/<meta[^>]*name=["']title["'][^>]*content=["']([^"']+)["']/i);
+  if (ogTitleMatch && ogTitleMatch[1]) {
+    const cleaned = cleanTitle(ogTitleMatch[1]);
+    if (cleaned) return cleaned;
+  }
+
+  // 3. Check HTML <title> tag
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch && titleMatch[1]) {
+    const cleaned = cleanTitle(titleMatch[1]);
+    if (cleaned) return cleaned;
+  }
+
+  // 4. Fallback: Search first 3 lines of cleaned text for title heuristic
+  const lines = html
+    .slice(0, 1000)
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 5 && l.length < 80);
+  for (const line of lines) {
+    if (
+      /engineer|developer|manager|analyst|designer|architect|lead|specialist|consultant|director|intern|associate/i.test(
+        line
+      )
+    ) {
+      const cleaned = cleanTitle(line);
+      if (cleaned) return cleaned;
+    }
+  }
+
+  return null;
+}
+
+function cleanTitle(rawTitle: string): string {
+  let cleaned = rawTitle
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#39;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .trim();
+
+  // Strip site suffixes like " | LinkedIn", " - Indeed.com", " at CompanyName"
+  cleaned = cleaned.split(/\s+[-|–—·•]\s+|\s+at\s+[\w\s.]+$|\s+\|\s+/i)[0].trim();
+  return cleaned.length >= 3 && cleaned.length <= 80 ? cleaned : "";
 }

@@ -6,11 +6,12 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { chatWithResumeStream } from "@/lib/ai/chat";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
+import { createSSEResponse } from "@/lib/sse";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  // â”€â”€ 1. Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── 1. Auth ──────────────────────────────────────────────
   const _user = await requireUser();
   const rateLimit = await checkRateLimit(_user.id, "chat");
   if (!rateLimit.success) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
   const supabase = await createServerComponentClient();
 
-  // â”€â”€ 2. Quota check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── 2. Quota check ───────────────────────────────────────
   const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // â”€â”€ 3. Parse & validate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── 3. Parse & validate ──────────────────────────────────
   const body = await req.json();
   let { message, resumeText, jobDescription, targetRole } = body;
   const { history } = body;
@@ -46,41 +47,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
   }
 
-  // â”€â”€ 4. RAG Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // chatWithResumeStream now embeds the question (RETRIEVAL_QUERY task type)
-  // and retrieves the top-k semantically relevant resume chunks from pgvector
-  // before calling the LLM â€” true Retrieval-Augmented Generation.
+  // ── 4. RAG Chat ──────────────────────────────────────────
   try {
     const streamResult = await chatWithResumeStream(
       message,
-      _user.id, // userId â€” scopes vector search to this user
-      supabase,        // authenticated client â€” passed to retrieval layer
-      resumeText,      // full text â€” fallback if no embeddings stored yet
+      _user.id,
+      supabase,
+      resumeText,
       jobDescription,
       targetRole,
-      history,
+      history
     );
 
-    const responseStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        try {
-          for await (const chunk of streamResult.stream) {
-            controller.enqueue(encoder.encode(chunk.text()));
-          }
-        } catch (streamErr) {
-          logger.error("Chat stream error:", streamErr);
-        } finally {
-          controller.close();
+    return createSSEResponse(async (send) => {
+      for await (const chunk of streamResult.stream) {
+        const text = chunk.text();
+        if (text) {
+          send(text);
         }
-      },
-    });
-
-    return new Response(responseStream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-      },
+      }
     });
   } catch (err: unknown) {
     logger.error("Chat API error:", err);
