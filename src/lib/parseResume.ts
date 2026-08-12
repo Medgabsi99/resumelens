@@ -695,3 +695,33 @@ export function resumeToText(data: ParsedResume): string {
 
   return lines.join("\n").trim();
 }
+
+/**
+ * Fallback OCR parser engine for scanned image-based PDF resumes.
+ * Uses client-side canvas text detection when selectable text layers are empty.
+ */
+export async function extractTextWithOcrFallback(
+  rawText: string,
+  imageBlob?: Blob
+): Promise<string> {
+  if (rawText && rawText.trim().length >= 50) {
+    return rawText.trim();
+  }
+
+  // If text layer is missing or image-scanned, attempt fallback OCR extraction
+  if (typeof window !== "undefined" && imageBlob) {
+    try {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+      const imageUrl = URL.createObjectURL(imageBlob);
+      const ret = await worker.recognize(imageUrl);
+      await worker.terminate();
+      URL.revokeObjectURL(imageUrl);
+      return ret.data.text.trim();
+    } catch {
+      // Fallback to raw text if OCR engine unavailable
+    }
+  }
+
+  return rawText;
+}

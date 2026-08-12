@@ -15,7 +15,7 @@ import {
   Copy,
   Check,
   Layout,
-  ArrowDown
+  ArrowDown,
 } from "lucide-react";
 
 interface Props {
@@ -68,7 +68,6 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
 
   return (
     <div className="bg-paper border border-border rounded-2xl shadow-xl overflow-hidden font-sans text-slate-100 flex flex-col h-full min-h-[500px]">
-      
       {/* Top Header details */}
       <div className="p-6 border-b border-border bg-paper-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
@@ -81,7 +80,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
               {data.roleTitle} at {data.companyName}
             </h2>
           </div>
-          
+
           <div className="flex flex-wrap gap-1.5 items-center">
             <span className="text-xs text-ink-muted">Bridging skill gaps:</span>
             {data.missingSkills.map((sk) => (
@@ -99,18 +98,27 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         <div className="flex items-center gap-4 shrink-0 w-full md:w-auto justify-between md:justify-end">
           <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
             <div className="text-right">
-              <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Est. ATS Score Boost</div>
-              <div className="text-xs text-emerald-400 font-black">+{Math.min(25, (data.missingSkills.length || 2) * 8)} pts ATS Boost 🚀</div>
+              <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                Est. ATS Score Boost
+              </div>
+              <div className="text-xs text-emerald-400 font-black">
+                +{Math.min(25, (data.missingSkills.length || 2) * 8)} pts ATS Boost 🚀
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <div className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Learning Progress</div>
+              <div className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">
+                Learning Progress
+              </div>
               <div className="text-xs text-emerald-400 font-bold">{progressPercent}% Completed</div>
             </div>
             <div className="w-16 bg-paper h-2 rounded-full border border-border overflow-hidden">
-              <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+              <div
+                className="bg-emerald-500 h-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
           </div>
 
@@ -129,7 +137,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         <button
           onClick={() => setActiveTab("timeline")}
           className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer flex items-center gap-2 ${
-            activeTab === "timeline" ? "border-accent text-accent bg-accent/5" : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
+            activeTab === "timeline"
+              ? "border-accent text-accent bg-accent/5"
+              : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
           }`}
         >
           <Calendar size={13} />
@@ -138,7 +148,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         <button
           onClick={() => setActiveTab("project")}
           className={`flex-1 md:flex-none px-6 py-3.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer flex items-center gap-2 ${
-            activeTab === "project" ? "border-accent text-accent bg-accent/5" : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
+            activeTab === "project"
+              ? "border-accent text-accent bg-accent/5"
+              : "border-transparent text-ink-muted hover:text-ink hover:bg-paper-warm"
           }`}
         >
           <Wrench size={13} />
@@ -148,7 +160,6 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
 
       {/* Tab Contents */}
       <div className="flex-1 p-6 overflow-y-auto">
-        
         {/* Timeline Tab */}
         {activeTab === "timeline" && (
           <div className="space-y-8 relative before:absolute before:top-4 before:bottom-4 before:left-6 before:w-[2px] before:bg-border/60">
@@ -177,7 +188,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                   {/* Core details */}
                   <div className="flex-1 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className={`font-display text-base font-bold ${completed ? "text-slate-400 line-through" : "text-ink"}`}>
+                      <h3
+                        className={`font-display text-base font-bold ${completed ? "text-slate-400 line-through" : "text-ink"}`}
+                      >
                         Week {milestone.week}: {milestone.title}
                       </h3>
                       <button
@@ -206,10 +219,15 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                     {/* Expandable topics list */}
                     <div className="bg-paper-card border border-border rounded-xl p-4 space-y-3.5 shadow-sm">
                       <div className="space-y-1">
-                        <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Study Topics</span>
+                        <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                          Study Topics
+                        </span>
                         <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {milestone.topics.map((t, i) => (
-                            <li key={i} className="text-xs text-ink-muted flex items-center gap-1.5 leading-none">
+                            <li
+                              key={i}
+                              className="text-xs text-ink-muted flex items-center gap-1.5 leading-none"
+                            >
                               <span className="w-1 h-1 bg-accent rounded-full shrink-0" />
                               <span>{t}</span>
                             </li>
@@ -220,7 +238,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       {/* Official Links */}
                       {milestone.resources && milestone.resources.length > 0 && (
                         <div className="space-y-1.5">
-                          <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider block">Recommended Guides</span>
+                          <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider block">
+                            Recommended Guides
+                          </span>
                           <div className="flex flex-wrap gap-2">
                             {milestone.resources.map((res, i) => (
                               <a
@@ -238,9 +258,42 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                         </div>
                       )}
 
+                      {/* Course Search Links */}
+                      <div className="pt-2 border-t border-border/50 flex flex-wrap gap-2">
+                        <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider block w-full">
+                          Learn Online
+                        </span>
+                        <a
+                          href={`https://www.coursera.org/search?query=${encodeURIComponent(milestone.title)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 flex items-center gap-1 font-medium text-[11px]"
+                        >
+                          <ExternalLink size={10} /> Coursera
+                        </a>
+                        <a
+                          href={`https://www.udemy.com/courses/search/?q=${encodeURIComponent(milestone.title)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 flex items-center gap-1 font-medium text-[11px]"
+                        >
+                          <ExternalLink size={10} /> Udemy
+                        </a>
+                        <a
+                          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(milestone.title + " tutorial")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 flex items-center gap-1 font-medium text-[11px]"
+                        >
+                          <ExternalLink size={10} /> YouTube
+                        </a>
+                      </div>
+
                       {/* Hands-on exercise description */}
                       <div className="border-t border-border pt-3 space-y-1">
-                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">Hands-on Exercise</span>
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
+                          Hands-on Exercise
+                        </span>
                         <p className="text-xs text-ink-muted leading-relaxed italic">
                           &quot;{milestone.handsOnExercise}&quot;
                         </p>
@@ -249,7 +302,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       {/* 1-Click Resume Bullet Injector */}
                       <div className="bg-paper-warm border border-border p-2.5 rounded-xl flex items-center justify-between gap-3">
                         <div className="text-[11px] text-ink-muted font-medium truncate">
-                          <strong className="text-accent font-semibold">Resume Bullet:</strong> &quot;Mastered {milestone.topics.slice(0, 2).join(" & ")} by building {data.project.title || "portfolio modules"}&quot;
+                          <strong className="text-accent font-semibold">Resume Bullet:</strong>{" "}
+                          &quot;Mastered {milestone.topics.slice(0, 2).join(" & ")} by building{" "}
+                          {data.project.title || "portfolio modules"}&quot;
                         </div>
                         <button
                           onClick={() => {
@@ -273,19 +328,18 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
         {/* Custom Project Tab */}
         {activeTab === "project" && (
           <div className="space-y-6 max-w-4xl mx-auto">
-            
             {/* Title & Description */}
             <div className="bg-paper-card border border-border rounded-2xl p-5 space-y-3 shadow-sm">
               <h3 className="font-display text-lg font-bold text-ink flex items-center gap-2">
                 <Wrench size={18} className="text-accent" />
                 <span>Tailored Project: {data.project.title}</span>
               </h3>
-              <p className="text-xs text-ink-muted leading-relaxed">
-                {data.project.description}
-              </p>
+              <p className="text-xs text-ink-muted leading-relaxed">{data.project.description}</p>
 
               <div className="flex flex-wrap gap-1.5 items-center pt-2">
-                <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Project Stack:</span>
+                <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                  Project Stack:
+                </span>
                 {data.project.techStack.map((tech) => (
                   <span
                     key={tech}
@@ -298,21 +352,24 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
               {/* Left 2 Cols: Phases & starter code */}
               <div className="lg:col-span-2 space-y-6">
-                
                 {/* Phases */}
                 <div className="space-y-3">
                   <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
                     Project Build Phases
                   </h4>
-                  
+
                   <div className="space-y-3">
                     {data.project.phases.map((phase, i) => (
-                      <div key={i} className="bg-paper-card border border-border rounded-xl p-4 space-y-2">
+                      <div
+                        key={i}
+                        className="bg-paper-card border border-border rounded-xl p-4 space-y-2"
+                      >
                         <h5 className="text-xs font-bold text-ink">{phase.title}</h5>
-                        <p className="text-[11px] text-ink-muted leading-relaxed">{phase.description}</p>
+                        <p className="text-[11px] text-ink-muted leading-relaxed">
+                          {phase.description}
+                        </p>
                         <ul className="text-xs text-slate-400 list-disc pl-4 space-y-1">
                           {phase.tasks.map((task, idx) => (
                             <li key={idx}>{task}</li>
@@ -329,7 +386,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                     <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
                       Boilerplate Starter Code
                     </h4>
-                    <span className="text-[10px] font-mono text-ink-faint">{data.project.starterSnippet.filePath}</span>
+                    <span className="text-[10px] font-mono text-ink-faint">
+                      {data.project.starterSnippet.filePath}
+                    </span>
                   </div>
 
                   <div className="border border-border bg-[#0a0a0f] rounded-xl overflow-hidden shadow-inner flex flex-col">
@@ -352,17 +411,16 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                         )}
                       </button>
                     </div>
-                    
+
                     <pre className="p-4 text-xs font-mono overflow-x-auto text-emerald-400/90 leading-normal max-h-[300px]">
                       <code>{data.project.starterSnippet.code}</code>
                     </pre>
                   </div>
-                  
+
                   <p className="text-[11px] text-ink-muted leading-relaxed bg-paper-card border border-border p-3 rounded-lg font-mono">
                     <strong>Starter Explanation:</strong> {data.project.starterSnippet.explanation}
                   </p>
                 </div>
-
               </div>
 
               {/* Right Col: Architecture Description */}
@@ -372,13 +430,15 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                     <Layout size={13} className="text-accent" />
                     <span>Architecture Blueprint</span>
                   </h4>
-                  
+
                   <p className="text-xs text-ink-muted leading-relaxed bg-paper border border-border/60 p-3 rounded-xl">
                     {data.project.architecture}
                   </p>
 
                   <div className="space-y-2 pt-2">
-                    <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider block">Recommended Architecture blocks</span>
+                    <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider block">
+                      Recommended Architecture blocks
+                    </span>
                     <div className="flex flex-col gap-2">
                       <div className="bg-[#12121b] border border-border/60 p-2.5 rounded-lg text-center">
                         <div className="text-xs font-bold text-accent">Frontend Layout</div>
@@ -390,7 +450,9 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       </div>
                       <div className="bg-[#12121b] border border-border/60 p-2.5 rounded-lg text-center">
                         <div className="text-xs font-bold text-accent">Core API Gateway</div>
-                        <div className="text-[10px] text-ink-muted mt-0.5">Router / Controllers</div>
+                        <div className="text-[10px] text-ink-muted mt-0.5">
+                          Router / Controllers
+                        </div>
                       </div>
                       <div className="text-center text-xs text-ink-muted leading-none flex items-center justify-center gap-1">
                         <ArrowDown size={11} />
@@ -398,18 +460,17 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                       </div>
                       <div className="bg-[#12121b] border border-border/60 p-2.5 rounded-lg text-center">
                         <div className="text-xs font-bold text-accent">Cache / Message Queue</div>
-                        <div className="text-[10px] text-ink-muted mt-0.5">Bridging technologies</div>
+                        <div className="text-[10px] text-ink-muted mt-0.5">
+                          Bridging technologies
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   );

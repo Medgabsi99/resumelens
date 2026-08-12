@@ -69,6 +69,44 @@ export default function ResumeEditor({
   analysisId,
 }: Props) {
   const [text, setText] = useState(initialText);
+
+  // Bounded Ring Buffer Undo/Redo History Stack (Max 50 states)
+  const MAX_HISTORY = 50;
+  const [history, setHistory] = useState<string[]>([initialText]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  const updateTextWithHistory = useCallback(
+    (newText: string) => {
+      setText(newText);
+      setHistory((prev) => {
+        const truncated = prev.slice(0, historyIndex + 1);
+        const updated = [...truncated, newText];
+        if (updated.length > MAX_HISTORY) {
+          return updated.slice(updated.length - MAX_HISTORY);
+        }
+        return updated;
+      });
+      setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+    },
+    [historyIndex]
+  );
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setText(history[newIndex]);
+    }
+  }, [history, historyIndex]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setText(history[newIndex]);
+    }
+  }, [history, historyIndex]);
+
   const [copied, setCopied] = useState(false);
   const [appliedIndices, setAppliedIndices] = useState<Set<number>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("tech-pro");

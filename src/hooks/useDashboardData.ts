@@ -13,10 +13,22 @@ interface AnalysisItem {
 
 const PAGE_SIZE = 8;
 
+// In-Memory Stale-While-Revalidate (SWR) Cache Singleton
+const swrCache: {
+  analyses: { data: AnalysisItem[]; timestamp: number } | null;
+  applications: { data: JobApplication[]; timestamp: number } | null;
+} = {
+  analyses: null,
+  applications: null,
+};
+const CACHE_TTL_MS = 60 * 1000; // 1 minute fresh TTL
+
 export function useDashboardData() {
-  const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [analyses, setAnalyses] = useState<AnalysisItem[]>(() => swrCache.analyses?.data || []);
+  const [applications, setApplications] = useState<JobApplication[]>(
+    () => swrCache.applications?.data || []
+  );
+  const [loading, setLoading] = useState(() => !swrCache.analyses || !swrCache.applications);
   const [error, setError] = useState<string | null>(null);
 
   // Tabs
@@ -38,7 +50,19 @@ export function useDashboardData() {
   const [diffOpen, setDiffOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     async function loadData() {
+      const now = Date.now();
+      const isAnalysesFresh = swrCache.analyses && now - swrCache.analyses.timestamp < CACHE_TTL_MS;
+      const isAppsFresh =
+        swrCache.applications && now - swrCache.applications.timestamp < CACHE_TTL_MS;
+
+      // If fresh cache exists, we already initialized state instantly
+      if (isAnalysesFresh && isAppsFresh) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const [analysesRes, appsRes] = await Promise.all([
           fetch("/api/analyses"),
@@ -55,16 +79,29 @@ export function useDashboardData() {
           throw new Error(appsData.error || "Failed to load applications");
         }
 
-        setAnalyses(analysesData.data || []);
-        setApplications(appsData.data || []);
+        const newAnalyses = analysesData.data || [];
+        const newApps = appsData.data || [];
+
+        swrCache.analyses = { data: newAnalyses, timestamp: Date.now() };
+        swrCache.applications = { data: newApps, timestamp: Date.now() };
+
+        if (isMounted) {
+          setAnalyses(newAnalyses);
+          setApplications(newApps);
+        }
       } catch (e: unknown) {
         logger.error(e);
-        setError((e as Error).message || "Failed to fetch dashboard data");
+        if (isMounted) {
+          setError((e as Error).message || "Failed to fetch dashboard data");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Reset pages on search/tab change

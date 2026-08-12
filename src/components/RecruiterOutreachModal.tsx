@@ -36,6 +36,14 @@ function RecruiterOutreachContent({
   const [targetType, setTargetType] = useState<OutreachTarget>("recruiter");
   const [templateType, setTemplateType] = useState<OutreachTemplateType>("inmail");
   const [copied, setCopied] = useState(false);
+  const [outreachStatus, setOutreachStatus] = useState<"draft" | "sent" | "opened" | "replied">(
+    "draft"
+  );
+
+  const handleUpdateStatus = (status: "draft" | "sent" | "opened" | "replied") => {
+    setOutreachStatus(status);
+    toastSuccess(`Outreach status updated to ${status.toUpperCase()}`, "CRM Status Saved");
+  };
 
   // ── Outreach Message Templates Generator ───────────────────
   const messages = useMemo(() => {
@@ -280,7 +288,35 @@ Best,
         </div>
 
         {/* Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "10px",
+            width: "100%",
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-[10px] font-mono font-bold uppercase text-[var(--ink-faint)]">
+              CRM Status:
+            </span>
+            {(["draft", "sent", "opened", "replied"] as const).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => handleUpdateStatus(st)}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition ${
+                  outreachStatus === st
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-[var(--paper)] border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
+          </div>
+
           <button
             onClick={handleCopyMessage}
             style={{
