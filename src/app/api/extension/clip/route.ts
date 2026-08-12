@@ -43,15 +43,28 @@ export async function POST(req: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // 1. Try to get authenticated user from session cookies
+    // 1. Try to get authenticated user from Authorization Bearer header or session cookies
     let targetUserId = userId || null;
-    try {
-      const supabase = await createServerComponentClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) targetUserId = user.id;
-    } catch {}
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      try {
+        const { data: authData } = await adminClient.auth.getUser(token);
+        if (authData?.user) {
+          targetUserId = authData.user.id;
+        }
+      } catch {}
+    }
+
+    if (!targetUserId) {
+      try {
+        const supabase = await createServerComponentClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) targetUserId = user.id;
+      } catch {}
+    }
 
     // 2. Fallback: query latest user profile from profiles table if unauthenticated
     if (!targetUserId) {
