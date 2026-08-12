@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import { useState } from "react";
+import { readSSEStream } from "@/lib/sse";
 
 export function useInterviewPrep(
   resumeText?: string,
@@ -38,24 +39,9 @@ export function useInterviewPrep(
         return;
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No readable stream reader available.");
-      }
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let accumulated = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: !done });
-          accumulated += chunk;
-          setInterviewQuestions(accumulated);
-        }
-      }
+      await readSSEStream(res, (accumulatedText) => {
+        setInterviewQuestions(accumulatedText);
+      });
     } catch (e: unknown) {
       logger.error(e);
       setIqError((e as Error).message || "Network error while generating interview questions.");

@@ -1,13 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { LayoutGrid, List, Send } from "lucide-react";
+import { LayoutGrid, List, Send, Download } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import {
-  ApplicationStatus,
-  APPLICATION_STATUS_LABELS,
-  JobApplication,
-} from "@/types";
+import { ApplicationStatus, APPLICATION_STATUS_LABELS, JobApplication } from "@/types";
 import AddApplicationModal from "@/components/AddApplicationModal";
 import SharedEmptyState from "@/components/EmptyState";
 import RecruiterOutreachModal from "@/components/RecruiterOutreachModal";
@@ -26,15 +22,40 @@ import { useDragAndDrop } from "./useDragAndDrop";
 type FilterStatus = "all" | ApplicationStatus;
 
 export default function ApplicationTracker() {
-  const {
-    applications,
-    setApplications,
-    loading,
-    error,
-    stats,
-    handleStatusChange,
-    handleDelete,
-  } = useApplications();
+  const { applications, setApplications, loading, error, stats, handleStatusChange, handleDelete } =
+    useApplications();
+
+  const handleExportCsv = () => {
+    if (applications.length === 0) return;
+    const headers = [
+      "Company",
+      "Job Title",
+      "Status",
+      "Date Applied",
+      "Job URL",
+      "Salary",
+      "Location",
+      "Notes",
+    ];
+    const rows = applications.map((app) => [
+      `"${app.company_name.replace(/"/g, '""')}"`,
+      `"${app.job_title.replace(/"/g, '""')}"`,
+      `"${app.status}"`,
+      `"${app.applied_at ? new Date(app.applied_at).toLocaleDateString() : ""}"`,
+      `"${app.job_url || ""}"`,
+      `"${app.salary_min || app.salary_max ? `${app.salary_min || ""}-${app.salary_max || ""}` : ""}"`,
+      `"${app.location || ""}"`,
+      `"${(app.notes || "").replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ResumeLens_Applications_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
@@ -131,6 +152,15 @@ export default function ApplicationTracker() {
           >
             <Send size={14} />
             <span>Outreach CRM 🚀</span>
+          </button>
+
+          <button
+            onClick={handleExportCsv}
+            disabled={applications.length === 0}
+            className="bg-paper-card border border-border hover:bg-paper-warm text-ink px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer transition disabled:opacity-50"
+          >
+            <Download size={14} className="text-accent" />
+            <span>Export CSV</span>
           </button>
 
           <button
@@ -310,9 +340,11 @@ export default function ApplicationTracker() {
                             style={{ backgroundColor: isActive ? "#fff" : col.color }}
                           />
                           <span>{col.label}</span>
-                          <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${
-                            isActive ? "bg-white/20 text-white" : "bg-border/60 text-ink-muted"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${
+                              isActive ? "bg-white/20 text-white" : "bg-border/60 text-ink-muted"
+                            }`}
+                          >
                             {count}
                           </span>
                         </button>
@@ -342,56 +374,57 @@ export default function ApplicationTracker() {
                               ? "2px solid var(--accent)"
                               : "1px solid rgba(var(--border-rgb, 99 102 241 / 0.12))",
                             borderColor: isOver ? "var(--accent)" : "var(--border)",
-                            boxShadow: isOver ? "0 0 0 4px var(--brand-glow), inset 0 0 20px var(--accent-bg)" : "none",
+                            boxShadow: isOver
+                              ? "0 0 0 4px var(--brand-glow), inset 0 0 20px var(--accent-bg)"
+                              : "none",
                             transform: isOver ? "scale(1.01)" : "scale(1)",
                           }}
                         >
-                        {/* Column Header */}
-                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
-                          <div className="flex items-center gap-2">
-                            <span 
-                              className="w-2.5 h-2.5 rounded-full" 
-                              style={{ backgroundColor: col.color }}
-                            />
-                            <span className="font-bold text-sm text-ink">{col.label}</span>
-                          </div>
-                          <span className="text-[11px] font-mono font-bold bg-border/60 text-ink-muted px-2 py-0.5 rounded-md">
-                            {colApps.length}
-                          </span>
-                        </div>
-
-                        {/* Column Cards Stack */}
-                        <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-1">
-                          {colApps.length === 0 ? (
-                            <div className="text-center py-12 text-ink-faint text-xs font-mono border border-dashed border-border/40 rounded-xl bg-paper-card/30">
-                              {isOver && draggingId ? "Drop here" : "Empty Zone"}
+                          {/* Column Header */}
+                          <div className="flex justify-between items-center mb-4 pb-2 border-b border-border/40">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full"
+                                style={{ backgroundColor: col.color }}
+                              />
+                              <span className="font-bold text-sm text-ink">{col.label}</span>
                             </div>
-                          ) : (
-                            <AnimatePresence initial={false}>
-                              {colApps.map((app) => (
-                                <KanbanCard
-                                  key={app.id}
-                                  app={app}
-                                  isDragging={draggingId === app.id}
-                                  isInsertTarget={insertBeforeId === app.id}
-                                  onDragStart={(e) => handleDragStart(e, app.id)}
-                                  onDragEnd={handleDragEnd}
-                                  onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
-                                  onEdit={() => setEditingApp(app)}
-                                  onDelete={() => handleDelete(app)}
-                                  onStatusChange={(s) => handleStatusChange(app, s)}
-                                />
-                              ))}
-                            </AnimatePresence>
-                          )}
+                            <span className="text-[11px] font-mono font-bold bg-border/60 text-ink-muted px-2 py-0.5 rounded-md">
+                              {colApps.length}
+                            </span>
+                          </div>
+
+                          {/* Column Cards Stack */}
+                          <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-1">
+                            {colApps.length === 0 ? (
+                              <div className="text-center py-12 text-ink-faint text-xs font-mono border border-dashed border-border/40 rounded-xl bg-paper-card/30">
+                                {isOver && draggingId ? "Drop here" : "Empty Zone"}
+                              </div>
+                            ) : (
+                              <AnimatePresence initial={false}>
+                                {colApps.map((app) => (
+                                  <KanbanCard
+                                    key={app.id}
+                                    app={app}
+                                    isDragging={draggingId === app.id}
+                                    isInsertTarget={insertBeforeId === app.id}
+                                    onDragStart={(e) => handleDragStart(e, app.id)}
+                                    onDragEnd={handleDragEnd}
+                                    onCardDragEnter={(e) => handleCardDragEnter(e, app.id)}
+                                    onEdit={() => setEditingApp(app)}
+                                    onDelete={() => handleDelete(app)}
+                                    onStatusChange={(s) => handleStatusChange(app, s)}
+                                  />
+                                ))}
+                              </AnimatePresence>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                   </div>
                 </div>
               );
-
             })()
           )}
         </>
@@ -413,9 +446,7 @@ export default function ApplicationTracker() {
             application={editingApp}
             onClose={() => setEditingApp(null)}
             onUpdated={(updated) => {
-              setApplications((prev) =>
-                prev.map((a) => (a.id === updated.id ? updated : a))
-              );
+              setApplications((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
               setEditingApp(null);
             }}
           />

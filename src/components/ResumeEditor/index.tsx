@@ -20,6 +20,7 @@ import { TemplateId, ResumeVersion, ResumeCustomStyle } from "./types";
 import { useSmartEnhance } from "./useSmartEnhance";
 import { useSelectionOptimizer } from "./useSelectionOptimizer";
 import { useDesignCustomizer } from "./useDesignCustomizer";
+import { fixTechStackCapitalization } from "@/lib/techStackFixer";
 import {
   Palette,
   Download,
@@ -318,6 +319,39 @@ export default function ResumeEditor({
     };
   }, []);
 
+  // Draggable Panel Resizer State
+  const [leftWidthPercent, setLeftWidthPercent] = useState<number>(45);
+  const [isDragging, setIsDragging] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!gridRef.current) return;
+      const rect = gridRef.current.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const newPercent = Math.max(25, Math.min(75, (offsetX / rect.width) * 100));
+      setLeftWidthPercent(newPercent);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     try {
@@ -415,6 +449,30 @@ export default function ResumeEditor({
     setSmartError(null);
   };
 
+  const handleEnforceSinglePage = () => {
+    setCustomStyle((prev) => ({
+      ...prev,
+      fontSize: "10pt",
+      lineHeight: "1.4",
+      padding: "36px 32px",
+    }));
+  };
+
+  const handleAutoFixTechStack = () => {
+    const { text: cleaned, replacementsCount } = fixTechStackCapitalization(text);
+    if (replacementsCount > 0) {
+      updateTextWithHistory(cleaned);
+      alert(`⚡ Automatically upgraded ${replacementsCount} tech stack terms & action verbs!`);
+    } else {
+      alert("✓ Tech stack capitalization and action verbs are already fully optimized!");
+    }
+  };
+
+  const handleInsertXyzFormula = () => {
+    const formula = "\n• Accomplished [X] as measured by [Y] by doing [Z]";
+    updateTextWithHistory(text + formula);
+  };
+
   // Clear parsedData when user manually edits text (so preview re-parses)
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
@@ -508,7 +566,15 @@ export default function ResumeEditor({
 
       {/* Side-by-Side Editor */}
       {editorOpen && (
-        <div className="sbs-editor-grid animate-fadeIn" style={{ marginTop: 16 }}>
+        <div
+          ref={gridRef}
+          className="sbs-editor-grid animate-fadeIn"
+          style={{
+            marginTop: 16,
+            gridTemplateColumns: `calc(${leftWidthPercent}% - 4px) 8px calc(${100 - leftWidthPercent}% - 4px)`,
+            userSelect: isDragging ? "none" : "auto",
+          }}
+        >
           {/* Mobile Tab Switcher */}
           <div className="flex lg:hidden bg-paper border-b border-border p-2 gap-2">
             <button
@@ -665,6 +731,30 @@ export default function ResumeEditor({
               >
                 <Palette size={11} />
                 <span>Style</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleEnforceSinglePage}
+                title="Auto-scale fonts and margins to strictly fit onto 1 page"
+                style={{
+                  background: "rgba(16,185,129,0.12)",
+                  color: "#059669",
+                  border: "1px solid rgba(16,185,129,0.3)",
+                  borderRadius: 7,
+                  padding: "0 10px",
+                  height: 28,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "Instrument Sans, sans-serif",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <Zap size={11} />
+                <span>Fit 1-Page</span>
               </button>
               <span style={{ width: 1, height: 16, background: "var(--border)", flexShrink: 0 }} />
               <button
@@ -1147,6 +1237,33 @@ export default function ResumeEditor({
             </div>
           </div>
 
+          {/* ── Resizer Handle Bar ── */}
+          <div
+            onMouseDown={handleMouseDown}
+            title="Click and drag to resize Preview and Editor panels"
+            style={{
+              width: 8,
+              cursor: "col-resize",
+              background: isDragging ? "var(--accent)" : "var(--border)",
+              transition: isDragging ? "none" : "background 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 20,
+              userSelect: "none",
+            }}
+            className="hover:bg-accent/40 hidden lg:flex"
+          >
+            <div
+              style={{
+                width: 2,
+                height: 28,
+                borderRadius: 1,
+                background: isDragging ? "#ffffff" : "var(--ink-muted)",
+              }}
+            />
+          </div>
+
           {/* ── Right Pane: Editor ── */}
           <div
             style={{
@@ -1245,6 +1362,23 @@ export default function ResumeEditor({
                     <span>ATS {liveAtsRules.deterministicScore}/100</span>
                   </div>
 
+                  {/* Word & Bullet Counter */}
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "DM Mono, monospace",
+                      color: "var(--ink-muted)",
+                      background: "var(--paper)",
+                      padding: "2px 8px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {text.trim().split(/\s+/).filter(Boolean).length} words ·{" "}
+                    {(text.match(/^[•\-\*]\s+/gm) || []).length} bullets
+                  </span>
+
                   {appliedCount > 0 && (
                     <span
                       style={{
@@ -1312,11 +1446,12 @@ export default function ResumeEditor({
               {/* Row 2: Secondary action buttons — all always visible */}
               <div
                 style={{
-                  padding: "0 12px",
+                  padding: "4px 12px",
                   display: "flex",
                   alignItems: "center",
+                  flexWrap: "wrap",
                   gap: 4,
-                  height: 34,
+                  minHeight: 34,
                 }}
               >
                 <ToolbarButton
@@ -1330,6 +1465,16 @@ export default function ResumeEditor({
                   }
                   variant="danger"
                   active={hasEdits || isEnhanced}
+                />
+                <ToolbarButton
+                  onClick={handleAutoFixTechStack}
+                  label={
+                    <span className="flex items-center gap-1">
+                      <Zap size={10} className="text-emerald-500" />
+                      <span>Fix Tech Terms</span>
+                    </span>
+                  }
+                  variant="default"
                 />
                 {analysisId && (
                   <ToolbarButton
@@ -1367,6 +1512,7 @@ export default function ResumeEditor({
                   }
                   variant="primary"
                 />
+
                 <ToolbarButton
                   onClick={() => setShowAtsView((v) => !v)}
                   label={

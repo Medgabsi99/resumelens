@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
+import { runAtsChecks } from "@/lib/atsRulesChecker";
+import { useAutoSaveDraft } from "@/lib/useAutoSaveDraft";
 import { AnalysisResult } from "@/types";
 import ResultsPanel from "@/components/ResultsPanel";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -54,6 +56,21 @@ export default function HomePage() {
   const [confettiKey, setConfettiKey] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const { hasSavedDraft, savedDraft, clearSavedDraft } = useAutoSaveDraft(
+    resumeText,
+    jobDescription,
+    targetRole
+  );
+
+  const handleRestoreDraft = () => {
+    if (savedDraft) {
+      setResumeText(savedDraft.resumeText || "");
+      setJobDescription(savedDraft.jobDescription || "");
+      setTargetRole(savedDraft.targetRole || "");
+      clearSavedDraft();
+    }
+  };
+
   // ── Load session + handle ?rerun= ──────────────────────
   useEffect(() => {
     const supabase = createBrowserClient();
@@ -95,6 +112,51 @@ export default function HomePage() {
     }
   }, []);
 
+  const handleLoadSample = () => {
+    const sampleResume = `ALEX MORGAN
+San Francisco, CA • (555) 234-5678 • alex.morgan@email.com • linkedin.com/in/alexmorgan
+
+PROFESSIONAL SUMMARY
+Senior Full Stack Engineer with 6+ years of experience building and scaling web applications and microservices. Proven track record of optimizing database queries, leading agile development teams, and reducing API response latency by 45%.
+
+WORK EXPERIENCE
+Senior Software Engineer | TechCorp Inc. | San Francisco, CA | 2021 – Present
+• Architected and deployed microservices using Node.js, TypeScript, PostgreSQL, and Docker, serving over 150,000 active daily users with 99.99% uptime.
+• Reduced frontend bundle load times by 42% by implementing Next.js Server Components and dynamic code splitting.
+• Mentored a team of 5 engineers, conducting weekly code reviews and establishing automated CI/CD deployment pipelines using GitHub Actions.
+
+Software Engineer | Innovate Systems | Austin, TX | 2018 – 2021
+• Developed RESTful and GraphQL API services in Python/Django, handling 10M+ daily telemetry requests.
+• Optimized PostgreSQL query performance and indexed high-volume database tables, dropping p95 latency from 450ms to 85ms.
+
+TECHNICAL SKILLS
+Languages: TypeScript, JavaScript, Python, SQL, HTML5, CSS3
+Frameworks: React, Next.js, Node.js, Express, TailwindCSS, Django
+Databases & Cloud: PostgreSQL, Redis, MongoDB, AWS (S3, EC2), Docker, Git, CI/CD`;
+
+    const sampleJob = `Senior Full Stack Developer
+Company: Acme Cloud Solutions
+Location: Remote / San Francisco, CA
+
+About the Role:
+We are seeking a Senior Full Stack Engineer to lead the architecture and development of our next-generation developer platform. You will work across TypeScript, React, Next.js, Node.js, and PostgreSQL to deliver high-performance cloud applications.
+
+Key Responsibilities:
+- Design and maintain scalable microservices in Node.js and TypeScript.
+- Build clean, accessible user interfaces using React and Next.js.
+- Optimize database queries and caching layers in PostgreSQL and Redis.
+
+Qualifications:
+- 4+ years of production experience with React, TypeScript, and Node.js.
+- Strong knowledge of relational databases (PostgreSQL/MySQL) and caching strategies.`;
+
+    setResumeText(sampleResume);
+    setJobDescription(sampleJob);
+    setTargetRole("Senior Full Stack Developer");
+    setUploadedFile(null);
+    setFileName(null);
+  };
+
   // ── File drop ────────────────────────────────────────────
   const onDrop = useCallback((accepted: File[]) => {
     const file = accepted[0];
@@ -128,6 +190,9 @@ export default function HomePage() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Failed to scrape");
       setJobDescription(data.jobDescription);
+      if (data.targetRole) {
+        setTargetRole(data.targetRole);
+      }
       setScrapeMode("paste"); // switch back to text view to show result
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Scraping failed";
@@ -348,7 +413,7 @@ export default function HomePage() {
             }}
           >
             Your resume,{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic inline-block pr-3">
               honestly reviewed
             </span>
           </h1>
@@ -357,6 +422,29 @@ export default function HomePage() {
             rewrite suggestions, and match yourself perfectly to target jobs.
           </p>
         </div>
+
+        {/* Unsaved Draft Recovery Banner */}
+        {hasSavedDraft && savedDraft && (
+          <div className="glass-card max-w-xl mx-auto mb-6 p-3 px-4 rounded-xl flex items-center justify-between text-xs border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+            <span>⚡ Unsaved draft recovered from previous session</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRestoreDraft}
+                className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold cursor-pointer hover:bg-amber-600 transition"
+              >
+                Restore
+              </button>
+              <button
+                type="button"
+                onClick={clearSavedDraft}
+                className="px-2 py-1 rounded-lg text-amber-700 dark:text-amber-300 font-semibold cursor-pointer hover:underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Quota indicator */}
         {isSessionLoaded && userEmail && profile && (
@@ -433,13 +521,23 @@ export default function HomePage() {
                       />
                     )}
                   </div>
-                  <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
+                  <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto mb-3">
                     {fileName
                       ? `${fileName}`
                       : isDragActive
                         ? "Drop your file here..."
                         : "Drop PDF, DOCX, or TXT here, or click to browse"}
                   </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLoadSample();
+                    }}
+                    className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <span>⚡ Try with Sample Resume</span>
+                  </button>
                 </div>
 
                 <div className="relative my-5 text-center">

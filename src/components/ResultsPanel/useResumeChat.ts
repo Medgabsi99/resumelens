@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from "react";
+import { readSSEStream } from "@/lib/sse";
 
-export function useResumeChat(
-  resumeText?: string,
-  jobDescription?: string,
-  targetRole?: string
-) {
+export function useResumeChat(resumeText?: string, jobDescription?: string, targetRole?: string) {
   const [chatInput, setChatInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<
-    { role: "user" | "ai"; text: string }[]
-  >([]);
+  const [chatHistory, setChatHistory] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [isChatting, setIsChatting] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
@@ -54,36 +49,21 @@ export function useResumeChat(
         throw new Error(data?.error || "Sorry, I encountered an error. Please try again.");
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No readable stream reader available.");
-      }
-
       // Add a placeholder message for the AI response
       setChatHistory((prev) => [...prev, { role: "ai", text: "" }]);
 
-      const decoder = new TextDecoder();
-      let done = false;
-      let accumulated = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: !done });
-          accumulated += chunk;
-          setChatHistory((prev) => {
-            const nextHistory = [...prev];
-            if (nextHistory.length > 0) {
-              const lastIdx = nextHistory.length - 1;
-              if (nextHistory[lastIdx].role === "ai") {
-                nextHistory[lastIdx] = { ...nextHistory[lastIdx], text: accumulated };
-              }
+      await readSSEStream(res, (accumulatedText) => {
+        setChatHistory((prev) => {
+          const nextHistory = [...prev];
+          if (nextHistory.length > 0) {
+            const lastIdx = nextHistory.length - 1;
+            if (nextHistory[lastIdx].role === "ai") {
+              nextHistory[lastIdx] = { ...nextHistory[lastIdx], text: accumulatedText };
             }
-            return nextHistory;
-          });
-        }
-      }
+          }
+          return nextHistory;
+        });
+      });
     } catch (err: unknown) {
       setChatHistory((prev) => [
         ...prev,

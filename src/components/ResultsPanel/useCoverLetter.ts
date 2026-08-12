@@ -1,11 +1,8 @@
 import { logger } from "@/lib/logger";
 import { useState } from "react";
+import { readSSEStream } from "@/lib/sse";
 
-export function useCoverLetter(
-  resumeText?: string,
-  jobDescription?: string,
-  targetRole?: string
-) {
+export function useCoverLetter(resumeText?: string, jobDescription?: string, targetRole?: string) {
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
   const [isGeneratingCL, setIsGeneratingCL] = useState(false);
   const [clError, setClError] = useState<string | null>(null);
@@ -34,24 +31,9 @@ export function useCoverLetter(
         return;
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No readable stream reader available.");
-      }
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let accumulated = "";
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: !done });
-          accumulated += chunk;
-          setCoverLetter(accumulated);
-        }
-      }
+      await readSSEStream(res, (accumulatedText) => {
+        setCoverLetter(accumulatedText);
+      });
     } catch (e: unknown) {
       logger.error(e);
       setClError((e as Error).message || "Network error while generating cover letter.");

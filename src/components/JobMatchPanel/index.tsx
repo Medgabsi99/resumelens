@@ -590,38 +590,39 @@ export default function JobMatchPanel({
           </ol>
         </SpotlightCard>
 
-        {/* Applied Tailored Badge */}
+        {/* Tailored success banner */}
         {appliedTailored && (
           <div
             style={{
-              background: "#edf7f2",
-              border: "1.5px solid rgba(45, 106, 79, 0.25)",
+              background: "rgba(16, 185, 129, 0.08)",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
               borderRadius: 12,
               padding: "16px 20px",
               marginBottom: 16,
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
-              gap: 12,
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ flex: "1 1 300px" }}>
               <div
                 style={{
                   fontSize: 14,
                   fontWeight: 700,
                   color: "#1e5c3a",
-                  marginBottom: 2,
+                  marginBottom: 4,
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
                 }}
               >
-                <CheckCircle size={14} className="text-emerald-600" />
+                <CheckCircle size={16} className="text-emerald-600" />
                 <span>Tailored Resume Applied!</span>
               </div>
-              <div style={{ fontSize: 12, color: "#2d6a4f", lineHeight: 1.4 }}>
-                The optimized text has been loaded into your editor. Scroll up to review, preview
+              <div style={{ fontSize: 12, color: "#2d6a4f", lineHeight: 1.5 }}>
+                The optimized text has been loaded into your editor. Click below to review, preview
                 template options, and export your PDF.
               </div>
             </div>
@@ -629,33 +630,38 @@ export default function JobMatchPanel({
               onClick={() => {
                 if (onGoToEditor) {
                   onGoToEditor();
-                } else {
+                }
+                setTimeout(() => {
                   const el =
+                    document.getElementById("resume-editor-section") ||
                     document.getElementById("areas-to-improve-section") ||
                     document.querySelector(".sbs-editor-grid");
                   if (el) {
                     el.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
-                }
+                }, 100);
               }}
               style={{
                 background: "#2d6a4f",
                 color: "white",
                 border: "none",
                 borderRadius: 8,
-                padding: "8px 16px",
+                padding: "10px 18px",
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: "pointer",
                 fontFamily: "Instrument Sans, sans-serif",
                 whiteSpace: "nowrap",
                 display: "inline-flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 6,
+                boxShadow: "0 2px 8px rgba(45, 106, 79, 0.25)",
+                flexShrink: 0,
               }}
             >
               <span>Go to Editor</span>
-              <ArrowRight size={12} />
+              <ArrowRight size={14} />
             </button>
           </div>
         )}
@@ -668,16 +674,25 @@ export default function JobMatchPanel({
                 "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
               border: "1.5px dashed rgba(99, 102, 241, 0.4)",
               borderRadius: 12,
-              padding: 20,
+              padding: 24,
               marginBottom: 16,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 12,
+              justifyContent: "center",
+              gap: 14,
               textAlign: "center",
+              width: "100%",
             }}
           >
-            <div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
               <span
                 style={{
                   display: "inline-block",
@@ -685,24 +700,25 @@ export default function JobMatchPanel({
                   color: "white",
                   fontSize: 10,
                   fontWeight: 800,
-                  padding: "3px 8px",
+                  padding: "3px 10px",
                   borderRadius: 6,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  marginBottom: 8,
+                  marginBottom: 10,
                 }}
               >
                 AI Auto-Tailor
               </span>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 4 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                 Tailor your resume for this role in seconds
               </div>
               <div
                 style={{
                   fontSize: 12,
                   color: "var(--ink-muted)",
-                  maxWidth: "500px",
-                  lineHeight: 1.5,
+                  maxWidth: "520px",
+                  lineHeight: 1.55,
+                  margin: "0 auto",
                 }}
               >
                 Optimize your professional summary, work experience bullets, and skills list with
@@ -716,27 +732,29 @@ export default function JobMatchPanel({
                 background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
                 color: "white",
                 border: "none",
-                borderRadius: 8,
-                padding: "10px 24px",
+                borderRadius: 9,
+                padding: "11px 28px",
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: isTailoring ? "wait" : "pointer",
                 fontFamily: "Instrument Sans, sans-serif",
-                transition: "opacity 0.2s",
-                boxShadow: "0 2px 10px rgba(99, 102, 241, 0.3)",
-                display: "flex",
+                transition: "all 0.2s ease",
+                boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
+                justifyContent: "center",
+                gap: 8,
+                margin: "0 auto",
               }}
             >
               {isTailoring ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={15} className="animate-spin" />
                   <span>Tailoring Resume points...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles size={14} />
+                  <Sparkles size={15} />
                   <span>Auto-Tailor Resume</span>
                 </>
               )}

@@ -7,8 +7,13 @@ import SaveResumeModal from "@/components/SaveResumeModal";
 import styles from "../ResultsPanel.module.css";
 import { useToast } from "../ToastProvider";
 import { usePdfExport, type PdfTemplate } from "./usePdfExport";
+import { downloadCoverLetterPdf } from "@/lib/pdf/downloadPdf";
+import { downloadApplicationBundle } from "@/lib/pdf/downloadBundle";
+import { parseResume } from "@/lib/parseResume";
+import SalaryEstimatorCard from "@/components/SalaryEstimatorCard";
 import dynamic from "next/dynamic";
 import {
+  FileCode,
   AlertTriangle,
   Zap,
   ArrowRight,
@@ -1515,6 +1520,7 @@ export default function ResultsPanel({
                     />
                   ))}
                 </div>
+                <SalaryEstimatorCard targetRole={targetRole} resumeText={resumeText} />
               </Section>
             )}
           </div>
@@ -1592,11 +1598,15 @@ export default function ResultsPanel({
                   defaultJobDescription={jobDescription}
                   defaultJobTitle={targetRole}
                   onGoToEditor={() => {
-                    setActiveTab("analysis");
+                    setActiveTab("tools");
                     setTimeout(() => {
-                      const el = document.getElementById("areas-to-improve-section");
-                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }, 100);
+                      const el = document.getElementById("resume-editor-section");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      } else {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }, 120);
                   }}
                 />
               </Section>
@@ -1688,7 +1698,31 @@ export default function ResultsPanel({
                       className={`${styles.btnPrimary} flex items-center gap-2`}
                     >
                       <Download size={14} />
-                      <span>Download Cover Letter (.txt)</span>
+                      <span>Download .txt</span>
+                    </button>
+                    <button
+                      onClick={() => coverLetter && downloadCoverLetterPdf(coverLetter, targetRole)}
+                      className={`${styles.btnPrimary} flex items-center gap-2`}
+                      style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+                    >
+                      <Download size={14} />
+                      <span>Download PDF</span>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const data = parseResume(resumeText || "");
+                        await downloadApplicationBundle(
+                          "tech-pro",
+                          data,
+                          coverLetter || undefined,
+                          targetRole
+                        );
+                      }}
+                      className={`${styles.btnPrimary} flex items-center gap-2`}
+                      style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)" }}
+                    >
+                      <Download size={14} />
+                      <span>📦 Application Bundle</span>
                     </button>
                   </div>
                   <div className="print-cover-letter">
