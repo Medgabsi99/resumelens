@@ -14,6 +14,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useToast } from "./ToastProvider";
+import ModalErrorBoundary from "./ModalErrorBoundary";
 
 interface Props {
   companyName: string;
@@ -25,7 +26,7 @@ interface Props {
 export type OutreachTarget = "recruiter" | "hiring_manager" | "executive";
 export type OutreachTemplateType = "inmail" | "cold_email" | "followup";
 
-export default function RecruiterOutreachModal({
+function RecruiterOutreachContent({
   companyName,
   jobTitle,
   contactName = "Hiring Team",
@@ -158,7 +159,8 @@ Best,
                 Recruiter Cold Email & Outreach CRM Architect
               </h3>
               <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--ink-muted)" }}>
-                Generate targeted LinkedIn InMails and recruiter outreach messages for {companyName}.
+                Generate targeted LinkedIn InMails and recruiter outreach messages for {companyName}
+                .
               </p>
             </div>
           </div>
@@ -240,11 +242,27 @@ Best,
             lineHeight: "1.6",
           }}
         >
-          <div style={{ marginBottom: "12px", paddingBottom: "8px", borderBottom: "1px solid #21262d" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#8b949e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              marginBottom: "12px",
+              paddingBottom: "8px",
+              borderBottom: "1px solid #21262d",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "#8b949e",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
               Subject Line:
             </span>
-            <div style={{ fontWeight: 700, color: "#58a6ff", fontSize: "13.5px", marginTop: "2px" }}>
+            <div
+              style={{ fontWeight: 700, color: "#58a6ff", fontSize: "13.5px", marginTop: "2px" }}
+            >
               {messages.subject}
             </div>
           </div>
@@ -286,5 +304,13 @@ Best,
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RecruiterOutreachModal(props: Props) {
+  return (
+    <ModalErrorBoundary modalTitle="Recruiter Outreach Error" onClose={props.onClose}>
+      <RecruiterOutreachContent {...props} />
+    </ModalErrorBoundary>
   );
 }

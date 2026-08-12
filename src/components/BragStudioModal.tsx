@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useToast } from "./ToastProvider";
 
+import ModalErrorBoundary from "./ModalErrorBoundary";
+
 interface Props {
   score: number;
   targetRole?: string;
@@ -84,7 +86,7 @@ const THEMES: Record<BragTheme, ThemePreset> = {
   },
 };
 
-export default function BragStudioModal({
+function BragStudioContent({
   score,
   targetRole = "Software Engineer",
   candidateName = "Candidate",
@@ -507,5 +509,13 @@ export default function BragStudioModal({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BragStudioModal(props: Props) {
+  return (
+    <ModalErrorBoundary modalTitle="Brag Studio Error" onClose={props.onClose}>
+      <BragStudioContent {...props} />
+    </ModalErrorBoundary>
   );
 }
