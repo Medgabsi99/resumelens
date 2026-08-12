@@ -1,7 +1,7 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUserWithQuota, incrementUsage } from "@/lib/auth";
 import { getSecureModel, withRetryAndTimeout } from "@/lib/ai/client";
 
 export const maxDuration = 45;
@@ -15,8 +15,16 @@ const xyzModel = getSecureModel({
 export async function POST(req: NextRequest) {
   let _user;
   try {
-    _user = await requireUser();
-  } catch {
+    const session = await requireUserWithQuota();
+    _user = session.user;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg === "QuotaExceeded") {
+      return NextResponse.json(
+        { error: "Upgrade required to run XYZ bullet optimizations" },
+        { status: 403 }
+      );
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -37,6 +45,8 @@ export async function POST(req: NextRequest) {
   if (!bullet || typeof bullet !== "string" || bullet.trim().length < 5) {
     return NextResponse.json({ error: "Invalid bullet text provided." }, { status: 400 });
   }
+
+  await incrementUsage(_user.id);
 
   const roleHint = targetRole ? ` for a ${targetRole} role` : "";
   const jdContext = jobDescription
@@ -78,7 +88,10 @@ Respond ONLY with a valid JSON object — no preamble, no markdown fences:
       return result.response.text();
     });
 
-    const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const cleaned = raw
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
     const parsed = JSON.parse(cleaned);
 
     return NextResponse.json({ success: true, data: parsed });

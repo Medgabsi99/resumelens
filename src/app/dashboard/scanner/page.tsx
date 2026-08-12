@@ -36,7 +36,7 @@ export default function ScannerPage() {
 
   useEffect(() => {
     setMounted(true);
-    
+
     // Check if query param analysisId is present
     const params = new URLSearchParams(window.location.search);
     const analysisId = params.get("analysisId");
@@ -156,75 +156,76 @@ export default function ScannerPage() {
 
   return (
     <DashboardLayout>
-      <div className="fade-up max-w-5xl mx-auto space-y-8">
-        
-        {/* Title */}
-        {!scannerData && !loading && (
-          <div className="space-y-1.5">
-            <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink flex items-center gap-2 flex-wrap">
-              PDF ATS-Compliance Heatmap & Structural Scanner
-            </h1>
-            <p className="text-ink-muted text-sm max-w-3xl">
-              Upload your resume PDF to scan for common formatting issues that confuse applicant tracking system parsers. Get a visual heatmap of your document structure warnings.
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Loading Step View */}
-        {loading && (
-          <div className="bg-paper-card border border-border rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[280px] sm:min-h-[350px]">
-            <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-            <h3 className="font-display text-lg font-bold text-ink mt-2">
-              {SCANNING_STEPS[scanStep]}
-            </h3>
-            <p className="text-xs text-ink-muted">
-              Analyzing font layers, headings, rating symbols, and column positions
-            </p>
-          </div>
-        )}
-
-        {/* Landing Dropzone View */}
-        {!scannerData && !loading && (
-          <div className="max-w-2xl mx-auto">
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed border-border/80 rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition bg-paper-card hover:bg-paper-warm hover:border-accent-border flex flex-col items-center justify-center min-h-[240px] sm:min-h-[300px] shadow-lg ${
-                isDragActive ? "border-accent bg-accent/5" : ""
-              }`}
-            >
-              <input {...getInputProps()} />
-              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent-border flex items-center justify-center text-accent mb-4">
-                <Upload size={28} />
-              </div>
-              <h3 className="font-display text-lg font-bold text-ink mb-1.5">
-                Drag and Drop Resume PDF here
-              </h3>
-              <p className="text-xs text-ink-muted mb-6">
-                or click to select file from finder (A4 PDF format)
+      <div className="workspace-canvas">
+        <div className="fade-up max-w-7xl mx-auto space-y-8">
+          {/* Title */}
+          {!scannerData && !loading && (
+            <div className="space-y-1.5">
+              <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink flex items-center gap-2 flex-wrap">
+                PDF ATS-Compliance Heatmap & Structural Scanner
+              </h1>
+              <p className="text-ink-muted text-sm max-w-3xl">
+                Upload your resume PDF to scan for common formatting issues that confuse applicant
+                tracking system parsers. Get a visual heatmap of your document structure warnings.
               </p>
-              
-              <div className="bg-paper border border-border/60 rounded-xl px-4 py-2 text-[10px] text-ink-muted uppercase font-bold tracking-wider">
-                Only PDF documents supported
+            </div>
+          )}
+
+          {error && (
+            <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Loading Step View */}
+          {loading && (
+            <div className="bg-paper-card border border-border rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[280px] sm:min-h-[350px]">
+              <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+              <h3 className="font-display text-lg font-bold text-ink mt-2">
+                {SCANNING_STEPS[scanStep]}
+              </h3>
+              <p className="text-xs text-ink-muted">
+                Analyzing font layers, headings, rating symbols, and column positions
+              </p>
+            </div>
+          )}
+
+          {/* Landing Dropzone View */}
+          {!scannerData && !loading && (
+            <div className="max-w-2xl mx-auto">
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed border-border/80 rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition bg-paper-card hover:bg-paper-warm hover:border-accent-border flex flex-col items-center justify-center min-h-[240px] sm:min-h-[300px] shadow-lg ${
+                  isDragActive ? "border-accent bg-accent/5" : ""
+                }`}
+              >
+                <input {...getInputProps()} />
+                <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent-border flex items-center justify-center text-accent mb-4">
+                  <Upload size={28} />
+                </div>
+                <h3 className="font-display text-lg font-bold text-ink mb-1.5">
+                  Drag and Drop Resume PDF here
+                </h3>
+                <p className="text-xs text-ink-muted mb-6">
+                  or click to select file from finder (A4 PDF format)
+                </p>
+
+                <div className="bg-paper border border-border/60 rounded-xl px-4 py-2 text-[10px] text-ink-muted uppercase font-bold tracking-wider">
+                  Only PDF documents supported
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Interactive Scorecard & Heatmap Board */}
-        {scannerData && !loading && (
-          <AtsScannerBoard
-            data={scannerData}
-            fileName={fileName || undefined}
-            onClose={handleReset}
-          />
-        )}
-
+          {/* Interactive Scorecard & Heatmap Board */}
+          {scannerData && !loading && (
+            <AtsScannerBoard
+              data={scannerData}
+              fileName={fileName || undefined}
+              onClose={handleReset}
+            />
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

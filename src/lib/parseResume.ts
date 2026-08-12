@@ -46,29 +46,68 @@ export interface ParsedResume {
 
 const SECTION_KEYWORDS = [
   // Summary
-  "summary", "objective", "profile", "about me", "about", "profil",
-  "sommaire", "presentation", "resume", "professional summary",
+  "summary",
+  "objective",
+  "profile",
+  "about me",
+  "about",
+  "profil",
+  "sommaire",
+  "presentation",
+  "resume",
+  "professional summary",
   // Experience
-  "experience", "work history", "employment", "career history",
-  "parcours", "experiences", "professional experience", "work experience",
+  "experience",
+  "work history",
+  "employment",
+  "career history",
+  "parcours",
+  "experiences",
+  "professional experience",
+  "work experience",
   // Education
-  "education", "academic", "formation", "etudes", "cursus",
-  "academic background", "educational background",
+  "education",
+  "academic",
+  "formation",
+  "etudes",
+  "cursus",
+  "academic background",
+  "educational background",
   // Skills
-  "skills", "core competencies", "technical skills", "expertise",
-  "competences", "aptitudes", "savoir-faire", "technologies",
-  "tools", "tools & technologies",
+  "skills",
+  "core competencies",
+  "technical skills",
+  "expertise",
+  "competences",
+  "aptitudes",
+  "savoir-faire",
+  "technologies",
+  "tools",
+  "tools & technologies",
   // Projects
-  "projects", "personal projects", "projets", "key projects",
+  "projects",
+  "personal projects",
+  "projets",
+  "key projects",
   // Certifications
-  "certifications", "licenses", "certification",
+  "certifications",
+  "licenses",
+  "certification",
   "professional certifications",
   // Languages
-  "languages", "langues",
+  "languages",
+  "langues",
   // Awards
-  "awards", "honors", "distinctions", "prix", "achievements",
+  "awards",
+  "honors",
+  "distinctions",
+  "prix",
+  "achievements",
   // Volunteering / Interests
-  "volunteer", "volunteering", "interests", "hobbies",
+  "volunteer",
+  "volunteering",
+  "interests",
+  "hobbies",
   // References
   "references",
 ];
@@ -110,7 +149,7 @@ function isDateLine(line: string): boolean {
   return (
     /^\w{0,12}\s*\d{4}\s*[-–—to]+\s*(\w{0,12}\s*\d{4}|present|current|now)/i.test(clean) ||
     /^\d{4}\s*$/.test(clean) ||
-    /^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(clean) && /\d{4}/.test(clean)
+    (/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(clean) && /\d{4}/.test(clean))
   );
 }
 
@@ -152,8 +191,7 @@ function splitIntoEntries(rawLines: string[]): string[][] {
       !isDateLine(trimmed) &&
       /^[A-Z\d]/.test(trimmed) &&
       // The previous line was a bullet or date → this is likely a new entry
-      (isBulletLine(current[current.length - 1]) ||
-        isDateLine(current[current.length - 1]))
+      (isBulletLine(current[current.length - 1]) || isDateLine(current[current.length - 1]))
     ) {
       entries.push(current);
       current = [];
@@ -171,9 +209,7 @@ function splitIntoEntries(rawLines: string[]): string[][] {
 
 // ─── Experience Entry Parser ────────────────────────────────
 
-function parseExperienceEntry(
-  entryLines: string[]
-): ParsedResume["experience"][number] {
+function parseExperienceEntry(entryLines: string[]): ParsedResume["experience"][number] {
   if (entryLines.length === 0) {
     return { title: "", company: "", bullets: [] };
   }
@@ -182,9 +218,7 @@ function parseExperienceEntry(
   const firstLine = entryLines[0];
 
   // Try to split title and company on common separators
-  const titleCompanyParts = firstLine.split(
-    /\s+at\s+|\s+@\s+|\s+[—–]\s+|\s*\|\s*/i
-  );
+  const titleCompanyParts = firstLine.split(/\s+at\s+|\s+@\s+|\s+[—–]\s+|\s*\|\s*/i);
   let title = titleCompanyParts[0]?.trim() || firstLine;
   let company = titleCompanyParts[1]?.trim() || "";
 
@@ -199,9 +233,7 @@ function parseExperienceEntry(
 
   // Extract dates from any line
   let dates = "";
-  const dateLineIdx = entryLines.findIndex(
-    (l, idx) => idx > 0 && isDateLine(l)
-  );
+  const dateLineIdx = entryLines.findIndex((l, idx) => idx > 0 && isDateLine(l));
   if (dateLineIdx > -1) {
     dates = entryLines[dateLineIdx];
   } else {
@@ -274,14 +306,21 @@ export function parseResume(text: string): ParsedResume {
   };
 
   // ── Contact block: first few lines before any section header ──
+  // Scan up to 14 lines — contact sections often have a line each for
+  // name, title, email, phone, location, LinkedIn, GitHub, portfolio
   const contactLines: string[] = [];
+  let blankCount = 0;
   let i = 0;
-  for (; i < Math.min(8, rawLines.length); i++) {
+  for (; i < Math.min(14, rawLines.length); i++) {
     const trimmed = rawLines[i].trim();
     if (trimmed === "") {
-      if (contactLines.length > 0) break; // blank after contact = done
+      blankCount++;
+      // Allow one blank line inside the contact block (separates name from details)
+      // but stop after two consecutive blanks
+      if (blankCount >= 2 && contactLines.length > 0) break;
       continue;
     }
+    blankCount = 0;
     if (isHeaderLine(trimmed)) break;
     contactLines.push(trimmed);
   }
@@ -289,15 +328,110 @@ export function parseResume(text: string): ParsedResume {
   if (contactLines.length > 0) {
     result.contact.name = contactLines[0];
     const rest = contactLines.slice(1).join(" | ");
+
+    // ── Standard fields ──────────────────────────────────────────
     const emailMatch = rest.match(/[\w.+-]+@[\w.-]+\.\w+/);
     const phoneMatch = rest.match(/[+]?[\d\s\-()]{7,}/);
-    const locationMatch = rest.match(
-      /(?:[\w\s]+,\s*[A-Z]{2})|(?:[\w\s]+,\s*[\w\s]+)/
-    );
+    const locationMatch = rest.match(/(?:[\w\s]+,\s*[A-Z]{2})|(?:[\w\s]+,\s*[\w\s]+)/);
     if (emailMatch) result.contact.email = emailMatch[0];
     if (phoneMatch) result.contact.phone = phoneMatch[0].trim();
     if (locationMatch) result.contact.location = locationMatch[0].trim();
-  }
+
+    // ── Extract LinkedIn / GitHub / Portfolio / any URL ──────────
+    const links: string[] = [];
+    const fullText = contactLines.join(" ");
+
+    // Step 1: collect all email domains to exclude (e.g. "gmail.com")
+    const emailDomains = new Set<string>();
+    const emailPattern = /[\w.+-]+@([\w.-]+\.\w+)/g;
+    let emailHit: RegExpExecArray | null;
+    while ((emailHit = emailPattern.exec(fullText)) !== null) {
+      emailDomains.add(emailHit[1].toLowerCase());
+    }
+
+    // Step 2: hard-skip known mail providers
+    const MAIL_PROVIDERS = new Set([
+      "gmail.com",
+      "yahoo.com",
+      "outlook.com",
+      "hotmail.com",
+      "icloud.com",
+      "protonmail.com",
+      "live.com",
+      "mail.com",
+      "aol.com",
+      "ymail.com",
+      "zoho.com",
+    ]);
+
+    // Step 3: broad URL regex — (?:[\w-]+\.)+ allows multi-segment domains:
+    //   johndoe.github.io, me.johndoe.com, sub.mysite.co.uk
+    //   [^\s<>"'()]* captures the full path including slashes, query params, hashes
+    const urlRegex =
+      /(?:https?:\/\/)?(?:[\w-]+\.)+(?:com|io|net|org|dev|me|co|app|tech|website|site|online|design|work)(?:\/[^\s<>"'()]*)?/gi;
+
+    let urlMatch: RegExpExecArray | null;
+    urlRegex.lastIndex = 0;
+    while ((urlMatch = urlRegex.exec(fullText)) !== null) {
+      let u = urlMatch[0].trim();
+      // Strip trailing punctuation
+      u = u.replace(/[.,;)'">\]]+$/, "");
+      if (!u || u.length < 6) continue;
+
+      // Extract full domain (everything before the first /)
+      const domainMatch = u.match(/^(?:https?:\/\/)?(?:www\.)?([\w.-]+)/);
+      const fullDomain = domainMatch?.[1]?.toLowerCase() ?? "";
+      // Root domain = last two segments: "johndoe.github.io" → "github.io"
+      const parts = fullDomain.split(".");
+      const rootDomain = parts.slice(-2).join(".");
+      const tld = parts[parts.length - 1] ?? "";
+
+      // Skip email domains and known mail providers (check both full and root)
+      if (
+        emailDomains.has(fullDomain) ||
+        emailDomains.has(rootDomain) ||
+        MAIL_PROVIDERS.has(fullDomain) ||
+        MAIL_PROVIDERS.has(rootDomain) ||
+        /^\d/.test(u)
+      )
+        continue;
+
+      // For bare .com/.net/.org with no path/prefix/known brand: skip fragments
+      const hasPath = u.includes("/");
+      const hasPrefix = u.startsWith("http") || u.startsWith("www.");
+      const isPortTld = [
+        "dev",
+        "io",
+        "me",
+        "app",
+        "tech",
+        "website",
+        "site",
+        "online",
+        "design",
+        "work",
+      ].includes(tld);
+      const isKnownBrand = [
+        "linkedin",
+        "github",
+        "gitlab",
+        "behance",
+        "dribbble",
+        "stackoverflow",
+        "medium",
+        "portfolio",
+      ].some((k) => fullDomain.includes(k));
+
+      if (!hasPath && !hasPrefix && !isPortTld && !isKnownBrand) continue;
+
+      // Deduplicate by full domain
+      if (!links.some((l) => l.toLowerCase().includes(fullDomain.slice(0, 20)))) {
+        links.push(u);
+      }
+    }
+
+    if (links.length > 0) result.contact.links = links;
+  } // end if (contactLines.length > 0)
 
   // ── Collect section buffers ──
   let currentSection = "summary";
@@ -327,7 +461,7 @@ export function parseResume(text: string): ParsedResume {
     ) {
       result.summary = textContent;
 
-    // ── Experience ──
+      // ── Experience ──
     } else if (
       sec.includes("experience") ||
       sec.includes("work") ||
@@ -342,7 +476,7 @@ export function parseResume(text: string): ParsedResume {
         result.experience.push(parseExperienceEntry(filtered));
       }
 
-    // ── Education ──
+      // ── Education ──
     } else if (
       sec.includes("education") ||
       sec.includes("academic") ||
@@ -365,11 +499,7 @@ export function parseResume(text: string): ParsedResume {
             return "";
           })();
         const detailLines = filtered.filter(
-          (l) =>
-            l !== degree &&
-            l !== school &&
-            l !== dates &&
-            !isDateLine(l)
+          (l) => l !== degree && l !== school && l !== dates && !isDateLine(l)
         );
         result.education.push({
           degree,
@@ -379,7 +509,7 @@ export function parseResume(text: string): ParsedResume {
         });
       }
 
-    // ── Skills ──
+      // ── Skills ──
     } else if (
       sec.includes("skill") ||
       sec.includes("competenc") ||
@@ -394,7 +524,7 @@ export function parseResume(text: string): ParsedResume {
         .filter(Boolean);
       result.skills = [...result.skills, ...skills];
 
-    // ── Projects ──
+      // ── Projects ──
     } else if (sec.includes("project") || sec.includes("projet")) {
       if (!result.projects) result.projects = [];
       const entries = splitIntoEntries(buffer);
@@ -409,21 +539,24 @@ export function parseResume(text: string): ParsedResume {
         });
       }
 
-    // ── Certifications ──
+      // ── Certifications ──
     } else if (sec.includes("certif") || sec.includes("license")) {
       result.certifications = [
         ...(result.certifications || []),
         ...textContent.split("\n").map(stripBullet).filter(Boolean),
       ];
 
-    // ── Languages ──
+      // ── Languages ──
     } else if (sec.includes("language") || sec.includes("langue")) {
       result.languages = [
         ...(result.languages || []),
-        ...textContent.split(/[,\n•]/).map(stripBullet).filter(Boolean),
+        ...textContent
+          .split(/[,\n•]/)
+          .map(stripBullet)
+          .filter(Boolean),
       ];
 
-    // ── Awards ──
+      // ── Awards ──
     } else if (
       sec.includes("award") ||
       sec.includes("distinction") ||
@@ -436,7 +569,7 @@ export function parseResume(text: string): ParsedResume {
         ...textContent.split("\n").map(stripBullet).filter(Boolean),
       ];
 
-    // ── Fallback → summary ──
+      // ── Fallback → summary ──
     } else {
       if (!result.summary) {
         result.summary = textContent;

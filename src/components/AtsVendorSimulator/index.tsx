@@ -22,13 +22,23 @@ import {
 interface Props {
   resumeText: string;
   jobDescription?: string;
+  onApplyFixes?: () => void;
 }
 
-export default function AtsVendorSimulator({ resumeText, jobDescription }: Props) {
+export default function AtsVendorSimulator({ resumeText, jobDescription, onApplyFixes }: Props) {
   const result: AtsSimulatorResult = simulateAtsVendors(resumeText, jobDescription);
 
   const [activeVendor, setActiveVendor] = useState<AtsVendor>("workday");
   const activeProfile: AtsVendorProfile = result.profiles[activeVendor];
+
+  const handleApplyFixes = () => {
+    if (onApplyFixes) {
+      onApplyFixes();
+    } else {
+      const el = document.getElementById("areas-to-improve-section");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
@@ -148,7 +158,9 @@ export default function AtsVendorSimulator({ resumeText, jobDescription }: Props
               {activeProfile.logoBadge}
             </span>
             <div>
-              <h4 className="font-display text-lg font-bold text-ink">{activeProfile.name} Profile</h4>
+              <h4 className="font-display text-lg font-bold text-ink">
+                {activeProfile.name} Profile
+              </h4>
               <div className="text-xs font-mono text-ink-faint">
                 Market Adoption: {activeProfile.marketShare}
               </div>
@@ -219,16 +231,18 @@ export default function AtsVendorSimulator({ resumeText, jobDescription }: Props
                 {result.universalFixesCount} Quick Fixes Available
               </div>
               <div className="text-[11px] text-ink-muted">
-                Resolving these flags boosts your score across Workday, Greenhouse, Lever, Taleo, and iCIMS simultaneously.
+                Resolving these flags boosts your score across Workday, Greenhouse, Lever, Taleo,
+                and iCIMS simultaneously.
               </div>
             </div>
           </div>
-          <a
-            href="#areas-to-improve-section"
-            className="text-xs font-bold text-white bg-accent hover:bg-accent-dark px-4 py-2 rounded-xl no-underline shadow-sm transition-transform hover:scale-105 shrink-0"
+          <button
+            type="button"
+            onClick={handleApplyFixes}
+            className="text-xs font-bold text-white bg-accent hover:bg-accent-dark px-4 py-2 rounded-xl no-underline shadow-sm transition-transform hover:scale-105 shrink-0 cursor-pointer border-none"
           >
             Apply Fixes in Editor →
-          </a>
+          </button>
         </div>
       )}
     </div>

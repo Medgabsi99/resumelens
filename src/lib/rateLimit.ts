@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 let ratelimit: Ratelimit | null = null;
 
@@ -18,7 +19,7 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
       prefix: "@upstash/ratelimit",
     });
   } catch (err) {
-    console.error("Failed to initialize Upstash Redis:", err);
+    logger.error("Failed to initialize Upstash Redis:", err);
   }
 }
 
@@ -39,7 +40,7 @@ export async function checkRateLimit(userId: string, routeName: string) {
     };
   } catch (err) {
     // If Upstash service fails/times out, fail-open to not block the user
-    console.error("Rate limit check failed:", err);
+    logger.error("Rate limit check failed:", err);
     return { success: true, limit: 0, remaining: 0, reset: 0 };
   }
 }

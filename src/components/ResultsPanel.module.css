@@ -17,11 +17,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
+  position: relative;
 }
 
 @media (min-width: 640px) {
   .header {
-    padding: 24px 30px;
+    padding: 20px 30px;
     gap: 16px;
   }
 }
@@ -35,14 +36,16 @@
 
 .headerTitle {
   font-family: "DM Serif Display", Georgia, serif;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  color: var(--ink);
+  line-height: 1.1;
 }
 
 @media (min-width: 640px) {
   .headerTitle {
-    font-size: 26px;
+    font-size: 24px;
   }
 }
 
@@ -136,7 +139,6 @@
   padding: 16px;
 }
 
-
 .previewCenter {
   display: flex;
   justify-content: flex-start;
@@ -150,7 +152,7 @@
   box-shadow: 0 15px 35px -10px var(--shadow-color);
   border-radius: var(--radius);
   overflow: hidden;
-  background: white;
+  background: var(--paper-card);
   border: 1px solid var(--border);
 }
 
@@ -176,7 +178,6 @@
     font-size: 14.5px;
   }
 }
-
 
 .gridTwo {
   display: grid;
@@ -508,12 +509,20 @@
   opacity: 0.4;
 }
 
-.typingDot:nth-child(1) { animation: typingDotBounce 1.4s infinite 0s; }
-.typingDot:nth-child(2) { animation: typingDotBounce 1.4s infinite 0.2s; }
-.typingDot:nth-child(3) { animation: typingDotBounce 1.4s infinite 0.4s; }
+.typingDot:nth-child(1) {
+  animation: typingDotBounce 1.4s infinite 0s;
+}
+.typingDot:nth-child(2) {
+  animation: typingDotBounce 1.4s infinite 0.2s;
+}
+.typingDot:nth-child(3) {
+  animation: typingDotBounce 1.4s infinite 0.4s;
+}
 
 @keyframes typingDotBounce {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.4;
   }
@@ -556,7 +565,9 @@
 .fadeUp {
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.25s, transform 0.25s;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
 }
 
 .exportLinkGroup {

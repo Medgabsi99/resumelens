@@ -7,9 +7,9 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // Plan limits
 export const PLAN_LIMITS = {
-  free: 999,        // Temporarily set to 999 for local development (was 2)
-  one_time: 999,    // effectively unlimited (one-time payment)
-  monthly: 999,     // unlimited on subscription
+  free: 999, // Set to 999 for active development and testing phase
+  one_time: 999, // effectively unlimited (one-time payment)
+  monthly: 999, // unlimited on subscription
 } as const;
 
 export const PRICES = {

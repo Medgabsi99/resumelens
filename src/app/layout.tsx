@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastProvider from "@/components/ToastProvider";
@@ -7,7 +8,9 @@ import FetchProgressInterceptor from "@/components/FetchProgressInterceptor";
 import { ContextMenuProvider } from "@/components/ContextMenu";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://resumelens.vercel.app";
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "https://resumelens.vercel.app";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -83,29 +86,25 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "ResumeLens — AI Resume Reviewer",
-    description:
-      "Get honest, structured AI feedback on your resume in seconds.",
+    description: "Get honest, structured AI feedback on your resume in seconds.",
     images: ["/icon-512.png"],
     creator: "@resumelens",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font -- root layout is equivalent to _document; loading shared fonts here is intentional */}
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        <script
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
@@ -134,4 +133,3 @@ export default function RootLayout({
     </html>
   );
 }
-

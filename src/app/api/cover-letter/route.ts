@@ -5,6 +5,7 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { generateCoverLetterStream } from "@/lib/ai";
 import { getUserProfile, canAnalyze } from "@/lib/auth";
+import { createSSEResponse } from "@/lib/sse";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
 
@@ -17,7 +18,6 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 2. Load user profile & check quota ───────────────────
-  // We require the user to have active quota to generate a cover letter
   const profile = await getUserProfile(_user.id);
   if (!profile || !canAnalyze(profile)) {
     return NextResponse.json(
@@ -39,38 +39,25 @@ export async function POST(req: NextRequest) {
       targetRole = validateAndSanitizeInput(targetRole, 200, "Target role");
     }
   } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
-      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
-    }
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
+  }
 
-  // ── 4. Generate Cover Letter ──────────────────────────────
+  // ── 4. Generate Cover Letter via SSE Stream ──────────────
   try {
     const streamResult = await generateCoverLetterStream(resumeText, jobDescription, targetRole);
-    const responseStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        try {
-          for await (const chunk of streamResult.stream) {
-            const text = chunk.text();
-            controller.enqueue(encoder.encode(text));
-          }
-        } catch (streamErr) {
-          logger.error("Cover letter stream error:", streamErr);
-        } finally {
-          controller.close();
+    return createSSEResponse(async (send) => {
+      for await (const chunk of streamResult.stream) {
+        const text = chunk.text();
+        if (text) {
+          send(text);
         }
-      },
-    });
-
-    return new Response(responseStream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-      },
+      }
     });
   } catch (err: unknown) {
     logger.error("Cover letter API error:", err);
-    const message = err instanceof Error ? (err as Error).message : "Cover letter generation failed";
+    const message =
+      err instanceof Error ? (err as Error).message : "Cover letter generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

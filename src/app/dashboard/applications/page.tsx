@@ -8,7 +8,11 @@ export const metadata = {
 export default function ApplicationsPage() {
   return (
     <DashboardLayout>
-      <ClientApplicationTracker />
+      <div className="workspace-canvas">
+        <div className="max-w-7xl mx-auto">
+          <ClientApplicationTracker />
+        </div>
+      </div>
     </DashboardLayout>
   );
 }

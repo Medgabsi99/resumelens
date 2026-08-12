@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Zap, CheckCircle2, AlertTriangle, AlertOctagon, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Zap,
+  CheckCircle2,
+  AlertTriangle,
+  AlertOctagon,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 
 interface Props {
   resumeText: string;
@@ -65,7 +72,12 @@ function detectWeakVerbs(text: string): WeakVerbMatch[] {
     if (count > 0) {
       const key = weak.toLowerCase();
       if (!found.has(key)) {
-        found.set(key, { verb: weak, count, suggestions: suggestions.slice(0, 3), lineSnippets: snippets });
+        found.set(key, {
+          verb: weak,
+          count,
+          suggestions: suggestions.slice(0, 3),
+          lineSnippets: snippets,
+        });
       }
     }
   }
@@ -94,18 +106,12 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
 
   const totalWeak = matches.reduce((s, m) => s + m.count, 0);
 
-  const scoreColor =
-    score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : "#ef4444";
+  const scoreColor = score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : "#ef4444";
 
   const scoreLabelText =
-    score >= 80
-      ? "Strong Verbs"
-      : score >= 60
-      ? "Needs Improvement"
-      : "Weak Verb Usage";
+    score >= 80 ? "Strong Verbs" : score >= 60 ? "Needs Improvement" : "Weak Verb Usage";
 
-  const ScoreLabelIcon =
-    score >= 80 ? CheckCircle2 : score >= 60 ? AlertTriangle : AlertOctagon;
+  const ScoreLabelIcon = score >= 80 ? CheckCircle2 : score >= 60 ? AlertTriangle : AlertOctagon;
 
   return (
     <div
@@ -128,7 +134,14 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
         }}
         onClick={() => setExpanded((v) => !v)}
       >
-        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", color: scoreColor }}>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: scoreColor,
+          }}
+        >
           <Zap size={20} />
         </span>
         <div style={{ flex: 1 }}>
@@ -161,12 +174,31 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
           >
             {score}
           </div>
-          <div style={{ fontSize: 9.5, color: scoreColor, fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 3, justifyContent: "center" }}>
+          <div
+            style={{
+              fontSize: 9.5,
+              color: scoreColor,
+              fontWeight: 700,
+              marginTop: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 3,
+              justifyContent: "center",
+            }}
+          >
             <ScoreLabelIcon size={10} />
             {scoreLabelText}
           </div>
         </div>
-        <span style={{ color: "var(--ink-faint)", fontSize: 14, marginLeft: 4, display: "flex", alignItems: "center" }}>
+        <span
+          style={{
+            color: "var(--ink-faint)",
+            fontSize: 14,
+            marginLeft: 4,
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </span>
       </div>
@@ -200,10 +232,10 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
             <div
               style={{
                 padding: "16px 20px",
-                background: "#f0fdf4",
-                border: "1px solid #bbf7d0",
+                background: "rgba(16,185,129,0.08)",
+                border: "1px solid rgba(16,185,129,0.25)",
                 borderRadius: 10,
-                color: "#15803d",
+                color: "#10b981",
                 fontSize: 13,
                 fontWeight: 600,
                 textAlign: "center",
@@ -221,11 +253,11 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
               <div
                 style={{
                   padding: "10px 14px",
-                  background: "#fffbeb",
-                  border: "1px solid #fde68a",
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.25)",
                   borderRadius: 10,
                   fontSize: 12,
-                  color: "#92400e",
+                  color: "var(--ink-muted)",
                   marginBottom: 14,
                   lineHeight: 1.5,
                 }}
@@ -253,22 +285,19 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                         alignItems: "center",
                         gap: 10,
                         cursor: "pointer",
-                        background:
-                          expandedVerb === m.verb ? "var(--paper)" : "var(--paper-card)",
+                        background: expandedVerb === m.verb ? "var(--paper)" : "var(--paper-card)",
                       }}
-                      onClick={() =>
-                        setExpandedVerb(expandedVerb === m.verb ? null : m.verb)
-                      }
+                      onClick={() => setExpandedVerb(expandedVerb === m.verb ? null : m.verb)}
                     >
                       <span
                         style={{
-                          background: "#fef3c7",
-                          border: "1px solid #fde68a",
+                          background: "rgba(245,158,11,0.1)",
+                          border: "1px solid rgba(245,158,11,0.3)",
                           padding: "2px 10px",
                           borderRadius: 20,
                           fontSize: 11.5,
                           fontWeight: 700,
-                          color: "#92400e",
+                          color: "#f59e0b",
                           fontFamily: "DM Mono, monospace",
                           textTransform: "capitalize",
                         }}
@@ -289,21 +318,27 @@ export default function ActiveVerbAuditor({ resumeText }: Props) {
                           <span
                             key={s}
                             style={{
-                              background: "#eff6ff",
-                              border: "1px solid #bfdbfe",
+                              background: "rgba(99,102,241,0.1)",
+                              border: "1px solid rgba(99,102,241,0.25)",
                               padding: "2px 9px",
                               borderRadius: 20,
                               fontSize: 11,
                               fontWeight: 700,
-                              color: "#1d4ed8",
+                              color: "#818cf8",
                             }}
                           >
                             {s}
                           </span>
                         ))}
                       </div>
-                      <span style={{ color: "var(--ink-faint)", display: "flex", alignItems: "center" }}>
-                        {expandedVerb === m.verb ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                      <span
+                        style={{ color: "var(--ink-faint)", display: "flex", alignItems: "center" }}
+                      >
+                        {expandedVerb === m.verb ? (
+                          <ChevronUp size={12} />
+                        ) : (
+                          <ChevronDown size={12} />
+                        )}
                       </span>
                     </div>
 

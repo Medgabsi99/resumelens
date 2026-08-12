@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useRef,
-  useState,
-  useEffect,
-} from "react";
+import { createContext, useContext, useCallback, useRef, useState, useEffect } from "react";
 import { getReducedMotion } from "@/hooks/useReducedMotion";
 
 // ─── Context & API ────────────────────────────────────────────────────────────
@@ -33,7 +26,7 @@ interface ProgressProviderProps {
 }
 
 export function ProgressProvider({ children }: ProgressProviderProps) {
-  const [value, setValue] = useState(0);        // 0–100
+  const [value, setValue] = useState(0); // 0–100
   const [visible, setVisible] = useState(false);
   const [finishing, setFinishing] = useState(false);
 
@@ -116,7 +109,9 @@ interface ProgressBarProps {
 function ProgressBar({ value, visible, finishing }: ProgressBarProps) {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (!mounted || !visible) return null;
 
   return (
@@ -178,7 +173,8 @@ function ProgressBar({ value, visible, finishing }: ProgressBarProps) {
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)",
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)",
               width: "40%",
               animation: "shimmer-slide 1.4s ease-in-out infinite",
             }}
@@ -197,7 +193,7 @@ function ProgressBar({ value, visible, finishing }: ProgressBarProps) {
               width: 7,
               height: 7,
               borderRadius: "50%",
-              background: "#fff",
+              background: "var(--paper-card)",
               border: "1.5px solid var(--accent)",
               boxShadow: "0 0 6px 3px var(--accent), 0 0 14px 4px var(--brand-glow, var(--accent))",
               animation: "pulse-dot 1.2s ease-in-out infinite",

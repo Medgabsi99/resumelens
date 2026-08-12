@@ -1,5 +1,6 @@
 import React from "react";
 import DocumentWrapper from "./DocumentWrapper";
+import TechProPdfTemplate from "./TechProPdfTemplate";
 import ProfessionalPdfTemplate from "./ProfessionalPdfTemplate";
 import ModernPdfTemplate from "./ModernPdfTemplate";
 import CreativePdfTemplate from "./CreativePdfTemplate";
@@ -16,6 +17,8 @@ export function getPdfTemplateComponent(
 ) {
   const props = { data, targetRole, customStyle };
   switch (templateId) {
+    case "tech-pro":
+      return React.createElement(TechProPdfTemplate, { data, targetRole });
     case "modern":
       return React.createElement(ModernPdfTemplate, props);
     case "creative":
@@ -27,6 +30,9 @@ export function getPdfTemplateComponent(
     case "professional":
     case "classic":
     case "results":
+    case "sidebar":
+    case "bold-header":
+    case "elegant":
     default:
       return React.createElement(ProfessionalPdfTemplate, props);
   }

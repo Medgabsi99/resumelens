@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { RefreshCw, Sparkles, X, AlertTriangle, Check, Copy } from "lucide-react";
+import { readSSEStream } from "@/lib/sse";
 
 interface Props {
   bullet: string;
@@ -51,7 +52,17 @@ function CopyButton({ text }: { text: string }) {
         gap: 4,
       }}
     >
-      {copied ? <><Check size={10} /><span>Copied</span></> : <><Copy size={10} /><span>Copy</span></>}
+      {copied ? (
+        <>
+          <Check size={10} />
+          <span>Copied</span>
+        </>
+      ) : (
+        <>
+          <Copy size={10} />
+          <span>Copy</span>
+        </>
+      )}
     </button>
   );
 }
@@ -84,15 +95,9 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
         throw new Error(data.error || "Failed to generate rewrites");
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        setRawStream((prev) => prev + chunk);
-      }
+      await readSSEStream(res, (accumulated) => {
+        setRawStream(accumulated);
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? (err as Error).message : "Failed to generate rewrites";
       setError(msg);
@@ -169,10 +174,10 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
             transition: "all 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            if (!streaming) (e.currentTarget.style.background = "rgba(99,102,241,0.12)");
+            if (!streaming) e.currentTarget.style.background = "rgba(99,102,241,0.12)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget.style.background = "var(--accent-bg)");
+            e.currentTarget.style.background = "var(--accent-bg)";
           }}
         >
           {streaming ? (
@@ -191,9 +196,15 @@ export default function BulletRewriterCard({ bullet, resumeContext, targetRole }
               Writing...
             </>
           ) : open && isComplete ? (
-            <><RefreshCw size={11} /><span>Regenerate</span></>
+            <>
+              <RefreshCw size={11} />
+              <span>Regenerate</span>
+            </>
           ) : (
-            <><Sparkles size={11} /><span>Rewrite</span></>
+            <>
+              <Sparkles size={11} />
+              <span>Rewrite</span>
+            </>
           )}
         </button>
 

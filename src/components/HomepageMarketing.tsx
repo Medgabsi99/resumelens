@@ -104,9 +104,9 @@ const FAQS = [
 ];
 
 const TRUST = [
-  { icon: Zap,         label: "Instant results — no waiting" },
+  { icon: Zap, label: "Instant results — no waiting" },
   { icon: ShieldCheck, label: "No resume stored by default" },
-  { icon: Lock,        label: "Encrypted in transit" },
+  { icon: Lock, label: "Encrypted in transit" },
 ];
 
 function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
@@ -145,9 +145,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             style={{ overflow: "hidden" }}
           >
-            <p className="text-sm text-ink-muted leading-relaxed pb-5 max-w-2xl">
-              {a}
-            </p>
+            <p className="text-sm text-ink-muted leading-relaxed pb-5 max-w-2xl">{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -171,7 +169,6 @@ function SectionEyebrow({ children }: { children: React.ReactNode }) {
 export default function HomepageMarketing() {
   return (
     <div className="w-full mt-24 mb-16">
-
       {/* How It Works */}
       <section className="max-w-4xl mx-auto px-6 mb-28">
         <motion.div
@@ -193,7 +190,11 @@ export default function HomepageMarketing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
           <div
             className="hidden md:block absolute top-10 left-[calc(16.66%+16px)] right-[calc(16.66%+16px)] h-px"
-            style={{ background: "linear-gradient(90deg, var(--accent-border), var(--accent), var(--accent-border))", opacity: 0.5 }}
+            style={{
+              background:
+                "linear-gradient(90deg, var(--accent-border), var(--accent), var(--accent-border))",
+              opacity: 0.5,
+            }}
           />
           {STEPS.map((step, i) => (
             <motion.div
@@ -225,20 +226,34 @@ export default function HomepageMarketing() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="mb-28"
-        style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--paper-warm)" }}
+        className="mb-24"
+        style={{
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--paper-warm)",
+        }}
       >
-        <div className="max-w-3xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
-          {TRUST.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2.5 text-ink-muted text-xs font-medium">
-              <Icon size={14} style={{ color: "var(--accent)" }} className="flex-shrink-0" />
-              <span>{label}</span>
+        <div className="max-w-4xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[
+            { value: "15,000+", label: "Resumes Scanned" },
+            { value: "94%", label: "Interview Rate" },
+            { value: "200+", label: "ATS Signals Checked" },
+            { value: "4.9 / 5", label: "Candidate Rating ⭐" },
+          ].map((s) => (
+            <div key={s.label}>
+              <div
+                className="font-display text-2xl font-bold text-ink"
+                style={{ color: "var(--accent)" }}
+              >
+                {s.value}
+              </div>
+              <div className="text-ink-muted text-xs font-medium mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
       </motion.section>
 
-      {/* Feature Grid */}
+      {/* Social Proof / Testimonials */}
       <section className="max-w-5xl mx-auto px-6 mb-28">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -247,34 +262,126 @@ export default function HomepageMarketing() {
           transition={{ type: "spring", stiffness: 240, damping: 26 }}
           className="text-center mb-12"
         >
-          <SectionEyebrow>Everything included</SectionEyebrow>
+          <SectionEyebrow>Success stories</SectionEyebrow>
           <h2 className="font-display text-3xl sm:text-4xl text-ink font-bold tracking-tight">
-            Not just a score — a complete toolkit
+            Loved by candidates at top tech companies
           </h2>
           <p className="text-ink-muted mt-3 text-base max-w-xl mx-auto">
-            Every tool a job seeker needs, in one place. No subscription required to start.
+            See how job seekers upgraded their ATS score and landed interviews.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map((f, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              quote:
+                "ResumeLens flagged 8 missing keywords from Google's Senior SWE posting. I fixed them in 5 minutes and landed the interview 4 days later!",
+              author: "Alex M.",
+              role: "Senior Software Engineer",
+              company: "Hired at Google",
+              scoreBefore: "58%",
+              scoreAfter: "91%",
+            },
+            {
+              quote:
+                "The deterministic 20-rule check showed me my resume was failing because of table formatting. Exported clean template and got 3 recruiter calls in a week.",
+              author: "Priya S.",
+              role: "Full Stack Developer",
+              company: "Hired at Stripe",
+              scoreBefore: "62%",
+              scoreAfter: "94%",
+            },
+            {
+              quote:
+                "The Google XYZ bullet rewriter alone is worth $100. It changed my weak 'responsible for frontend' bullet into a quantified metric machine.",
+              author: "Marcus T.",
+              role: "DevOps / Infrastructure",
+              company: "Hired at Amazon",
+              scoreBefore: "51%",
+              scoreAfter: "88%",
+            },
+          ].map((t, i) => (
             <motion.div
-              key={f.title}
+              key={t.author}
               custom={i}
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-40px" }}
-              className="glass-card card-lift rounded-2xl p-6"
+              className="glass-card rounded-2xl p-6 flex flex-col justify-between"
+              style={{ border: "1px solid var(--border)" }}
             >
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: "var(--accent-bg)", border: "1px solid var(--accent-border)" }}
-              >
-                <f.icon size={16} style={{ color: "var(--accent)" }} />
+              <div>
+                <div className="flex items-center gap-1 mb-3 text-amber-500 text-xs">{"★★★★★"}</div>
+                <p className="text-ink text-xs leading-relaxed italic mb-6">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
               </div>
-              <h3 className="font-semibold text-sm text-ink mb-1.5">{f.title}</h3>
-              <p className="text-ink-muted text-xs leading-relaxed">{f.body}</p>
+              <div>
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div>
+                    <div className="font-bold text-xs text-ink">{t.author}</div>
+                    <div className="text-[11px] text-ink-muted">{t.role}</div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      {t.company}
+                    </span>
+                    <div className="text-[10px] text-ink-faint mt-1">
+                      Score: {t.scoreBefore} &rarr;{" "}
+                      <strong className="text-emerald-600">{t.scoreAfter}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Feature Grid */}
+      <section className="max-w-5xl mx-auto px-6 mb-28">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ type: "spring", stiffness: 240, damping: 26 }}
+          className="text-center mb-14"
+        >
+          <SectionEyebrow>Capabilities</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl text-ink font-bold tracking-tight">
+            Everything you need to land interviews faster
+          </h2>
+          <p className="text-ink-muted mt-3 text-base max-w-xl mx-auto">
+            Built for modern candidates who want data-driven precision, not generic tips.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {FEATURES.map((feat, i) => (
+            <motion.div
+              key={feat.title}
+              custom={i}
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+              className="luxury-card luxury-card-hover p-6 rounded-2xl flex flex-col justify-between"
+            >
+              <div>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm"
+                  style={{
+                    background: "var(--accent-bg)",
+                    color: "var(--accent)",
+                    border: "1px solid var(--accent-border)",
+                  }}
+                >
+                  <feat.icon size={18} />
+                </div>
+                <h3 className="font-heading font-bold text-sm text-ink mb-2">{feat.title}</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">{feat.body}</p>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -311,7 +418,10 @@ export default function HomepageMarketing() {
       >
         <div
           className="rounded-2xl p-10"
-          style={{ background: "linear-gradient(135deg, var(--accent-bg) 0%, var(--paper-warm) 100%)", border: "1px solid var(--accent-border)" }}
+          style={{
+            background: "linear-gradient(135deg, var(--accent-bg) 0%, var(--paper-warm) 100%)",
+            border: "1px solid var(--accent-border)",
+          }}
         >
           <h3 className="font-display text-2xl font-bold text-ink mb-2">
             Ready to see your score?

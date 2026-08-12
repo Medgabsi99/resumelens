@@ -32,7 +32,10 @@ import {
   LogOut,
   ChevronLeft,
   BarChart2,
-  GitCompare
+  GitCompare,
+  Columns,
+  PenSquare,
+  Puzzle,
 } from "lucide-react";
 
 interface NavItem {
@@ -44,17 +47,104 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: <Home size={15} />, matchPaths: ["/dashboard"], shortcut: "g + d" },
-  { href: "/dashboard/analytics", label: "Analytics", icon: <BarChart2 size={15} />, matchPaths: ["/dashboard/analytics"], shortcut: "g + y" },
-  { href: "/dashboard/ab-testing", label: "A/B Testing", icon: <GitCompare size={15} />, matchPaths: ["/dashboard/ab-testing"], shortcut: "g + b" },
-  { href: "/dashboard/applications", label: "Applications", icon: <Briefcase size={15} />, matchPaths: ["/dashboard/applications"], shortcut: "g + a" },
-  { href: "/dashboard/negotiator", label: "Salary Negotiator", icon: <DollarSign size={15} />, matchPaths: ["/dashboard/negotiator"], shortcut: "g + n" },
-  { href: "/dashboard/interviews", label: "Mock Interviews", icon: <Mic size={15} />, matchPaths: ["/dashboard/interviews"], shortcut: "g + i" },
-  { href: "/dashboard/scanner", label: "ATS Scanner", icon: <Search size={15} />, matchPaths: ["/dashboard/scanner"], shortcut: "g + s" },
-  { href: "/dashboard/learning-paths", label: "Learning Paths", icon: <GraduationCap size={15} />, matchPaths: ["/dashboard/learning-paths"], shortcut: "g + l" },
-  { href: "/dashboard/tailor", label: "Tailor Sandbox", icon: <Sparkles size={15} />, matchPaths: ["/dashboard/tailor"], shortcut: "g + t" },
-  { href: "/dashboard/committee", label: "Recruiter Sandbox", icon: <Users size={15} />, matchPaths: ["/dashboard/committee"], shortcut: "g + c" },
-  { href: "/dashboard/settings", label: "Settings", icon: <Settings size={15} />, matchPaths: ["/dashboard/settings"], shortcut: "g + e" },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: <Home size={15} />,
+    matchPaths: ["/dashboard"],
+    shortcut: "g + d",
+  },
+  {
+    href: "/dashboard/analytics",
+    label: "Analytics",
+    icon: <BarChart2 size={15} />,
+    matchPaths: ["/dashboard/analytics"],
+    shortcut: "g + y",
+  },
+  {
+    href: "/dashboard/ab-testing",
+    label: "A/B Testing",
+    icon: <GitCompare size={15} />,
+    matchPaths: ["/dashboard/ab-testing"],
+    shortcut: "g + b",
+  },
+  {
+    href: "/dashboard/compare",
+    label: "Compare Resumes",
+    icon: <Columns size={15} />,
+    matchPaths: ["/dashboard/compare"],
+    shortcut: "g + m",
+  },
+  {
+    href: "/dashboard/builder",
+    label: "Resume Builder",
+    icon: <PenSquare size={15} />,
+    matchPaths: ["/dashboard/builder"],
+    shortcut: "g + w",
+  },
+  {
+    href: "/dashboard/applications",
+    label: "Applications",
+    icon: <Briefcase size={15} />,
+    matchPaths: ["/dashboard/applications"],
+    shortcut: "g + a",
+  },
+  {
+    href: "/dashboard/extension",
+    label: "Chrome Extension",
+    icon: <Puzzle size={15} />,
+    matchPaths: ["/dashboard/extension"],
+    shortcut: "g + x",
+  },
+  {
+    href: "/dashboard/negotiator",
+    label: "Salary Negotiator",
+    icon: <DollarSign size={15} />,
+    matchPaths: ["/dashboard/negotiator"],
+    shortcut: "g + n",
+  },
+  {
+    href: "/dashboard/interviews",
+    label: "Mock Interviews",
+    icon: <Mic size={15} />,
+    matchPaths: ["/dashboard/interviews"],
+    shortcut: "g + i",
+  },
+  {
+    href: "/dashboard/scanner",
+    label: "ATS Scanner",
+    icon: <Search size={15} />,
+    matchPaths: ["/dashboard/scanner"],
+    shortcut: "g + s",
+  },
+  {
+    href: "/dashboard/learning-paths",
+    label: "Learning Paths",
+    icon: <GraduationCap size={15} />,
+    matchPaths: ["/dashboard/learning-paths"],
+    shortcut: "g + l",
+  },
+  {
+    href: "/dashboard/tailor",
+    label: "Tailor Sandbox",
+    icon: <Sparkles size={15} />,
+    matchPaths: ["/dashboard/tailor"],
+    shortcut: "g + t",
+  },
+  {
+    href: "/dashboard/committee",
+    label: "Recruiter Sandbox",
+    icon: <Users size={15} />,
+    matchPaths: ["/dashboard/committee"],
+    shortcut: "g + c",
+  },
+  {
+    href: "/dashboard/settings",
+    label: "Settings",
+    icon: <Settings size={15} />,
+    matchPaths: ["/dashboard/settings"],
+    shortcut: "g + e",
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -66,14 +156,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
-  
+
   // Collapsible Sidebar States
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const gPendingRef = useRef(false);         // tracks "G" prefix for go-to shortcuts
-  const gTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gPendingRef = useRef(false); // tracks "G" prefix for go-to shortcuts
+  const gTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -123,9 +213,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       // Skip single-key shortcuts when focus is in a text field
       const tag = (e.target as HTMLElement)?.tagName;
       const isEditable =
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        (e.target as HTMLElement)?.isContentEditable;
+        tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
       if (isEditable || e.metaKey || e.ctrlKey || e.altKey) return;
 
       const key = e.key;
@@ -263,46 +351,149 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           {/* Brand branding */}
-          <div className="p-6 border-b border-border flex items-center justify-center h-[73px]">
+          <div className="p-6 border-b border-border flex items-center justify-between h-[73px]">
             {isCollapsed ? (
-              <span className="bg-accent/15 text-accent border border-accent/20 w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-sm select-none">
+              <span className="bg-gradient-to-br from-accent to-amber-500 text-white w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shadow-md select-none mx-auto">
                 RL
               </span>
             ) : (
               <Link
                 href="/"
-                className="font-display text-xl font-bold tracking-tight no-underline text-ink hover:text-accent transition-colors block w-full truncate"
+                className="font-display text-xl font-bold tracking-tight no-underline text-ink hover:text-accent transition-colors flex items-center gap-2.5 truncate"
               >
-                ResumeLens
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-amber-500 flex items-center justify-center text-white font-black text-xs shadow-md flex-shrink-0">
+                  RL
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-heading font-extrabold text-base leading-tight tracking-tight text-ink">
+                    ResumeLens
+                  </span>
+                  <span className="font-mono text-[9px] font-bold text-accent tracking-wider uppercase">
+                    Pro Edition
+                  </span>
+                </div>
               </Link>
             )}
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-1 px-3 py-6 overflow-y-auto space-y-1">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isCollapsed ? `${item.label} (${item.shortcut})` : undefined}
-                className={`group px-3 py-2.5 rounded-xl text-sm font-semibold no-underline flex items-center transition-all duration-200 ${
-                  isCollapsed ? "justify-center" : "gap-3"
-                }`}
-                style={{
-                  color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
-                  background: isActive(item) ? "var(--accent-bg)" : "transparent",
-                  border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
-                }}
-              >
-                <span className="flex-shrink-0 opacity-80">{item.icon}</span>
-                {!isCollapsed && <span className="truncate">{item.label}</span>}
-                {!isCollapsed && (
-                  <span className="ml-auto font-mono text-[9px] font-medium text-ink-faint opacity-50 group-hover:opacity-100 transition bg-paper border border-border/60 px-1.5 py-0.5 rounded leading-none select-none flex-shrink-0">
-                    {item.shortcut}
-                  </span>
-                )}
-              </Link>
-            ))}
+          <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-5">
+            {/* Section 1: Main */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 mb-2 font-mono text-[9px] font-bold tracking-wider text-ink-faint uppercase">
+                  Workspace
+                </div>
+              )}
+              <div className="space-y-1">
+                {NAV_ITEMS.slice(0, 5).map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={isCollapsed ? `${item.label} (${item.shortcut})` : undefined}
+                    className={`group relative px-3 py-2 rounded-xl text-xs font-semibold no-underline flex items-center transition-all duration-200 ${
+                      isCollapsed ? "justify-center" : "gap-3"
+                    }`}
+                    style={{
+                      color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
+                      background: isActive(item) ? "var(--accent-bg)" : "transparent",
+                      border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
+                    }}
+                  >
+                    {isActive(item) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-r-full shadow-sm" />
+                    )}
+                    <span className="flex-shrink-0 opacity-90 transition-transform group-hover:scale-110">
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    {!isCollapsed && (
+                      <span className="ml-auto font-mono text-[9px] font-medium text-ink-faint opacity-40 group-hover:opacity-100 transition bg-paper border border-border px-1.5 py-0.5 rounded leading-none select-none flex-shrink-0">
+                        {item.shortcut}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 2: AI Suite */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 mb-2 font-mono text-[9px] font-bold tracking-wider text-ink-faint uppercase">
+                  AI Optimization
+                </div>
+              )}
+              <div className="space-y-1">
+                {NAV_ITEMS.slice(5, 10).map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={isCollapsed ? `${item.label} (${item.shortcut})` : undefined}
+                    className={`group relative px-3 py-2 rounded-xl text-xs font-semibold no-underline flex items-center transition-all duration-200 ${
+                      isCollapsed ? "justify-center" : "gap-3"
+                    }`}
+                    style={{
+                      color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
+                      background: isActive(item) ? "var(--accent-bg)" : "transparent",
+                      border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
+                    }}
+                  >
+                    {isActive(item) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-r-full shadow-sm" />
+                    )}
+                    <span className="flex-shrink-0 opacity-90 transition-transform group-hover:scale-110">
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    {!isCollapsed && (
+                      <span className="ml-auto font-mono text-[9px] font-medium text-ink-faint opacity-40 group-hover:opacity-100 transition bg-paper border border-border px-1.5 py-0.5 rounded leading-none select-none flex-shrink-0">
+                        {item.shortcut}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 3: Tools & Growth */}
+            <div>
+              {!isCollapsed && (
+                <div className="px-3 mb-2 font-mono text-[9px] font-bold tracking-wider text-ink-faint uppercase">
+                  Career Growth
+                </div>
+              )}
+              <div className="space-y-1">
+                {NAV_ITEMS.slice(10).map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={isCollapsed ? `${item.label} (${item.shortcut})` : undefined}
+                    className={`group relative px-3 py-2 rounded-xl text-xs font-semibold no-underline flex items-center transition-all duration-200 ${
+                      isCollapsed ? "justify-center" : "gap-3"
+                    }`}
+                    style={{
+                      color: isActive(item) ? "var(--accent)" : "var(--ink-muted)",
+                      background: isActive(item) ? "var(--accent-bg)" : "transparent",
+                      border: `1px solid ${isActive(item) ? "var(--accent-border)" : "transparent"}`,
+                    }}
+                  >
+                    {isActive(item) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-accent rounded-r-full shadow-sm" />
+                    )}
+                    <span className="flex-shrink-0 opacity-90 transition-transform group-hover:scale-110">
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    {!isCollapsed && (
+                      <span className="ml-auto font-mono text-[9px] font-medium text-ink-faint opacity-40 group-hover:opacity-100 transition bg-paper border border-border px-1.5 py-0.5 rounded leading-none select-none flex-shrink-0">
+                        {item.shortcut}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </nav>
 
           {/* Profile & Controls Area */}
@@ -321,7 +512,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                   )}
                 </div>
-                
+
                 {/* Theme Toggle */}
                 <div className="flex items-center justify-center w-8 h-8">
                   <ThemeToggle />
@@ -353,14 +544,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               // Expanded Area
               <>
                 {userEmail && (
-                  <div className="font-mono text-[11px] text-ink-faint px-2.5 py-1.5 rounded-lg bg-paper border border-border/40 truncate select-all flex items-center gap-2" title={userEmail}>
+                  <div
+                    className="font-mono text-[11px] text-ink-faint px-2.5 py-1.5 rounded-lg bg-paper border border-border/40 truncate select-all flex items-center gap-2"
+                    title={userEmail}
+                  >
                     <User size={13} className="text-ink-muted" />
                     <span>{userEmail}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between px-1">
                   <ThemeToggle />
-                  
+
                   <button
                     onClick={() => setShortcutsOpen(true)}
                     aria-label="Show keyboard shortcuts"
@@ -371,7 +565,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ?
                   </button>
                 </div>
-                
+
                 <button
                   onClick={handleSignOut}
                   disabled={signingOut}
@@ -387,34 +581,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Right Pane: Content Panel & Top Headers */}
-        <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Desktop header (visible on lg and above) */}
           <header
-            className="hidden lg:flex items-center justify-between py-3.5 px-8 border-b border-border backdrop-blur-md sticky top-0 z-30 flex-shrink-0"
-            style={{ background: "var(--nav-bg)" }}
+            className="hidden lg:flex items-center justify-between py-3 px-6 border-b border-border backdrop-blur-md flex-shrink-0 z-30"
+            style={{ background: "var(--nav-bg)", height: "57px" }}
           >
-            <div>
-              {/* Command Palette Trigger */}
+            {/* Left zone: current page context breadcrumb */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2">
+                {NAV_ITEMS.map((item) =>
+                  isActive(item) ? (
+                    <span
+                      key={item.href}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted"
+                    >
+                      <span className="text-accent opacity-70">{item.icon}</span>
+                      <span className="text-ink font-bold truncate max-w-[160px]">
+                        {item.label}
+                      </span>
+                    </span>
+                  ) : null
+                )}
+              </div>
+            </div>
+
+            {/* Center zone: Command Palette search bar — the hero action */}
+            <div className="flex-1 flex justify-center px-6">
               <button
                 onClick={() => setPaletteOpen(true)}
                 aria-label="Open command palette"
                 title="Search commands (Ctrl+K)"
-                className="flex items-center gap-2.5 text-xs font-semibold text-ink-muted hover:text-ink border border-border hover:border-accent-border px-4 py-2 rounded-xl transition-all duration-200 bg-paper-card"
+                className="flex items-center gap-2.5 text-xs font-medium text-ink-muted hover:text-ink border border-border hover:border-accent-border px-4 py-2 rounded-xl transition-all duration-200 bg-paper-warm/60 w-full max-w-sm"
               >
-                <Search size={13} />
-                <span>Search commands...</span>
-                <span className="flex items-center gap-0.5 ml-4">
-                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1">⌘</kbd>
-                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1">K</kbd>
+                <Search size={13} className="flex-shrink-0" />
+                <span className="flex-1 text-left">Search features, resumes, commands...</span>
+                <span className="flex items-center gap-0.5 flex-shrink-0">
+                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1.5 py-0.5">
+                    Ctrl
+                  </kbd>
+                  <kbd className="font-mono text-[9px] bg-paper border border-border rounded px-1.5 py-0.5">
+                    K
+                  </kbd>
                 </span>
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Right zone: Notifications + badge + theme */}
+            <div className="flex items-center gap-2.5">
               <NotificationBell />
-              <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider bg-paper border border-border px-3 py-1 rounded-lg flex items-center gap-1.5">
-                <Sparkles size={11} className="text-accent" />
-                <span>AI Career Suite</span>
+              <span className="status-pill status-pill-accent text-[10px]">
+                <span className="pulse-live" />
+                AI Suite
               </span>
             </div>
           </header>
@@ -426,7 +644,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ref={mobileMenuRef}
           >
             <div className="flex items-center justify-between py-3.5 px-6">
-              <Link href="/" className="font-display text-xl font-bold tracking-tight no-underline text-ink">
+              <Link
+                href="/"
+                className="font-display text-xl font-bold tracking-tight no-underline text-ink"
+              >
                 ResumeLens
               </Link>
 
@@ -469,9 +690,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {item.label}
                   </Link>
                 ))}
-                <div className="border-t pt-3 mt-1 flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+                <div
+                  className="border-t pt-3 mt-1 flex items-center justify-between"
+                  style={{ borderColor: "var(--border)" }}
+                >
                   {userEmail && (
-                    <span className="font-mono text-xs text-ink-faint truncate max-w-[180px]">{userEmail}</span>
+                    <span className="font-mono text-xs text-ink-faint truncate max-w-[180px]">
+                      {userEmail}
+                    </span>
                   )}
                   <button
                     onClick={handleSignOut}
@@ -485,12 +711,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </nav>
 
-          {/* Main content area */}
-          <main className="relative z-10 flex-1">
-            <PageTransition className="w-full max-w-6xl mx-auto px-4 md:px-8 py-10">
-              <Breadcrumbs />
-              {children}
-            </PageTransition>
+          {/* Main content area — viewport-locked, children scroll independently */}
+          <main className="relative z-10 flex-1 overflow-hidden">
+            <PageTransition className="h-full">{children}</PageTransition>
           </main>
         </div>
       </div>

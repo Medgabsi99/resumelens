@@ -16,7 +16,7 @@ import {
   PenTool,
   Briefcase,
   Tag,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
 
 interface Props {
@@ -24,27 +24,28 @@ interface Props {
   defaultJobDescription?: string;
   defaultJobTitle?: string;
   defaultCompanyName?: string;
+  onGoToEditor?: () => void;
 }
 
 const VERDICT_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   strong: { bg: "#edf7f2", text: "#1e5c3a", label: "Strong Fit" },
-  good:   { bg: "#e8f4f8", text: "#1c5878", label: "Good Fit" },
-  fair:   { bg: "#fef3e2", text: "#92400e", label: "Fair Fit" },
-  weak:   { bg: "#fce8e8", text: "#7a2020", label: "Weak Fit" },
+  good: { bg: "#e8f4f8", text: "#1c5878", label: "Good Fit" },
+  fair: { bg: "#fef3e2", text: "#92400e", label: "Fair Fit" },
+  weak: { bg: "#fce8e8", text: "#7a2020", label: "Weak Fit" },
 };
 
 const EXP_VERDICT_COLORS: Record<string, string> = {
-  exceeds:        "#1e5c3a",
-  meets:          "#1c5878",
+  exceeds: "#1e5c3a",
+  meets: "#1c5878",
   "slightly-below": "#92400e",
-  below:          "#7a2020",
+  below: "#7a2020",
 };
 
 const EXP_VERDICT_LABELS: Record<string, string> = {
-  exceeds:          "Exceeds",
-  meets:            "Meets",
+  exceeds: "Exceeds",
+  meets: "Meets",
   "slightly-below": "Slightly Below",
-  below:            "Below",
+  below: "Below",
 };
 
 function DiffText({ original, tailored }: { original: string; tailored: string }) {
@@ -92,23 +93,30 @@ function DiffText({ original, tailored }: { original: string; tailored: string }
             </span>
           );
         }
-        return <span key={index} style={{ color: "var(--ink)" }}>{part.value}</span>;
+        return (
+          <span key={index} style={{ color: "var(--ink)" }}>
+            {part.value}
+          </span>
+        );
       })}
     </span>
   );
 }
-
 
 export default function JobMatchPanel({
   resumeText,
   defaultJobDescription = "",
   defaultJobTitle = "",
   defaultCompanyName = "",
+  onGoToEditor,
 }: Props) {
   const {
-    jobDescription, setJobDescription,
-    jobTitle, setJobTitle,
-    companyName, setCompanyName,
+    jobDescription,
+    setJobDescription,
+    jobTitle,
+    setJobTitle,
+    companyName,
+    setCompanyName,
     isMatching,
     error,
     result,
@@ -120,7 +128,8 @@ export default function JobMatchPanel({
     isTailoring,
     tailorError,
     tailoredResult,
-    showDiff, setShowDiff,
+    showDiff,
+    setShowDiff,
     appliedTailored,
     handleAutoTailor,
     applyTailoredResume,
@@ -178,9 +187,7 @@ export default function JobMatchPanel({
             >
               {verdict.label}
             </div>
-            <div style={{ fontSize: 14, color: "#1a202c", lineHeight: 1.55 }}>
-              {result.summary}
-            </div>
+            <div style={{ fontSize: 14, color: "#1a202c", lineHeight: 1.55 }}>{result.summary}</div>
           </div>
         </div>
 
@@ -195,8 +202,16 @@ export default function JobMatchPanel({
         >
           {[
             { label: "Skills", value: result.breakdown.skills, hint: "Required skills match" },
-            { label: "Experience", value: result.breakdown.experience, hint: "Relevant experience" },
-            { label: "Responsibilities", value: result.breakdown.responsibilities, hint: "Past work alignment" },
+            {
+              label: "Experience",
+              value: result.breakdown.experience,
+              hint: "Relevant experience",
+            },
+            {
+              label: "Responsibilities",
+              value: result.breakdown.responsibilities,
+              hint: "Past work alignment",
+            },
             { label: "Education", value: result.breakdown.education, hint: "Education match" },
             { label: "Culture", value: result.breakdown.culture, hint: "Values & work style" },
           ].map((b) => {
@@ -322,10 +337,7 @@ export default function JobMatchPanel({
         </div>
 
         {/* Strengths & Gaps */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-          style={{ marginBottom: 20 }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ marginBottom: 20 }}>
           <div
             style={{
               background: "#edf7f2",
@@ -421,10 +433,7 @@ export default function JobMatchPanel({
         </div>
 
         {/* Skills */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-          style={{ marginBottom: 20 }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ marginBottom: 20 }}>
           <div>
             <div
               style={{
@@ -436,7 +445,7 @@ export default function JobMatchPanel({
                 marginBottom: 8,
               }}
             >
-              Matched Skills ({result.matchedSkills.length})
+              Matched Skills &amp; Context ({result.matchedSkills.length})
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {result.matchedSkills.length === 0 ? (
@@ -444,26 +453,52 @@ export default function JobMatchPanel({
                   None identified
                 </span>
               ) : (
-                result.matchedSkills.map((s, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      fontSize: 11,
-                      padding: "3px 8px",
-                      borderRadius: 4,
-                      background: "#f0faf5",
-                      color: "#1e5c3a",
-                      border: "1px solid rgba(45,106,79,0.3)",
-                      fontFamily: "DM Mono, monospace",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <Check size={10} />
-                    <span>{s}</span>
-                  </span>
-                ))
+                result.matchedSkills.map((s, i) => {
+                  // Determine placement context in resume text
+                  const expMatch = resumeText.match(
+                    /(?:experience|work history|employment)[\s\S]*?(?:education|skills|certifications|$)/i
+                  );
+                  const inExperience = expMatch
+                    ? expMatch[0].toLowerCase().includes(s.toLowerCase())
+                    : false;
+                  return (
+                    <span
+                      key={i}
+                      title={
+                        inExperience
+                          ? "High Impact: Skill appears in Experience bullets (3x ATS credit)"
+                          : "Medium Impact: Skill appears only in Skills list — consider moving into an Experience bullet with a metric"
+                      }
+                      style={{
+                        fontSize: 11,
+                        padding: "4px 9px",
+                        borderRadius: 6,
+                        background: inExperience ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+                        color: inExperience ? "#10b981" : "#f59e0b",
+                        border: `1px solid ${inExperience ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)"}`,
+                        fontFamily: "DM Mono, monospace",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <Check size={10} style={{ color: inExperience ? "#16a34a" : "#d97706" }} />
+                      <span>{s}</span>
+                      <span
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          opacity: 0.8,
+                          borderRadius: 3,
+                          padding: "0 3px",
+                          background: inExperience ? "#dcfce7" : "#fef3c7",
+                        }}
+                      >
+                        {inExperience ? "Exp ⚡" : "List Only ⚠️"}
+                      </span>
+                    </span>
+                  );
+                })
               )}
             </div>
           </div>
@@ -571,19 +606,36 @@ export default function JobMatchPanel({
             }}
           >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#1e5c3a", marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#1e5c3a",
+                  marginBottom: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
                 <CheckCircle size={14} className="text-emerald-600" />
                 <span>Tailored Resume Applied!</span>
               </div>
               <div style={{ fontSize: 12, color: "#2d6a4f", lineHeight: 1.4 }}>
-                The optimized text has been loaded into your editor. Scroll up to review, preview template options, and export your PDF.
+                The optimized text has been loaded into your editor. Scroll up to review, preview
+                template options, and export your PDF.
               </div>
             </div>
             <button
               onClick={() => {
-                const editorElement = document.querySelector(".sbs-editor-grid");
-                if (editorElement) {
-                  editorElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (onGoToEditor) {
+                  onGoToEditor();
+                } else {
+                  const el =
+                    document.getElementById("areas-to-improve-section") ||
+                    document.querySelector(".sbs-editor-grid");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
                 }
               }}
               style={{
@@ -612,7 +664,8 @@ export default function JobMatchPanel({
         {!showDiff && !appliedTailored && (
           <SpotlightCard
             style={{
-              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
+              background:
+                "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)",
               border: "1.5px dashed rgba(99, 102, 241, 0.4)",
               borderRadius: 12,
               padding: 20,
@@ -644,8 +697,16 @@ export default function JobMatchPanel({
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 4 }}>
                 Tailor your resume for this role in seconds
               </div>
-              <div style={{ fontSize: 12, color: "var(--ink-muted)", maxWidth: "500px", lineHeight: 1.5 }}>
-                Optimize your professional summary, work experience bullets, and skills list with targeted keywords from this job description to maximize your ATS score.
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-muted)",
+                  maxWidth: "500px",
+                  lineHeight: 1.5,
+                }}
+              >
+                Optimize your professional summary, work experience bullets, and skills list with
+                targeted keywords from this job description to maximize your ATS score.
               </div>
             </div>
             <button
@@ -681,7 +742,16 @@ export default function JobMatchPanel({
               )}
             </button>
             {tailorError && (
-              <div style={{ color: "#dc2626", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
+              <div
+                style={{
+                  color: "#dc2626",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
                 <AlertTriangle size={12} />
                 <span>{tailorError}</span>
               </div>
@@ -764,18 +834,37 @@ export default function JobMatchPanel({
 
             {/* Diffs Content */}
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              
               {/* Summary Diff */}
               {tailoredResult.tailoredResume.summary && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 8, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                  <h5
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--ink-muted)",
+                      marginBottom: 8,
+                      fontFamily: "DM Mono, monospace",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     <PenTool size={12} className="text-accent" />
                     <span>Professional Summary</span>
                   </h5>
-                  <div style={{ padding: "10px 14px", background: "var(--paper-warm)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                    <DiffText 
-                      original={parseResume(resumeText).summary || ""} 
-                      tailored={tailoredResult.tailoredResume.summary} 
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "var(--paper-warm)",
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    <DiffText
+                      original={parseResume(resumeText).summary || ""}
+                      tailored={tailoredResult.tailoredResume.summary}
                     />
                   </div>
                 </div>
@@ -784,38 +873,73 @@ export default function JobMatchPanel({
               {/* Experience Diff */}
               {tailoredResult.tailoredResume.experience.length > 0 && (
                 <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16 }}>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 12, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                  <h5
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--ink-muted)",
+                      marginBottom: 12,
+                      fontFamily: "DM Mono, monospace",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     <Briefcase size={12} className="text-accent" />
                     <span>Work Experience Bullets</span>
                   </h5>
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {tailoredResult.tailoredResume.experience.map((exp: ParsedResume["experience"][number], expIdx: number) => {
-                      const origResume = parseResume(resumeText);
-                      let origExp: ParsedResume["experience"][number] | undefined = origResume.experience[expIdx];
-                      if (!origExp && exp.company) {
-                        origExp = origResume.experience.find(e => e.company.toLowerCase() === exp.company.toLowerCase());
-                      }
-                      return (
-                        <div key={expIdx} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
-                            {exp.title} <span style={{ fontWeight: 400, color: "var(--ink-muted)" }}>at</span> {exp.company}
-                          </div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingLeft: 12 }}>
-                            {exp.bullets.map((bullet: string, bulletIdx: number) => {
-                              const origBullet = origExp?.bullets[bulletIdx] || "";
-                              return (
-                                <div key={bulletIdx} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                                  <span style={{ color: "var(--ink-faint)", userSelect: "none" }}>•</span>
-                                  <div style={{ flex: 1 }}>
-                                    <DiffText original={origBullet} tailored={bullet} />
+                    {tailoredResult.tailoredResume.experience.map(
+                      (exp: ParsedResume["experience"][number], expIdx: number) => {
+                        const origResume = parseResume(resumeText);
+                        let origExp: ParsedResume["experience"][number] | undefined =
+                          origResume.experience[expIdx];
+                        if (!origExp && exp.company) {
+                          origExp = origResume.experience.find(
+                            (e) => e.company.toLowerCase() === exp.company.toLowerCase()
+                          );
+                        }
+                        return (
+                          <div
+                            key={expIdx}
+                            style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                          >
+                            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>
+                              {exp.title}{" "}
+                              <span style={{ fontWeight: 400, color: "var(--ink-muted)" }}>at</span>{" "}
+                              {exp.company}
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 6,
+                                paddingLeft: 12,
+                              }}
+                            >
+                              {exp.bullets.map((bullet: string, bulletIdx: number) => {
+                                const origBullet = origExp?.bullets[bulletIdx] || "";
+                                return (
+                                  <div
+                                    key={bulletIdx}
+                                    style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
+                                  >
+                                    <span style={{ color: "var(--ink-faint)", userSelect: "none" }}>
+                                      •
+                                    </span>
+                                    <div style={{ flex: 1 }}>
+                                      <DiffText original={origBullet} tailored={bullet} />
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      }
+                    )}
                   </div>
                 </div>
               )}
@@ -823,45 +947,61 @@ export default function JobMatchPanel({
               {/* Skills Diff */}
               {tailoredResult.tailoredResume.skills.length > 0 && (
                 <div>
-                  <h5 style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-muted)", marginBottom: 10, fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                  <h5
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--ink-muted)",
+                      marginBottom: 10,
+                      fontFamily: "DM Mono, monospace",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     <Tag size={12} className="text-accent" />
                     <span>Skills & Keywords</span>
                   </h5>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {(() => {
-                      const origSkills = new Set((parseResume(resumeText).skills || []).map(s => s.toLowerCase().trim()));
-                      return tailoredResult.tailoredResume.skills.map((skill: string, idx: number) => {
-                        const isNew = !origSkills.has(skill.toLowerCase().trim());
-                        return (
-                          <span
-                            key={idx}
-                            style={{
-                              fontSize: 11,
-                              padding: "4px 10px",
-                              borderRadius: 6,
-                              background: isNew ? "#e6ffec" : "var(--paper-warm)",
-                              color: isNew ? "#1a7f37" : "var(--ink)",
-                              border: `1px solid ${isNew ? "rgba(26, 127, 55, 0.3)" : "var(--border)"}`,
-                              fontWeight: 700,
-                              fontFamily: "DM Mono, monospace",
-                            }}
-                          >
-                            {isNew ? "+ " : ""}{skill}
-                          </span>
-                        );
-                      });
+                      const origSkills = new Set(
+                        (parseResume(resumeText).skills || []).map((s) => s.toLowerCase().trim())
+                      );
+                      return tailoredResult.tailoredResume.skills.map(
+                        (skill: string, idx: number) => {
+                          const isNew = !origSkills.has(skill.toLowerCase().trim());
+                          return (
+                            <span
+                              key={idx}
+                              style={{
+                                fontSize: 11,
+                                padding: "4px 10px",
+                                borderRadius: 6,
+                                background: isNew ? "#e6ffec" : "var(--paper-warm)",
+                                color: isNew ? "#1a7f37" : "var(--ink)",
+                                border: `1px solid ${isNew ? "rgba(26, 127, 55, 0.3)" : "var(--border)"}`,
+                                fontWeight: 700,
+                                fontFamily: "DM Mono, monospace",
+                              }}
+                            >
+                              {isNew ? "+ " : ""}
+                              {skill}
+                            </span>
+                          );
+                        }
+                      );
                     })()}
                   </div>
                 </div>
               )}
-
             </div>
           </SpotlightCard>
         )}
 
         {/* Reset Button */}
         <div style={{ textAlign: "center" }}>
-
           <button
             onClick={handleReset}
             style={{
@@ -1011,5 +1151,3 @@ export default function JobMatchPanel({
     </div>
   );
 }
-
-

@@ -45,16 +45,26 @@ function CopyButton({ text }: { text: string }) {
         gap: 4,
       }}
     >
-      {copied ? <><Check size={10} /><span>Copied</span></> : <><Copy size={10} /><span>Copy</span></>}
+      {copied ? (
+        <>
+          <Check size={10} />
+          <span>Copied</span>
+        </>
+      ) : (
+        <>
+          <Copy size={10} />
+          <span>Copy</span>
+        </>
+      )}
     </button>
   );
 }
 
 function XyzPill({ letter, label, value }: { letter: string; label: string; value: string }) {
   const colors: Record<string, { bg: string; text: string; border: string }> = {
-    X: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
-    Y: { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
-    Z: { bg: "#fdf4ff", text: "#7e22ce", border: "#e9d5ff" },
+    X: { bg: "rgba(99,102,241,0.1)", text: "#818cf8", border: "rgba(99,102,241,0.25)" },
+    Y: { bg: "rgba(16,185,129,0.1)", text: "#10b981", border: "rgba(16,185,129,0.25)" },
+    Z: { bg: "rgba(168,85,247,0.1)", text: "#a78bfa", border: "rgba(168,85,247,0.25)" },
   };
   const c = colors[letter] || colors.X;
   return (
@@ -88,7 +98,16 @@ function XyzPill({ letter, label, value }: { letter: string; label: string; valu
         {letter}
       </span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: c.text, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: c.text,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 2,
+          }}
+        >
           {label}
         </div>
         <div style={{ fontSize: 12.5, color: "var(--ink)", lineHeight: 1.5 }}>{value}</div>
@@ -201,7 +220,16 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
           }}
           disabled={loading}
         >
-          {loading ? "Analyzing..." : data ? "Re-analyze" : <><Zap size={11} /><span style={{ marginLeft: 3 }}>XYZ Audit</span></>}
+          {loading ? (
+            "Analyzing..."
+          ) : data ? (
+            "Re-analyze"
+          ) : (
+            <>
+              <Zap size={11} />
+              <span style={{ marginLeft: 3 }}>XYZ Audit</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -238,12 +266,12 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
             <div
               style={{
                 padding: "14px 16px",
-                background: "#fef2f2",
-                border: "1px solid #fca5a5",
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.25)",
                 borderRadius: 8,
                 margin: 12,
                 fontSize: 12.5,
-                color: "#991b1b",
+                color: "#f87171",
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
@@ -260,11 +288,11 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
               <div
                 style={{
                   padding: "10px 14px",
-                  background: "#fffbeb",
-                  border: "1px solid #fde68a",
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.25)",
                   borderRadius: 10,
                   fontSize: 12.5,
-                  color: "#92400e",
+                  color: "var(--ink-muted)",
                   lineHeight: 1.5,
                 }}
               >
@@ -299,8 +327,9 @@ export default function XyzBulletAuditor({ bullet, targetRole, jobDescription }:
               <div
                 style={{
                   padding: "14px 16px",
-                  background: "linear-gradient(135deg, #eff6ff, #f5f3ff)",
-                  border: "1.5px solid #c7d2fe",
+                  background:
+                    "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08))",
+                  border: "1.5px solid rgba(99,102,241,0.25)",
                   borderRadius: 12,
                 }}
               >

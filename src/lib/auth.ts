@@ -45,11 +45,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
 
   const supabase = await createServerComponentClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
 
   if (error || !data) {
     profileCache.set(userId, { profile: null, expiresAt: now + CACHE_TTL_MS });
@@ -63,8 +59,18 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
 // Check if user can run another analysis
 export function canAnalyze(profile: UserProfile): boolean {
-  const limit = PLAN_LIMITS[profile.plan];
+  const limit = PLAN_LIMITS[profile.plan] ?? 999;
   return profile.analyses_used < limit;
+}
+
+// Centralized quota guard: verifies auth AND checks user plan quota
+export async function requireUserWithQuota() {
+  const user = await requireUser();
+  const profile = await getUserProfile(user.id);
+  if (profile && !canAnalyze(profile)) {
+    throw new Error("QuotaExceeded");
+  }
+  return { user, profile };
 }
 
 // Increment usage counter

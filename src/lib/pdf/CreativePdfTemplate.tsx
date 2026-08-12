@@ -135,7 +135,10 @@ interface Props {
 
 export default function CreativePdfTemplate({ data, targetRole }: Props) {
   const tokens = DESIGN_TOKENS.creative;
-  const containerStyle = [styles.container, { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }];
+  const containerStyle = [
+    styles.container,
+    { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor },
+  ];
   const headerStyle = [styles.header, { borderBottomColor: tokens.primaryColor }];
   const nameStyle = [styles.name, { color: tokens.primaryColor }];
   const roleStyle = [styles.role, { color: tokens.primaryColor }];
@@ -146,14 +149,13 @@ export default function CreativePdfTemplate({ data, targetRole }: Props) {
       {/* Header */}
       <View style={headerStyle}>
         <Text style={nameStyle}>{data.contact.name || "Your Name"}</Text>
-        {targetRole && (
-          <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>
-        )}
+        {targetRole && <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>}
         <Text style={styles.contact}>
           {[
             data.contact.email,
             data.contact.phone,
             data.contact.location,
+            ...(data.contact.links || []),
           ]
             .filter(Boolean)
             .join("   |   ")}
@@ -184,9 +186,7 @@ export default function CreativePdfTemplate({ data, targetRole }: Props) {
                     </Text>
                   )}
                 </Text>
-                {exp.dates && (
-                  <Text style={styles.entryDates}>{exp.dates}</Text>
-                )}
+                {exp.dates && <Text style={styles.entryDates}>{exp.dates}</Text>}
               </View>
               {exp.bullets.length > 0 && (
                 <View>

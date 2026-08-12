@@ -27,7 +27,7 @@ export function useScoreChart(analyses: AnalysisItem[], formatDate: (d: string) 
 
     const svgW = 560;
     const svgH = 210;
-    const padding = { top: 24, right: 28, bottom: 38, left: 38 };
+    const padding = { top: 24, right: 58, bottom: 38, left: 38 };
     const plotW = svgW - padding.left - padding.right;
     const plotH = svgH - padding.top - padding.bottom;
 
@@ -50,30 +50,47 @@ export function useScoreChart(analyses: AnalysisItem[], formatDate: (d: string) 
       return `${d} C${cpx.toFixed(1)},${prev.y.toFixed(1)} ${cpx.toFixed(1)},${p.y.toFixed(1)} ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
     }, "");
 
-    const areaPath = points.length > 0
-      ? `${smoothPath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
-      : "";
+    const areaPath =
+      points.length > 0
+        ? `${smoothPath} L${points[points.length - 1].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} L${points[0].x.toFixed(1)},${(padding.top + plotH).toFixed(1)} Z`
+        : "";
 
     const milestones = [
-      { value: 60, label: "Fair",  color: "#f59e0b" },
-      { value: 80, label: "Good",  color: "#6366f1" },
+      { value: 60, label: "Fair", color: "#f59e0b" },
+      { value: 80, label: "Good", color: "#6366f1" },
       { value: 90, label: "Elite", color: "#10b981" },
     ].filter((m) => m.value >= minScore && m.value <= maxScore);
 
     const yGridValues = [20, 40, 60, 80, 100].filter((v) => v >= minScore && v <= maxScore);
 
-    const bestIdx    = scores.indexOf(Math.max(...scores));
+    const bestIdx = scores.indexOf(Math.max(...scores));
     const firstScore = sorted[0].score;
-    const lastScore  = sorted[sorted.length - 1].score;
-    const bestScore  = Math.max(...scores);
-    const delta      = lastScore - firstScore;
+    const lastScore = sorted[sorted.length - 1].score;
+    const bestScore = Math.max(...scores);
+    const delta = lastScore - firstScore;
 
     return {
-      points, smoothPath, areaPath, milestones,
-      minScore, maxScore, scoreRange, yGridValues,
-      svgW, svgH, padding, plotW, plotH,
-      sorted, bestIdx, firstScore, lastScore, bestScore, delta,
-      xOf, yOf,
+      points,
+      smoothPath,
+      areaPath,
+      milestones,
+      minScore,
+      maxScore,
+      scoreRange,
+      yGridValues,
+      svgW,
+      svgH,
+      padding,
+      plotW,
+      plotH,
+      sorted,
+      bestIdx,
+      firstScore,
+      lastScore,
+      bestScore,
+      delta,
+      xOf,
+      yOf,
     };
   }, [analyses, chartPeriod, formatDate]);
 

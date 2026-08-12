@@ -74,13 +74,13 @@ const THEMES: Record<BragTheme, ThemePreset> = {
   minimal: {
     id: "minimal",
     label: "Minimal Crisp",
-    bgGrad: ["#f8fafc", "#e2e8f0"],
+    bgGrad: ["#f1f5f9", "#e2e8f0"],
     accentColor: "#0f172a",
     cardBg: "#ffffff",
-    border: "#cbd5e1",
+    border: "#94a3b8",
     textColor: "#0f172a",
-    subColor: "#475569",
-    badgeBg: "#e2e8f0",
+    subColor: "#64748b",
+    badgeBg: "#cbd5e1",
   },
 };
 
@@ -352,7 +352,14 @@ export default function BragStudioModal({
 
         {/* Theme Selector Pills */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--ink-muted)", fontFamily: "DM Mono, monospace" }}>
+          <span
+            style={{
+              fontSize: "11.5px",
+              fontWeight: 700,
+              color: "var(--ink-muted)",
+              fontFamily: "DM Mono, monospace",
+            }}
+          >
             Theme Style:
           </span>
           {(Object.keys(THEMES) as BragTheme[]).map((tKey) => {
@@ -407,7 +414,15 @@ export default function BragStudioModal({
 
         {/* Editable Headline */}
         <div>
-          <label style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--ink-muted)", display: "block", marginBottom: "4px" }}>
+          <label
+            style={{
+              fontSize: "11.5px",
+              fontWeight: 700,
+              color: "var(--ink-muted)",
+              display: "block",
+              marginBottom: "4px",
+            }}
+          >
             Headline Caption
           </label>
           <input

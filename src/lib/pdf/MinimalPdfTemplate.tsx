@@ -140,12 +140,20 @@ export default function MinimalPdfTemplate({ data, targetRole, customStyle }: Pr
     primaryColor: tokens.primaryColor,
   };
 
-  const resolvedFont = style.fontFamily === "serif" ? "Lora" : style.fontFamily === "mono" ? "Courier" : tokens.fontFamilyPdf;
+  const resolvedFont =
+    style.fontFamily === "serif"
+      ? "Lora"
+      : style.fontFamily === "mono"
+        ? "Courier"
+        : tokens.fontFamilyPdf;
   const resolvedFontSize = parseFloat(style.fontSize) || 9.5;
   const resolvedLineHeight = parseFloat(style.lineHeight) || 1.4;
   const resolvedColor = style.primaryColor || "#09090b";
 
-  const containerStyle = [styles.container, { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight }];
+  const containerStyle = [
+    styles.container,
+    { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight },
+  ];
   const nameStyle = [styles.name, { color: resolvedColor }];
   const sectionTitleStyle = [styles.sectionTitle, { color: resolvedColor }];
 
@@ -154,14 +162,13 @@ export default function MinimalPdfTemplate({ data, targetRole, customStyle }: Pr
       {/* Header */}
       <View style={styles.header}>
         <Text style={nameStyle}>{data.contact.name || "Your Name"}</Text>
-        {targetRole && (
-          <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
-        )}
+        {targetRole && <Text style={styles.role}>{targetRole.toUpperCase()}</Text>}
         <Text style={styles.contact}>
           {[
             data.contact.email,
             data.contact.phone,
             data.contact.location,
+            ...(data.contact.links || []),
           ]
             .filter(Boolean)
             .join("   |   ")}
@@ -185,13 +192,9 @@ export default function MinimalPdfTemplate({ data, targetRole, customStyle }: Pr
               <View style={styles.entryHeader}>
                 <Text style={styles.entryTitle}>
                   {exp.title}
-                  {exp.company && (
-                    <Text style={styles.entryCompany}> — {exp.company}</Text>
-                  )}
+                  {exp.company && <Text style={styles.entryCompany}> — {exp.company}</Text>}
                 </Text>
-                {exp.dates && (
-                  <Text style={styles.entryDates}>{exp.dates}</Text>
-                )}
+                {exp.dates && <Text style={styles.entryDates}>{exp.dates}</Text>}
               </View>
               {exp.bullets.length > 0 && (
                 <View>

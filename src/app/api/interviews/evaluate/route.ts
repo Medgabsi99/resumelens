@@ -1,5 +1,5 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
-import { requireUser } from "@/lib/auth";
+import { requireUserWithQuota, incrementUsage } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,8 +9,22 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Auth check
-    const _user = await requireUser();
+    // 1. Auth & Quota check
+    let _user;
+    try {
+      const session = await requireUserWithQuota();
+      _user = session.user;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "QuotaExceeded") {
+        return NextResponse.json(
+          { success: false, error: "Upgrade required to evaluate interview answers" },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const rateLimit = await checkRateLimit(_user.id, "interviews-evaluate");
     if (!rateLimit.success) {
       return rateLimitResponse();
@@ -23,7 +37,7 @@ export async function POST(req: NextRequest) {
     try {
       resumeText = validateAndSanitizeInput(resumeText, 15000, "Resume text", true);
       question = validateAndSanitizeInput(question, 2000, "Question", true);
-      answer = validateAndSanitizeInput(answer, 4000, "Answer", true);
+      answer = validateAndSanitizeInput(answer, 5000, "Answer", true);
       if (jobDescription) {
         jobDescription = validateAndSanitizeInput(jobDescription, 10000, "Job description");
       }
@@ -32,22 +46,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
 
-    // 3. Evaluate response
-    const evaluation = await evaluateInterviewAnswer(
-      resumeText,
-      question,
-      answer,
-      jobDescription || undefined
-    );
+    await incrementUsage(_user.id);
+
+    // 3. Evaluate via AI
+    const evaluation = await evaluateInterviewAnswer(resumeText, question, answer, jobDescription);
 
     return NextResponse.json({ success: true, evaluation });
-  } catch (error: unknown) {
-    logger.error("Simulator turn evaluation route error:", error);
-    const message =
-      error instanceof Error ? (error as Error).message : "Failed to evaluate answer";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    logger.error("Interview Evaluation API Error:", err);
+    const message = err instanceof Error ? (err as Error).message : "Interview evaluation failed";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

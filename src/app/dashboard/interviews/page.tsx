@@ -8,10 +8,13 @@ import { useToast } from "@/components/ToastProvider";
 import dynamic from "next/dynamic";
 import { Settings2, Trophy, X, GraduationCap } from "lucide-react";
 
-const MockInterviewSimulatorBoard = dynamic(() => import("@/components/MockInterviewSimulatorBoard"), {
-  ssr: false,
-  loading: () => <div className="p-8 text-center text-muted">Loading Interview Simulator...</div>,
-});
+const MockInterviewSimulatorBoard = dynamic(
+  () => import("@/components/MockInterviewSimulatorBoard"),
+  {
+    ssr: false,
+    loading: () => <div className="p-8 text-center text-muted">Loading Interview Simulator...</div>,
+  }
+);
 
 interface ResumeItem {
   id: string;
@@ -29,7 +32,13 @@ interface SavedInterviewItem {
   interview_type: string;
   difficulty: string;
   questions: string[];
-  transcripts: Array<{ question: string; answer: string; score?: number; feedback?: string; sampleAnswer?: string }>;
+  transcripts: Array<{
+    question: string;
+    answer: string;
+    score?: number;
+    feedback?: string;
+    sampleAnswer?: string;
+  }>;
   overall_score: number;
   star_mastery: number;
   filler_words: Record<string, number>;
@@ -106,7 +115,10 @@ export default function InterviewsPage() {
       try {
         const local = localStorage.getItem("mock_interviews_local");
         if (local) {
-          localHistory = JSON.parse(local).map((item: Partial<SavedInterviewItem>) => ({ ...item, isLocal: true }));
+          localHistory = JSON.parse(local).map((item: Partial<SavedInterviewItem>) => ({
+            ...item,
+            isLocal: true,
+          }));
         }
       } catch (err) {
         logger.warn("Failed to load local storage mock interviews:", err);
@@ -209,7 +221,10 @@ export default function InterviewsPage() {
         setHistory((prev) => prev.filter((entry) => entry.id !== item.id));
         toastSuccess("Mock interview deleted successfully.", "Deleted");
       } catch (err: unknown) {
-        toastError((err as Error).message || "Failed to delete log from database.", "Delete Failed");
+        toastError(
+          (err as Error).message || "Failed to delete log from database.",
+          "Delete Failed"
+        );
       }
     }
   };
@@ -224,355 +239,391 @@ export default function InterviewsPage() {
 
   return (
     <DashboardLayout>
-      <div className="fade-up max-w-5xl mx-auto space-y-8">
+      <div className="workspace-canvas">
+        <div className="fade-up max-w-7xl mx-auto space-y-8">
+          {/* Page Titles */}
+          {!activeQuestions && !generating && (
+            <div className="space-y-1.5">
+              <h1 className="font-display text-4xl font-bold tracking-tight text-ink flex items-center gap-2">
+                Mock Interview Simulator
+              </h1>
+              <p className="text-ink-muted text-sm max-w-3xl">
+                Practice situational, technical, and screening interviews tailored directly to your
+                target company, role seniority, and resume background.
+              </p>
+            </div>
+          )}
 
-        {/* Page Titles */}
-        {!activeQuestions && !generating && (
-          <div className="space-y-1.5">
-            <h1 className="font-display text-4xl font-bold tracking-tight text-ink flex items-center gap-2">
-              Mock Interview Simulator
-            </h1>
-            <p className="text-ink-muted text-sm max-w-3xl">
-              Practice situational, technical, and screening interviews tailored directly to your target company, role seniority, and resume background.
-            </p>
-          </div>
-        )}
+          {error && (
+            <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
+              {error}
+            </div>
+          )}
 
-        {error && (
-          <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-sm">
-            {error}
-          </div>
-        )}
+          {/* Loading Step View */}
+          {generating && (
+            <div className="bg-paper-card border border-border rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[350px]">
+              <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+              <h3 className="font-display text-lg font-bold text-ink mt-2">
+                {GENERATING_STEPS[genStep]}
+              </h3>
+              <p className="text-xs text-ink-muted">
+                Leveraging gemini-2.5 models to customize specialized questions for your target
+                profile
+              </p>
+            </div>
+          )}
 
-        {/* Loading Step View */}
-        {generating && (
-          <div className="bg-paper-card border border-border rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-4 shadow-lg min-h-[350px]">
-            <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-            <h3 className="font-display text-lg font-bold text-ink mt-2">
-              {GENERATING_STEPS[genStep]}
-            </h3>
-            <p className="text-xs text-ink-muted">
-              Leveraging gemini-2.5 models to customize specialized questions for your target profile
-            </p>
-          </div>
-        )}
+          {/* Core Layout Setup */}
+          {!activeQuestions && !generating && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Launcher Setup Form */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-5 shadow-lg">
+                  <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
+                    <Settings2 size={14} /> Configure Interview Setup
+                  </h3>
 
-        {/* Core Layout Setup */}
-        {!activeQuestions && !generating && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Select Resume */}
+                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Select Base Resume
+                      </label>
+                      <select
+                        value={selectedResumeId}
+                        onChange={handleResumeChange}
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+                      >
+                        <option value="">-- Choose resume from library --</option>
+                        {resumes.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name} ({r.target_role || "No target role"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-            {/* Launcher Setup Form */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-5 shadow-lg">
-                <h3 className="font-display text-lg font-bold text-ink border-b border-border pb-3 flex items-center gap-2">
-                  <Settings2 size={14} /> Configure Interview Setup
-                </h3>
+                    {/* Target Role */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Target Role Title
+                      </label>
+                      <input
+                        type="text"
+                        value={roleTitle}
+                        onChange={(e) => setRoleTitle(e.target.value)}
+                        placeholder="e.g. Senior Frontend Engineer"
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Target Company */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Target Company
+                      </label>
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="e.g. Stripe"
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+                      />
+                    </div>
 
-                  {/* Select Resume */}
-                  <div className="flex flex-col gap-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Select Base Resume
-                    </label>
-                    <select
-                      value={selectedResumeId}
-                      onChange={handleResumeChange}
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                    >
-                      <option value="">-- Choose resume from library --</option>
-                      {resumes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name} ({r.target_role || "No target role"})
+                    {/* Focus Style */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Interview Focus Style
+                      </label>
+                      <select
+                        value={interviewType}
+                        onChange={(e) => setInterviewType(e.target.value)}
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+                      >
+                        <option value="behavioral">Behavioral (STAR Method Check)</option>
+                        <option value="technical">Technical (Coding / Design tradeoffs)</option>
+                        <option value="screening">
+                          General Screening (Verification & achievements)
                         </option>
-                      ))}
-                    </select>
+                      </select>
+                    </div>
+
+                    {/* Difficulty */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Role Difficulty Level
+                      </label>
+                      <select
+                        value={difficulty}
+                        onChange={(e) => setDifficulty(e.target.value)}
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+                      >
+                        <option value="junior">Junior (Foundational concepts)</option>
+                        <option value="mid">Mid-Level (Tradeoffs & implementation)</option>
+                        <option value="senior">
+                          Senior (Architecture, leadership & STAR metrics)
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Job Description Text */}
+                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                      <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+                        Job Description / Requirements List (Optional)
+                      </label>
+                      <textarea
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        placeholder="Paste the target job description to allow AI to tailors questions exactly to the criteria."
+                        rows={4}
+                        className="w-full bg-paper border border-border rounded-xl px-4 py-3 text-sm text-ink outline-none focus:border-accent resize-vertical transition"
+                      />
+                    </div>
                   </div>
 
-                  {/* Target Role */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Target Role Title
-                    </label>
-                    <input
-                      type="text"
-                      value={roleTitle}
-                      onChange={(e) => setRoleTitle(e.target.value)}
-                      placeholder="e.g. Senior Frontend Engineer"
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                    />
-                  </div>
-
-                  {/* Target Company */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Target Company
-                    </label>
-                    <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="e.g. Stripe"
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                    />
-                  </div>
-
-                  {/* Focus Style */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Interview Focus Style
-                    </label>
-                    <select
-                      value={interviewType}
-                      onChange={(e) => setInterviewType(e.target.value)}
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                    >
-                      <option value="behavioral">Behavioral (STAR Method Check)</option>
-                      <option value="technical">Technical (Coding / Design tradeoffs)</option>
-                      <option value="screening">General Screening (Verification & achievements)</option>
-                    </select>
-                  </div>
-
-                  {/* Difficulty */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Role Difficulty Level
-                    </label>
-                    <select
-                      value={difficulty}
-                      onChange={(e) => setDifficulty(e.target.value)}
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                    >
-                      <option value="junior">Junior (Foundational concepts)</option>
-                      <option value="mid">Mid-Level (Tradeoffs & implementation)</option>
-                      <option value="senior">Senior (Architecture, leadership & STAR metrics)</option>
-                    </select>
-                  </div>
-
-                  {/* Job Description Text */}
-                  <div className="flex flex-col gap-1.5 md:col-span-2">
-                    <label className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-                      Job Description / Requirements List (Optional)
-                    </label>
-                    <textarea
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      placeholder="Paste the target job description to allow AI to tailors questions exactly to the criteria."
-                      rows={4}
-                      className="w-full bg-paper border border-border rounded-xl px-4 py-3 text-sm text-ink outline-none focus:border-accent resize-vertical transition"
-                    />
-                  </div>
-
+                  <button
+                    onClick={handleLaunchSimulator}
+                    disabled={!selectedResumeId || !roleTitle || !companyName}
+                    className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
+                  >
+                    Generate Custom Questions & Start Simulation
+                  </button>
                 </div>
+              </div>
 
-                <button
-                  onClick={handleLaunchSimulator}
-                  disabled={!selectedResumeId || !roleTitle || !companyName}
-                  className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
-                >
-                  Generate Custom Questions & Start Simulation
-                </button>
+              {/* Previous History List */}
+              <div className="space-y-6">
+                <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-4 shadow-lg h-full">
+                  <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-border pb-3">
+                    <Trophy size={11} /> Session History
+                  </h3>
 
+                  {loading ? (
+                    <div className="space-y-3">
+                      <SkeletonHistoryCard />
+                      <SkeletonHistoryCard />
+                      <SkeletonHistoryCard />
+                    </div>
+                  ) : history.length === 0 ? (
+                    <div className="text-center text-xs text-ink-muted py-8">
+                      <p>No completed interviews found.</p>
+                      <p className="text-[10px] text-ink-faint mt-1">
+                        Configure your credentials above to run your first simulation!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                      {history.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-paper border border-border p-3.5 rounded-xl space-y-2 hover:border-accent-border transition animate-fade-in relative group"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4
+                                className="font-bold text-sm text-ink truncate max-w-[130px]"
+                                title={item.role_title}
+                              >
+                                {item.role_title}
+                              </h4>
+                              <span className="text-[10px] text-ink-muted font-medium block">
+                                at {item.company_name}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <span className="bg-indigo-500/10 text-indigo-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                {item.overall_score}%
+                              </span>
+                              {item.isLocal && (
+                                <span
+                                  className="bg-slate-500/10 text-slate-400 text-[8px] font-bold px-1 py-0.5 rounded border border-slate-500/20"
+                                  title="Saved locally in browser"
+                                >
+                                  LOCAL
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Badges */}
+                          <div className="flex flex-wrap gap-1 text-[9px] font-semibold">
+                            <span className="bg-emerald-500/5 text-emerald-400 border border-emerald-500/10 px-1.5 py-0.2 rounded">
+                              {item.star_mastery}% STAR
+                            </span>
+                            <span className="bg-indigo-500/5 text-indigo-400 border border-indigo-500/10 px-1.5 py-0.2 rounded capitalize">
+                              {item.interview_type}
+                            </span>
+                          </div>
+
+                          {/* Actions bar */}
+                          <div className="flex justify-between items-center pt-2 border-t border-border/50 text-[10px] text-ink-muted">
+                            <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setSelectedHistoryItem(item)}
+                                className="text-accent font-semibold hover:underline cursor-pointer"
+                              >
+                                Details
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItem(item)}
+                                className="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Previous History List */}
-            <div className="space-y-6">
-              <div className="bg-paper-card border border-border rounded-2xl p-6 space-y-4 shadow-lg h-full">
-                <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-border pb-3">
-                  <Trophy size={11} /> Session History
-                </h3>
+          {/* Active Simulation Workspace Overlay */}
+          {activeQuestions && activeResumeText && (
+            <MockInterviewSimulatorBoard
+              questions={activeQuestions}
+              resumeText={activeResumeText}
+              jobDescription={jobDescription}
+              roleTitle={roleTitle}
+              companyName={companyName}
+              interviewType={interviewType}
+              difficulty={difficulty}
+              onClose={handleCloseBoard}
+            />
+          )}
 
-                {loading ? (
-                  <div className="space-y-3">
-                    <SkeletonHistoryCard />
-                    <SkeletonHistoryCard />
-                    <SkeletonHistoryCard />
+          {/* Saved Past Scorecard Detail Dialog Overlay */}
+          {selectedHistoryItem && (
+            <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 overflow-y-auto backdrop-blur-sm">
+              <div className="w-full max-w-2xl bg-[#121216] border border-[#2c2c38] rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 max-h-[85vh] overflow-y-auto text-slate-100 font-sans">
+                {/* Header */}
+                <div className="text-center border-b border-[#2c2c38]/50 pb-5 relative">
+                  <button
+                    onClick={() => setSelectedHistoryItem(null)}
+                    className="absolute right-0 top-0 text-ink-muted hover:text-ink border border-border px-2.5 py-1 rounded-lg text-xs"
+                  >
+                    <X size={13} /> Close
+                  </button>
+                  <div className="flex justify-center mb-2">
+                    <GraduationCap size={32} className="text-ink-muted" />
                   </div>
-                ) : history.length === 0 ? (
-                  <div className="text-center text-xs text-ink-muted py-8">
-                    <p>No completed interviews found.</p>
-                    <p className="text-[10px] text-ink-faint mt-1">Configure your credentials above to run your first simulation!</p>
+                  <h3 className="font-display text-2xl font-bold text-ink">
+                    Saved Interview Scorecard
+                  </h3>
+                  <p className="text-ink-muted text-sm mt-1">
+                    {selectedHistoryItem.role_title} at{" "}
+                    <span className="font-semibold text-ink">
+                      {selectedHistoryItem.company_name}
+                    </span>
+                  </p>
+                  <div className="flex justify-center gap-2 mt-2.5 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="bg-[#1c1c24] text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded">
+                      {selectedHistoryItem.interview_type}
+                    </span>
+                    <span className="bg-[#1c1c24] text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded">
+                      Level: {selectedHistoryItem.difficulty}
+                    </span>
                   </div>
-                ) : (
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                    {history.map((item) => (
-                      <div
-                        key={item.id}
-                        className="bg-paper border border-border p-3.5 rounded-xl space-y-2 hover:border-accent-border transition animate-fade-in relative group"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-bold text-sm text-ink truncate max-w-[130px]" title={item.role_title}>
-                              {item.role_title}
-                            </h4>
-                            <span className="text-[10px] text-ink-muted font-medium block">at {item.company_name}</span>
-                          </div>
+                </div>
 
-                          <div className="flex items-center gap-1.5">
-                            <span className="bg-indigo-500/10 text-indigo-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                              {item.overall_score}%
-                            </span>
-                            {item.isLocal && (
-                              <span className="bg-slate-500/10 text-slate-400 text-[8px] font-bold px-1 py-0.5 rounded border border-slate-500/20" title="Saved locally in browser">
-                                LOCAL
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                {/* Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Score */}
+                  <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                      Match Score
+                    </span>
+                    <span className="text-3xl font-extrabold text-indigo-400 mt-1">
+                      {selectedHistoryItem.overall_score}%
+                    </span>
+                  </div>
 
-                        {/* Badges */}
-                        <div className="flex flex-wrap gap-1 text-[9px] font-semibold">
-                          <span className="bg-emerald-500/5 text-emerald-400 border border-emerald-500/10 px-1.5 py-0.2 rounded">
-                            {item.star_mastery}% STAR
-                          </span>
-                          <span className="bg-indigo-500/5 text-indigo-400 border border-indigo-500/10 px-1.5 py-0.2 rounded capitalize">
-                            {item.interview_type}
-                          </span>
-                        </div>
+                  {/* STAR Mastery */}
+                  <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                      STAR Mastery
+                    </span>
+                    <span className="text-3xl font-extrabold text-emerald-400 mt-1">
+                      {selectedHistoryItem.star_mastery}%
+                    </span>
+                  </div>
 
-                        {/* Actions bar */}
-                        <div className="flex justify-between items-center pt-2 border-t border-border/50 text-[10px] text-ink-muted">
-                          <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setSelectedHistoryItem(item)}
-                              className="text-accent font-semibold hover:underline cursor-pointer"
-                            >
-                              Details
-                            </button>
-                            <button
-                              onClick={() => handleDeleteItem(item)}
-                              className="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                  {/* Filler count */}
+                  <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                      Filler words used
+                    </span>
+                    <span className="text-3xl font-extrabold text-amber-400 mt-1">
+                      {Object.values(selectedHistoryItem.filler_words || {}).reduce(
+                        (a, b) => a + b,
+                        0
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Filler Words Frequencies */}
+                {selectedHistoryItem.filler_words && (
+                  <div className="space-y-2">
+                    <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
+                      Filler word occurrences
+                    </h4>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2 text-xs">
+                      {Object.entries(selectedHistoryItem.filler_words).map(([w, c]) => (
+                        <div
+                          key={w}
+                          className="bg-[#181822] border border-border/50 p-2 rounded-lg flex justify-between"
+                        >
+                          <span className="text-ink-muted font-mono">&quot;{w}&quot;</span>
+                          <span className="font-bold">{c}</span>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-          </div>
-        )}
+                {/* Transcripts dialogue check list */}
+                <div className="space-y-3">
+                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-[#2c2c38]/50 pb-2">
+                    Conversation Transcripts
+                  </h4>
 
-        {/* Active Simulation Workspace Overlay */}
-        {activeQuestions && activeResumeText && (
-          <MockInterviewSimulatorBoard
-            questions={activeQuestions}
-            resumeText={activeResumeText}
-            jobDescription={jobDescription}
-            roleTitle={roleTitle}
-            companyName={companyName}
-            interviewType={interviewType}
-            difficulty={difficulty}
-            onClose={handleCloseBoard}
-          />
-        )}
-
-        {/* Saved Past Scorecard Detail Dialog Overlay */}
-        {selectedHistoryItem && (
-          <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 overflow-y-auto backdrop-blur-sm">
-            <div className="w-full max-w-2xl bg-[#121216] border border-[#2c2c38] rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 max-h-[85vh] overflow-y-auto text-slate-100 font-sans">
-
-              {/* Header */}
-              <div className="text-center border-b border-[#2c2c38]/50 pb-5 relative">
-                <button
-                  onClick={() => setSelectedHistoryItem(null)}
-                  className="absolute right-0 top-0 text-ink-muted hover:text-ink border border-border px-2.5 py-1 rounded-lg text-xs"
-                >
-                  <X size={13} /> Close
-                </button>
-                <div className="flex justify-center mb-2"><GraduationCap size={32} className="text-ink-muted" /></div>
-                <h3 className="font-display text-2xl font-bold text-ink">Saved Interview Scorecard</h3>
-                <p className="text-ink-muted text-sm mt-1">
-                  {selectedHistoryItem.role_title} at <span className="font-semibold text-ink">{selectedHistoryItem.company_name}</span>
-                </p>
-                <div className="flex justify-center gap-2 mt-2.5 text-[10px] font-bold uppercase tracking-wider">
-                  <span className="bg-[#1c1c24] text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded">
-                    {selectedHistoryItem.interview_type}
-                  </span>
-                  <span className="bg-[#1c1c24] text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded">
-                    Level: {selectedHistoryItem.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              {/* Stats Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                {/* Score */}
-                <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Match Score</span>
-                  <span className="text-3xl font-extrabold text-indigo-400 mt-1">{selectedHistoryItem.overall_score}%</span>
-                </div>
-
-                {/* STAR Mastery */}
-                <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">STAR Mastery</span>
-                  <span className="text-3xl font-extrabold text-emerald-400 mt-1">{selectedHistoryItem.star_mastery}%</span>
-                </div>
-
-                {/* Filler count */}
-                <div className="bg-[#181822] border border-[#2c2c38] p-4 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">Filler words used</span>
-                  <span className="text-3xl font-extrabold text-amber-400 mt-1">
-                    {Object.values(selectedHistoryItem.filler_words || {}).reduce((a, b) => a + b, 0)}
-                  </span>
-                </div>
-
-              </div>
-
-              {/* Filler Words Frequencies */}
-              {selectedHistoryItem.filler_words && (
-                <div className="space-y-2">
-                  <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">Filler word occurrences</h4>
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 text-xs">
-                    {Object.entries(selectedHistoryItem.filler_words).map(([w, c]) => (
-                      <div key={w} className="bg-[#181822] border border-border/50 p-2 rounded-lg flex justify-between">
-                        <span className="text-ink-muted font-mono">&quot;{w}&quot;</span>
-                        <span className="font-bold">{c}</span>
+                  <div className="space-y-4 max-h-[280px] overflow-y-auto pr-1">
+                    {selectedHistoryItem.transcripts?.map((s, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-[#181822] border border-[#2c2c38] rounded-xl p-4 space-y-2 text-xs"
+                      >
+                        <div className="font-bold text-indigo-400">
+                          Q{idx + 1}: {s.question}
+                        </div>
+                        <div className="text-ink-muted bg-[#121216] border border-border/50 p-2.5 rounded-lg leading-relaxed italic">
+                          &quot;{s.answer}&quot;
+                        </div>
+                        <div className="text-[11px] leading-relaxed pt-1.5 border-t border-[#2c2c38]/40">
+                          <strong>Grade Feedback (Score: {s.score}/10):</strong>{" "}
+                          <span className="text-ink-muted">{s.feedback}</span>
+                        </div>
+                        {s.sampleAnswer && (
+                          <div className="text-[11px] text-emerald-400 leading-relaxed pt-1 border-t border-dashed border-[#2c2c38]/40">
+                            <strong>Coach Suggestion:</strong> &quot;{s.sampleAnswer}&quot;
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Transcripts dialogue check list */}
-              <div className="space-y-3">
-                <h4 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider border-b border-[#2c2c38]/50 pb-2">
-                  Conversation Transcripts
-                </h4>
-
-                <div className="space-y-4 max-h-[280px] overflow-y-auto pr-1">
-                  {selectedHistoryItem.transcripts?.map((s, idx) => (
-                    <div key={idx} className="bg-[#181822] border border-[#2c2c38] rounded-xl p-4 space-y-2 text-xs">
-                      <div className="font-bold text-indigo-400">
-                        Q{idx + 1}: {s.question}
-                      </div>
-                      <div className="text-ink-muted bg-[#121216] border border-border/50 p-2.5 rounded-lg leading-relaxed italic">
-                        &quot;{s.answer}&quot;
-                      </div>
-                      <div className="text-[11px] leading-relaxed pt-1.5 border-t border-[#2c2c38]/40">
-                        <strong>Grade Feedback (Score: {s.score}/10):</strong> <span className="text-ink-muted">{s.feedback}</span>
-                      </div>
-                      {s.sampleAnswer && (
-                        <div className="text-[11px] text-emerald-400 leading-relaxed pt-1 border-t border-dashed border-[#2c2c38]/40">
-                          <strong>Coach Suggestion:</strong> &quot;{s.sampleAnswer}&quot;
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
               </div>
-
             </div>
-          </div>
-        )}
-
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

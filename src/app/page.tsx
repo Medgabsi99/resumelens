@@ -11,16 +11,7 @@ import AuroraBackground from "@/components/AuroraBackground";
 import ConfettiCannon from "@/components/ConfettiCannon";
 import ParsingProgressVisualizer from "@/components/ParsingProgressVisualizer";
 import HomepageMarketing from "@/components/HomepageMarketing";
-import {
-  FileText,
-  Upload,
-  Sparkles,
-  Menu,
-  X,
-  Play,
-  ArrowRight,
-  TrendingUp
-} from "lucide-react";
+import { FileText, Upload, Sparkles, Menu, X, Play, ArrowRight, TrendingUp } from "lucide-react";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -36,17 +27,29 @@ export default function HomePage() {
   const [targetRole, setTargetRole] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [jobUrl, setJobUrl] = useState("");
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [scrapeMode, setScrapeMode] = useState<"paste" | "url">("paste");
 
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [preview, setPreview] = useState<{ score: number; summary: string; strengths: string[] } | null>(null);
+  const [preview, setPreview] = useState<{
+    score: number;
+    summary: string;
+    strengths: string[];
+  } | null>(null);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isSessionLoaded, setIsSessionLoaded] = useState(false);
-  const [profile, setProfile] = useState<{ plan: string; analyses_used: number; analyses_limit: number } | null>(null);
+  const [profile, setProfile] = useState<{
+    plan: string;
+    analyses_used: number;
+    analyses_limit: number;
+  } | null>(null);
   // Increments each time a milestone score is achieved → triggers confetti
   const [confettiKey, setConfettiKey] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,14 +60,14 @@ export default function HomePage() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUserEmail(session.user.email || null);
-        
+
         // Fetch active plan and quota limits from database profile
         const { data } = await supabase
           .from("profiles")
           .select("plan, analyses_used, analyses_limit")
           .eq("id", session.user.id)
           .single();
-          
+
         if (data) {
           setProfile(data);
         }
@@ -110,6 +113,29 @@ export default function HomePage() {
     },
     maxFiles: 1,
   });
+
+  // ── Scrape job URL ──────────────────────────────────────────
+  async function handleScrapeUrl() {
+    if (!jobUrl.trim()) return;
+    setIsScraping(true);
+    setScrapeError(null);
+    try {
+      const res = await fetch("/api/scrape-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: jobUrl }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to scrape");
+      setJobDescription(data.jobDescription);
+      setScrapeMode("paste"); // switch back to text view to show result
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Scraping failed";
+      setScrapeError(msg);
+    } finally {
+      setIsScraping(false);
+    }
+  }
 
   // ── Analyze ──────────────────────────────────────────────
   const [extractedText, setExtractedText] = useState("");
@@ -205,7 +231,14 @@ export default function HomePage() {
         }}
       >
         <div className="flex items-center justify-between w-full md:w-auto">
-          <div style={{ fontFamily: "DM Serif Display, serif", fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>
+          <div
+            style={{
+              fontFamily: "DM Serif Display, serif",
+              fontSize: 24,
+              fontWeight: 700,
+              letterSpacing: "-0.5px",
+            }}
+          >
             Resume<span style={{ color: "var(--accent)" }}>Lens</span>
           </div>
           <div className="flex items-center gap-3 md:hidden">
@@ -215,11 +248,7 @@ export default function HomePage() {
               className="text-ink hover:text-accent transition-colors focus:outline-none p-1"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -318,10 +347,14 @@ export default function HomePage() {
               letterSpacing: "-1px",
             }}
           >
-            Your resume, <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic">honestly reviewed</span>
+            Your resume,{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic">
+              honestly reviewed
+            </span>
           </h1>
           <p className="text-ink-muted text-base md:text-lg leading-relaxed max-w-xl mx-auto">
-            Get instant, deep analysis on your resume. Identify ATS keywords gaps, receive tailored rewrite suggestions, and match yourself perfectly to target jobs.
+            Get instant, deep analysis on your resume. Identify ATS keywords gaps, receive tailored
+            rewrite suggestions, and match yourself perfectly to target jobs.
           </p>
         </div>
 
@@ -342,14 +375,23 @@ export default function HomePage() {
                   className="capitalize font-semibold"
                   style={{ color: profile.plan === "free" ? "var(--accent)" : "#10b981" }}
                 >
-                  {profile.plan === "free" ? "Free Tier" : profile.plan === "monthly" ? "Pro Monthly" : "Lifetime Pro"}
+                  {profile.plan === "free"
+                    ? "Free Tier"
+                    : profile.plan === "monthly"
+                      ? "Pro Monthly"
+                      : "Lifetime Pro"}
                 </strong>
               </span>
             </div>
             <div>
               {profile.plan === "free" ? (
                 <span className="text-ink-muted">
-                  Quota: <strong className="text-ink">{Math.max(0, profile.analyses_limit - profile.analyses_used)} / {profile.analyses_limit}</strong> remaining
+                  Quota:{" "}
+                  <strong className="text-ink">
+                    {Math.max(0, profile.analyses_limit - profile.analyses_used)} /{" "}
+                    {profile.analyses_limit}
+                  </strong>{" "}
+                  remaining
                 </span>
               ) : (
                 <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
@@ -385,21 +427,30 @@ export default function HomePage() {
                     {fileName ? (
                       <FileText size={28} className="text-accent" />
                     ) : (
-                      <Upload size={28} className="text-ink-muted group-hover:text-accent transition-colors" />
+                      <Upload
+                        size={28}
+                        className="text-ink-muted group-hover:text-accent transition-colors"
+                      />
                     )}
                   </div>
                   <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto">
                     {fileName
                       ? `${fileName}`
                       : isDragActive
-                      ? "Drop your file here..."
-                      : "Drop PDF, DOCX, or TXT here, or click to browse"}
+                        ? "Drop your file here..."
+                        : "Drop PDF, DOCX, or TXT here, or click to browse"}
                   </p>
                 </div>
 
                 <div className="relative my-5 text-center">
-                  <span className="absolute inset-y-1/2 left-0 right-0 h-px" style={{ background: "var(--border)" }} />
-                  <span className="relative px-3 font-mono text-[10px] tracking-widest text-ink-faint uppercase" style={{ background: "var(--paper-card)" }}>
+                  <span
+                    className="absolute inset-y-1/2 left-0 right-0 h-px"
+                    style={{ background: "var(--border)" }}
+                  />
+                  <span
+                    className="relative px-3 font-mono text-[10px] tracking-widest text-ink-faint uppercase"
+                    style={{ background: "var(--paper-card)" }}
+                  >
                     or paste resume text
                   </span>
                 </div>
@@ -408,18 +459,29 @@ export default function HomePage() {
                   value={resumeText}
                   onChange={(e) => {
                     setResumeText(e.target.value);
-                    if (e.target.value) { setUploadedFile(null); setFileName(null); }
+                    if (e.target.value) {
+                      setUploadedFile(null);
+                      setFileName(null);
+                    }
                   }}
                   placeholder="Paste the raw text of your resume here..."
                   className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed"
                 />
                 <div className="flex justify-between items-center mt-1.5 px-0.5">
                   <span className="text-[10px] font-mono text-ink-faint">
-                    {resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : ""}
+                    {resumeText.length > 0
+                      ? `${resumeText.length.toLocaleString()} characters`
+                      : ""}
                   </span>
                   {resumeText.length > 500 && (
-                    <span className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}>
-                      {resumeText.length >= 4000 ? "Great length" : resumeText.length >= 1500 ? "Good — add more for best results" : "Keep going…"}
+                    <span
+                      className={`text-[10px] font-mono font-semibold ${resumeText.length >= 4000 ? "text-emerald-500" : resumeText.length >= 1500 ? "text-amber-500" : "text-ink-faint"}`}
+                    >
+                      {resumeText.length >= 4000
+                        ? "Great length"
+                        : resumeText.length >= 1500
+                          ? "Good — add more for best results"
+                          : "Keep going…"}
                     </span>
                   )}
                 </div>
@@ -427,18 +489,132 @@ export default function HomePage() {
 
               {/* Right — Job context */}
               <Panel label="Job Context (recommended)">
-                <textarea
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the job description here. Enabling this unlocks personalized matching, ATS gap analysis, and tailored rewrites..."
-                  className="premium-input w-full min-h-[220px] font-mono text-xs leading-relaxed mb-4"
-                />
+                {/* URL / Paste toggle */}
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setScrapeMode("paste")}
+                    style={{
+                      flex: 1,
+                      padding: "6px 0",
+                      borderRadius: 8,
+                      border: `1.5px solid ${scrapeMode === "paste" ? "var(--accent)" : "var(--border)"}`,
+                      background: scrapeMode === "paste" ? "var(--accent-bg)" : "var(--paper-card)",
+                      color: scrapeMode === "paste" ? "var(--accent)" : "var(--ink-muted)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    📋 Paste Text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScrapeMode("url")}
+                    style={{
+                      flex: 1,
+                      padding: "6px 0",
+                      borderRadius: 8,
+                      border: `1.5px solid ${scrapeMode === "url" ? "var(--accent)" : "var(--border)"}`,
+                      background: scrapeMode === "url" ? "var(--accent-bg)" : "var(--paper-card)",
+                      color: scrapeMode === "url" ? "var(--accent)" : "var(--ink-muted)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    🔗 Job URL
+                  </button>
+                </div>
+
+                {scrapeMode === "url" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ fontSize: 11, color: "var(--ink-muted)", lineHeight: 1.5 }}>
+                      Paste a LinkedIn, Indeed, Greenhouse, Lever, or Workday job URL and we'll
+                      extract the description automatically.
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        type="url"
+                        value={jobUrl}
+                        onChange={(e) => setJobUrl(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleScrapeUrl()}
+                        placeholder="https://linkedin.com/jobs/view/..."
+                        className="premium-input"
+                        style={{ flex: 1, fontSize: 12 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleScrapeUrl}
+                        disabled={isScraping || !jobUrl.trim()}
+                        style={{
+                          background: isScraping ? "#9ca3af" : "var(--accent)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "0 16px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: isScraping ? "wait" : "pointer",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isScraping ? "Fetching..." : "Fetch"}
+                      </button>
+                    </div>
+                    {scrapeError && (
+                      <div style={{ fontSize: 11, color: "#ef4444", lineHeight: 1.4 }}>
+                        ⚠️ {scrapeError}
+                      </div>
+                    )}
+                    {jobDescription && (
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "#10b981",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        ✅ Job description fetched ({jobDescription.length.toLocaleString()} chars)
+                        —{" "}
+                        <button
+                          type="button"
+                          onClick={() => setScrapeMode("paste")}
+                          style={{
+                            color: "var(--accent)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: 0,
+                          }}
+                        >
+                          View text
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <textarea
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the job description here. Enabling this unlocks personalized matching, ATS gap analysis, and tailored rewrites..."
+                    className="premium-input w-full min-h-[180px] font-mono text-xs leading-relaxed mb-4"
+                  />
+                )}
                 <input
                   type="text"
                   value={targetRole}
                   onChange={(e) => setTargetRole(e.target.value)}
                   placeholder='Target role, e.g. "Senior Frontend Developer"'
                   className="premium-input w-full"
+                  style={{ marginTop: scrapeMode === "url" ? 8 : 0 }}
                 />
               </Panel>
             </div>
@@ -482,10 +658,10 @@ export default function HomePage() {
         {/* Upgrade preview */}
         {requiresUpgrade && preview && !showUpgradeModal && (
           <div className="glass-card max-w-xl mx-auto p-8 rounded-2xl text-center shadow-premium bg-gradient-to-b from-paper-card to-paper-warm/20 mt-8">
-            <div className="font-display text-5xl text-accent mb-2">
-              {preview.score}
-            </div>
-            <p className="text-ink-muted mb-6 text-sm leading-relaxed max-w-sm mx-auto">{preview.summary}</p>
+            <div className="font-display text-5xl text-accent mb-2">{preview.score}</div>
+            <p className="text-ink-muted mb-6 text-sm leading-relaxed max-w-sm mx-auto">
+              {preview.summary}
+            </p>
             <button
               onClick={() => setShowUpgradeModal(true)}
               className="btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
@@ -498,9 +674,7 @@ export default function HomePage() {
       </main>
 
       {/* Marketing / trust sections — only when no result is active */}
-      {!result && !requiresUpgrade && (
-        <HomepageMarketing />
-      )}
+      {!result && !requiresUpgrade && <HomepageMarketing />}
 
       {showUpgradeModal && (
         <UpgradeModal preview={preview} onClose={() => setShowUpgradeModal(false)} />

@@ -1,7 +1,8 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUserWithQuota, incrementUsage } from "@/lib/auth";
 import { getSecureModel } from "@/lib/ai/client";
+import { createSSEResponse } from "@/lib/sse";
 
 export const maxDuration = 30;
 
@@ -12,11 +13,18 @@ const bulletRewriteModel = getSecureModel({
 });
 
 export async function POST(req: NextRequest) {
-  // Auth guard
+  // Auth & Quota guard
   let _user;
   try {
-    _user = await requireUser();
-  } catch {
+    const session = await requireUserWithQuota();
+    _user = session.user;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg === "QuotaExceeded") {
+      return new Response(JSON.stringify({ error: "Upgrade required to run bullet rewrites" }), {
+        status: 403,
+      });
+    }
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
@@ -30,6 +38,9 @@ export async function POST(req: NextRequest) {
   if (!bullet || typeof bullet !== "string" || bullet.trim().length < 5) {
     return new Response(JSON.stringify({ error: "Invalid bullet text" }), { status: 400 });
   }
+
+  // Increment usage counter
+  await incrementUsage(_user.id);
 
   const contextSnippet = resumeContext
     ? `\n\nResume context (first 800 chars):\n${String(resumeContext).slice(0, 800)}`
@@ -60,33 +71,13 @@ REWRITE 2:
 REWRITE 3:
 [rewrite here]`;
 
-  const encoder = new TextEncoder();
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const result = await bulletRewriteModel.generateContentStream(prompt);
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) {
-            controller.enqueue(encoder.encode(text));
-          }
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Stream error";
-        controller.enqueue(encoder.encode(`\n[ERROR: ${msg}]`));
-      } finally {
-        controller.close();
+  return createSSEResponse(async (send) => {
+    const result = await bulletRewriteModel.generateContentStream(prompt);
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) {
+        send(text);
       }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Transfer-Encoding": "chunked",
-      "Cache-Control": "no-cache",
-      "X-Accel-Buffering": "no",
-    },
+    }
   });
 }

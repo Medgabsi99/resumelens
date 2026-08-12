@@ -136,7 +136,10 @@ interface Props {
 
 export default function ExecutivePdfTemplate({ data, targetRole }: Props) {
   const tokens = DESIGN_TOKENS.executive;
-  const containerStyle = [styles.container, { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }];
+  const containerStyle = [
+    styles.container,
+    { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor },
+  ];
   const nameStyle = [styles.name, { color: tokens.primaryColor || "#7a1c1c" }];
 
   return (
@@ -144,14 +147,13 @@ export default function ExecutivePdfTemplate({ data, targetRole }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={nameStyle}>{(data.contact.name || "Your Name").toUpperCase()}</Text>
-        {targetRole && (
-          <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
-        )}
+        {targetRole && <Text style={styles.role}>{targetRole.toUpperCase()}</Text>}
         <Text style={styles.contact}>
           {[
             data.contact.email,
             data.contact.phone,
             data.contact.location,
+            ...(data.contact.links || []),
           ]
             .filter(Boolean)
             .join("   |   ")}
@@ -177,9 +179,7 @@ export default function ExecutivePdfTemplate({ data, targetRole }: Props) {
                   {exp.title}
                   {exp.company ? `, ${exp.company}` : ""}
                 </Text>
-                {exp.dates && (
-                  <Text style={styles.entryDates}>{exp.dates}</Text>
-                )}
+                {exp.dates && <Text style={styles.entryDates}>{exp.dates}</Text>}
               </View>
               {exp.bullets.length > 0 && (
                 <View>

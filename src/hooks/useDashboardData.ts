@@ -31,7 +31,7 @@ export function useDashboardData() {
   const [appsPage, setAppsPage] = useState(1);
 
   // Delete modal
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Diff viewer
@@ -68,9 +68,16 @@ export function useDashboardData() {
   }, []);
 
   // Reset pages on search/tab change
-  useEffect(() => { setReviewsPage(1); }, [reviewsSearch]);
-  useEffect(() => { setAppsPage(1); }, [appsSearch]);
-  useEffect(() => { setReviewsPage(1); setAppsPage(1); }, [activeTab]);
+  useEffect(() => {
+    setReviewsPage(1);
+  }, [reviewsSearch]);
+  useEffect(() => {
+    setAppsPage(1);
+  }, [appsSearch]);
+  useEffect(() => {
+    setReviewsPage(1);
+    setAppsPage(1);
+  }, [activeTab]);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -85,70 +92,95 @@ export function useDashboardData() {
     }
   };
 
-  const handleDeleteAnalysis = useCallback((id: string) => {
-    setDeleteTargetId(id);
+  const handleDeleteAnalysis = useCallback((ids: string | string[]) => {
+    const targetArray = Array.isArray(ids) ? ids : [ids];
+    setDeleteTargetIds(targetArray);
   }, []);
 
   const confirmDeleteAnalysis = useCallback(async () => {
-    if (!deleteTargetId) return;
+    if (deleteTargetIds.length === 0) return;
     setIsDeleting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/analyses/${deleteTargetId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.error || "Failed to delete analysis. Please try again.");
-        return;
+      const results = await Promise.all(
+        deleteTargetIds.map(async (id: string) => {
+          try {
+            const res = await fetch(`/api/analyses/${id}`, {
+              method: "DELETE",
+            });
+            const data = await res.json();
+            return { id, success: res.ok && data.success };
+          } catch {
+            return { id, success: false };
+          }
+        })
+      );
+
+      const successfulIds = new Set(
+        results
+          .filter((r: { id: string; success: boolean }) => r.success)
+          .map((r: { id: string; success: boolean }) => r.id)
+      );
+      if (successfulIds.size > 0) {
+        setAnalyses((prev) => prev.filter((a) => !successfulIds.has(a.id)));
       }
-      setAnalyses((prev) => prev.filter((a) => a.id !== deleteTargetId));
-      setDeleteTargetId(null);
+
+      if (successfulIds.size < deleteTargetIds.length) {
+        setError("Some items could not be deleted. Please try again.");
+      }
+      setDeleteTargetIds([]);
     } catch (e) {
       logger.error("Delete analysis failed", e);
-      setError("Network error: could not delete analysis.");
+      setError("Network error: could not delete selected reviews.");
     } finally {
       setIsDeleting(false);
     }
-  }, [deleteTargetId]);
+  }, [deleteTargetIds]);
 
   const stats = useMemo(() => {
     const totalReviews = analyses.length;
-    const avgScore = totalReviews > 0
-      ? Math.round(analyses.reduce((acc, a) => acc + a.score, 0) / totalReviews)
-      : 0;
+    const avgScore =
+      totalReviews > 0
+        ? Math.round(analyses.reduce((acc, a) => acc + a.score, 0) / totalReviews)
+        : 0;
     const totalApps = applications.length;
     const activePipelineCount = applications.filter((a) =>
       ["screening", "interviewing", "offer", "accepted"].includes(a.status)
     ).length;
-    const successRate = totalApps > 0
-      ? Math.round((activePipelineCount / totalApps) * 100)
-      : 0;
+    const successRate = totalApps > 0 ? Math.round((activePipelineCount / totalApps) * 100) : 0;
     return { avgScore, totalReviews, totalApps, successRate };
   }, [analyses, applications]);
 
-  const filteredAnalyses = useMemo(() =>
-    analyses.filter((a) => {
-      const role = a.target_role?.toLowerCase() || "general resume review";
-      return role.includes(reviewsSearch.toLowerCase());
-    }),
+  const filteredAnalyses = useMemo(
+    () =>
+      analyses.filter((a) => {
+        const role = a.target_role?.toLowerCase() || "general resume review";
+        return role.includes(reviewsSearch.toLowerCase());
+      }),
     [analyses, reviewsSearch]
   );
 
-  const filteredApplications = useMemo(() =>
-    applications.filter((a) => {
-      const company = a.company_name.toLowerCase();
-      const title = a.job_title.toLowerCase();
-      const query = appsSearch.toLowerCase();
-      return company.includes(query) || title.includes(query);
-    }),
+  const filteredApplications = useMemo(
+    () =>
+      applications.filter((a) => {
+        const company = a.company_name.toLowerCase();
+        const title = a.job_title.toLowerCase();
+        const query = appsSearch.toLowerCase();
+        return company.includes(query) || title.includes(query);
+      }),
     [applications, appsSearch]
   );
 
   const reviewsTotalPages = Math.max(1, Math.ceil(filteredAnalyses.length / PAGE_SIZE));
-  const appsTotalPages    = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
-  const pagedAnalyses     = filteredAnalyses.slice((reviewsPage - 1) * PAGE_SIZE, reviewsPage * PAGE_SIZE);
-  const pagedApplications = filteredApplications.slice((appsPage - 1) * PAGE_SIZE, appsPage * PAGE_SIZE);
+  const appsTotalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
+  const pagedAnalyses = filteredAnalyses.slice(
+    (reviewsPage - 1) * PAGE_SIZE,
+    reviewsPage * PAGE_SIZE
+  );
+  const pagedApplications = filteredApplications.slice(
+    (appsPage - 1) * PAGE_SIZE,
+    appsPage * PAGE_SIZE
+  );
 
   const funnelData = useMemo(() => {
     const groups = { saved: 0, applied: 0, screening: 0, interviewing: 0, offer: 0, accepted: 0 };
@@ -158,11 +190,31 @@ export function useDashboardData() {
     });
     const offerAcceptedCount = groups.offer + groups.accepted;
     const data = [
-      { label: "Saved Jobs",    count: groups.saved,         color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)" },
-      { label: "Applied",       count: groups.applied,       color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)"  },
-      { label: "Screening",     count: groups.screening,     color: "#6366f1", bg: "rgba(99, 102, 241, 0.1)"  },
-      { label: "Interviewing",  count: groups.interviewing,  color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)"  },
-      { label: "Offers / Hired",count: offerAcceptedCount,   color: "#10b981", bg: "rgba(16, 185, 129, 0.1)"  },
+      {
+        label: "Saved Jobs",
+        count: groups.saved,
+        color: "#94a3b8",
+        bg: "rgba(148, 163, 184, 0.1)",
+      },
+      { label: "Applied", count: groups.applied, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.1)" },
+      {
+        label: "Screening",
+        count: groups.screening,
+        color: "#6366f1",
+        bg: "rgba(99, 102, 241, 0.1)",
+      },
+      {
+        label: "Interviewing",
+        count: groups.interviewing,
+        color: "#f59e0b",
+        bg: "rgba(245, 158, 11, 0.1)",
+      },
+      {
+        label: "Offers / Hired",
+        count: offerAcceptedCount,
+        color: "#10b981",
+        bg: "rgba(16, 185, 129, 0.1)",
+      },
     ];
     return { stages: data, maxCount: Math.max(...data.map((d) => d.count), 1) };
   }, [applications]);
@@ -195,8 +247,8 @@ export function useDashboardData() {
     filteredApplicationsCount: filteredApplications.length,
     PAGE_SIZE,
     // Delete
-    deleteTargetId,
-    setDeleteTargetId,
+    deleteTargetIds,
+    setDeleteTargetIds,
     isDeleting,
     handleDeleteAnalysis,
     confirmDeleteAnalysis,

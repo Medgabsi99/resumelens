@@ -4,6 +4,7 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { generateInterviewQuestionsStream } from "@/lib/ai";
 import { getUserProfile, canAnalyze, requireUser } from "@/lib/auth";
+import { createSSEResponse } from "@/lib/sse";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
 
@@ -42,32 +43,23 @@ export async function POST(req: NextRequest) {
 
   // ── 4. Generate Interview Questions ───────────────────────
   try {
-    const streamResult = await generateInterviewQuestionsStream(resumeText, jobDescription, targetRole);
-    const responseStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        try {
-          for await (const chunk of streamResult.stream) {
-            const text = chunk.text();
-            controller.enqueue(encoder.encode(text));
-          }
-        } catch (streamErr) {
-          logger.error("Interview questions stream error:", streamErr);
-        } finally {
-          controller.close();
+    const streamResult = await generateInterviewQuestionsStream(
+      resumeText,
+      jobDescription,
+      targetRole
+    );
+    return createSSEResponse(async (send) => {
+      for await (const chunk of streamResult.stream) {
+        const text = chunk.text();
+        if (text) {
+          send(text);
         }
-      },
-    });
-
-    return new Response(responseStream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-      },
+      }
     });
   } catch (err: unknown) {
     logger.error("Interview questions API error:", err);
-    const message = err instanceof Error ? (err as Error).message : "Interview questions generation failed";
+    const message =
+      err instanceof Error ? (err as Error).message : "Interview questions generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

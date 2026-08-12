@@ -8,7 +8,22 @@ import { parseResume } from "@/lib/parseResume";
 import { useToast } from "@/components/ToastProvider";
 import { downloadResumePdf } from "@/lib/pdf/downloadPdf";
 import * as Diff from "diff";
-import { Settings, Sparkles, Wrench, Loader2, ScanSearch, Target, BookOpen, FileText, X, ArrowLeft, ArrowRight, Download, Check, Layers } from "lucide-react";
+import {
+  Settings,
+  Sparkles,
+  Wrench,
+  Loader2,
+  ScanSearch,
+  Target,
+  BookOpen,
+  FileText,
+  X,
+  ArrowLeft,
+  ArrowRight,
+  Download,
+  Check,
+  Layers,
+} from "lucide-react";
 import MultiJobMatrixModal from "@/components/MultiJobMatrixModal";
 
 interface ResumeItem {
@@ -276,18 +291,19 @@ export default function TailorSandboxPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Launcher Configuration (Setup View) */}
-        {!activeSandbox && (
-          <div className="max-w-3xl mx-auto fade-up space-y-6">
+      {/* Setup view: standard scroll page */}
+      {!activeSandbox && (
+        <div className="workspace-canvas">
+          <div className="max-w-4xl mx-auto fade-up space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight text-ink mb-1.5 flex items-center gap-2.5">
                   AI Tailoring Sandbox
                 </h1>
                 <p className="text-ink-muted text-sm leading-relaxed">
-                  Optimize and match your baseline resume to target roles. Write manual edits inside a side-by-side sandbox, track matching keywords, and evaluate ATS fit in real-time.
+                  Optimize and match your baseline resume to target roles. Write manual edits inside
+                  a side-by-side sandbox, track matching keywords, and evaluate ATS fit in
+                  real-time.
                 </p>
               </div>
 
@@ -390,124 +406,93 @@ export default function TailorSandboxPage() {
                 className="w-full btn-gradient py-3.5 rounded-xl text-sm font-semibold shadow hover:scale-[1.01] active:scale-[1] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1] transition flex items-center justify-center gap-2 cursor-pointer text-white"
               >
                 {isInitializing ? (
-                    <span className="flex items-center gap-2">
-                      <span className="animate-spin inline-flex"><Loader2 size={15} /></span>
-                      <span>{LOADING_STEPS[initStep]}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin inline-flex">
+                      <Loader2 size={15} />
                     </span>
+                    <span>{LOADING_STEPS[initStep]}</span>
+                  </span>
                 ) : (
-                  <><Sparkles size={14} /> Initialize Tailor Playground Sandbox</>
+                  <>
+                    <Sparkles size={14} /> Initialize Tailor Playground Sandbox
+                  </>
                 )}
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Sandbox Editing Playground (Active View) */}
-        {activeSandbox && (
-          <div className="space-y-6 fade-up">
-            
-            {/* Header / Info Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-              <div>
-                <span className="inline-block bg-accent/10 border border-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider mb-2 font-mono">
-                  <Wrench size={10} className="inline mr-1" /> Interactive Sandbox Mode
+      {/* Active sandbox view: viewport-locked 3-pane workspace */}
+      {activeSandbox && (
+        <div className="workspace-shell fade-up">
+          {/* === CENTER CANVAS: editors === */}
+          <div className="workspace-canvas">
+            {/* Sandbox top header bar */}
+            <div className="flex items-center justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="status-pill status-pill-accent text-[10px]">
+                  <Wrench size={9} />
+                  Sandbox Active
                 </span>
-                <h1 className="font-display text-2xl font-bold text-ink">
-                  {roleTitle || "Target Role"} Sandbox
-                </h1>
-                <p className="text-xs text-ink-muted mt-0.5">
-                  Optimizing for {companyName || "Target Company"}
-                </p>
+                <div className="min-w-0">
+                  <h1 className="font-display text-xl font-bold text-ink leading-tight truncate">
+                    {roleTitle || "Target Role"} Sandbox
+                  </h1>
+                  <p className="text-[11px] text-ink-muted truncate">
+                    Targeting {companyName || "Target Company"}
+                  </p>
+                </div>
               </div>
 
-              {/* Top status parameters */}
-              <div className="flex items-center gap-4 flex-wrap">
-                {score !== null && (
-                  <div className="flex items-center gap-2.5 bg-paper border border-border px-4 py-2 rounded-2xl shadow-sm">
-                    <div className="text-right">
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-ink-faint">Projected Score</span>
-                      <span className="text-sm font-semibold text-ink-muted">ATS Compatibility</span>
-                    </div>
-                    <div className="text-2xl font-black text-accent font-mono border-l border-border pl-3">
-                      {score}%
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleRecalculateScore}
-                  disabled={isScanning}
-                  className="bg-paper border border-border text-ink hover:text-accent hover:border-accent-border px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm"
-                >
-                  {isScanning ? (
-                    <>
-                      <span className="animate-spin inline-flex"><Loader2 size={13} /></span>
-                      Scanning...
-                    </>
-                  ) : (
-                    <><ScanSearch size={13} /> Re-scan Match Score</>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  if (confirm("Exit sandbox? Unsaved edits will be lost.")) {
+                    if (originAnalysisId) {
+                      router.push(`/dashboard/${originAnalysisId}`);
+                    } else {
+                      setActiveSandbox(false);
+                      setOriginalText("");
+                      setTailoredText("");
+                      setKeywords([]);
+                      setScore(null);
+                    }
+                  }
+                }}
+                className="flex-shrink-0 px-3 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer flex items-center gap-1.5"
+              >
+                <ArrowLeft size={12} /> Exit
+              </button>
             </div>
 
-            {/* Keyword Checklist Dashboard Card */}
-            {liveChecklist.length > 0 && (
-              <div className="glass-card bg-paper-card border border-border p-5 rounded-2xl shadow-md space-y-3">
-                <div className="flex justify-between items-center border-b border-border pb-2">
-                  <span className="text-xs font-semibold text-ink uppercase tracking-wider font-mono flex items-center gap-1.5">
-                    <Target size={11} /> Dynamic Keyword checklist
-                  </span>
-                  <span className="font-mono text-xs text-ink-muted">
-                    Matched: <strong className="text-emerald-500">{matchedCount}</strong> / {liveChecklist.length} ({Math.round((matchedCount / liveChecklist.length) * 100)}%)
-                  </span>
-                </div>
-                
-                <div className="flex flex-wrap gap-1.5 max-h-[85px] overflow-y-auto pr-1">
-                  {liveChecklist.map((kw, i) => (
-                    <span
-                      key={i}
-                      className={`text-[10px] px-2 py-0.5 rounded border transition-all duration-200 ${
-                        kw.matched
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 line-through opacity-70"
-                          : "bg-paper border-border text-ink-muted"
-                      }`}
-                    >
-                      {kw.matched ? <Check size={9} className="inline mr-0.5" /> : <span className="mr-0.5">–</span>} {kw.text}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Split Screen Editors */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-              
+            <div className="grid grid-cols-2 gap-4 h-[calc(100%-80px)]">
               {/* Left Column: Baseline Reference (Read-only) */}
-              <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col h-[52vh] overflow-hidden shadow-lg">
-                <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-rose-500 uppercase flex items-center gap-1.5">
-                    <BookOpen size={10} /> Original Baseline Resume (Read-only)
+              <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col overflow-hidden shadow-lg">
+                <div className="px-4 py-2.5 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-rose-400 uppercase flex items-center gap-1.5">
+                    <BookOpen size={9} /> Baseline Resume (Read-only)
                   </span>
                 </div>
-                <div className="p-5 flex-1 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap font-mono text-[11.5px] leading-relaxed text-ink-muted select-none">
+                <div className="p-4 flex-1 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-ink-muted select-none">
                     {originalText}
                   </pre>
                 </div>
               </div>
 
               {/* Right Column: Tailored Editor / Visual Diff */}
-              <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col h-[52vh] overflow-hidden shadow-lg">
-                <div className="px-5 py-3 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
+              <div className="glass-card bg-paper-card border border-border rounded-2xl flex flex-col overflow-hidden shadow-lg">
+                <div className="px-4 py-2.5 border-b border-border bg-paper-warm/20 flex justify-between items-center flex-shrink-0">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
-                    <FileText size={10} /> Tailored Playground Draft
+                    <FileText size={9} /> Tailored Draft (Editable)
                   </span>
-
-                  {/* Visual Diff Toggle */}
                   <div className="flex items-center gap-2">
-                    <label className="text-[10px] font-semibold text-ink-muted cursor-pointer font-mono" htmlFor="diff-toggle">
-                      Show Visual Diff
+                    <label
+                      className="text-[10px] font-semibold text-ink-muted cursor-pointer font-mono"
+                      htmlFor="diff-toggle"
+                    >
+                      Diff
                     </label>
                     <input
                       id="diff-toggle"
@@ -524,11 +509,11 @@ export default function TailorSandboxPage() {
                     <textarea
                       value={tailoredText}
                       onChange={(e) => setTailoredText(e.target.value)}
-                      placeholder="AI tailored draft text loaded here. Add manual edits, insert metrics, or restructure bullets..."
-                      className="w-full h-full p-5 bg-paper font-mono text-[11.5px] leading-relaxed text-ink border-none outline-none resize-none focus:bg-paper-warm/30 transition-colors"
+                      placeholder="AI tailored draft loaded here. Add manual edits, insert metrics, or restructure bullets..."
+                      className="w-full h-full p-4 bg-paper font-mono text-[11px] leading-relaxed text-ink border-none outline-none resize-none focus:bg-paper-warm/30 transition-colors"
                     />
                   ) : (
-                    <div className="w-full h-full p-5 overflow-y-auto bg-paper font-mono text-[11.5px] leading-relaxed">
+                    <div className="w-full h-full p-4 overflow-y-auto bg-paper font-mono text-[11px] leading-relaxed">
                       {diffTokens.length === 0 ? (
                         <span className="text-ink-faint italic">No differences calculated.</span>
                       ) : (
@@ -560,168 +545,279 @@ export default function TailorSandboxPage() {
                   )}
                 </div>
               </div>
-
-            </div>
-
-            {/* Sandbox Bottom Actions Panel */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-paper-card border border-border rounded-2xl p-4 shadow">
-              <button
-                onClick={() => {
-                  if (confirm("Are you sure you want to quit the sandbox? Current edits will be lost.")) {
-                    if (originAnalysisId) {
-                      router.push(`/dashboard/${originAnalysisId}`);
-                    } else {
-                      setActiveSandbox(false);
-                      setOriginalText("");
-                      setTailoredText("");
-                      setKeywords([]);
-                      setScore(null);
-                    }
-                  }
-                }}
-                className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink bg-paper hover:bg-paper-warm transition cursor-pointer flex items-center gap-1.5"
-              >
-                <ArrowLeft size={13} /> Exit Sandbox
-              </button>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowExportModal(true)}
-                  className="bg-paper border border-border text-ink-muted hover:text-accent hover:border-accent-border px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"
-                >
-                  <Download size={13} /> Export PDF Template
-                </button>
-
-                <button
-                  onClick={() => setShowSaveModal(true)}
-                  className="btn-gradient px-5 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer shadow hover:scale-[1.01] active:scale-[1] transition"
-                >
-                  Save as New version
-                </button>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* Modal: Save Version Confirmation */}
-        {showSaveModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-paper-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-              <h3 className="font-display text-lg font-bold text-ink">Save Sandbox Version</h3>
-              <p className="text-xs text-ink-muted leading-relaxed">
-                Save the current tailored draft as a new resume in your document library. This will not overwrite your baseline reference copy.
-              </p>
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">
-                  Document Version Name
-                </label>
-                <input
-                  type="text"
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="e.g. Senior Frontend Resume (Tailored)"
-                  className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setShowSaveModal(false)}
-                  disabled={isSaving}
-                  className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink hover:bg-paper-warm transition disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveResume}
-                  disabled={isSaving || !saveName.trim()}
-                  className="bg-accent hover:bg-accent/90 text-white font-semibold px-5 py-2 rounded-xl text-xs transition disabled:opacity-50 cursor-pointer shadow flex items-center gap-1.5"
-                >
-                  {isSaving ? "Saving..." : <><span>Save Resume</span><ArrowRight size={13} /></>}
-                </button>
-              </div>
             </div>
           </div>
-        )}
 
-        {/* Modal: PDF Template Selector Download */}
-        {showExportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-paper-card border border-border rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5">
-              <div className="flex justify-between items-center border-b border-border pb-3">
-                <h3 className="font-display text-lg font-bold text-ink flex items-center gap-2">
-                  <FileText size={14} /> Export Vector PDF Template
-                </h3>
-                <button
-                  onClick={() => setShowExportModal(false)}
-                  className="text-ink-muted hover:text-ink text-sm p-1"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <p className="text-xs text-ink-muted leading-relaxed">
-                Compile your tailored resume layout draft into a high-fidelity, ATS-safe vector PDF. Select one of our premium design layouts to download:
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { id: "minimal", name: "Minimalist CV", desc: "Spacious layout with clean Helvetica. Perfect for default universal styling." },
-                  { id: "professional", name: "Professional Corporate", desc: "Classic Lora serif formatting with elegant spacing. Great for conservative fields." },
-                  { id: "modern", name: "Modern Sidebar", desc: "Dual column system placing skills, links, and contact elements on a left-side panel." },
-                  { id: "creative", name: "Creative Designer", desc: "Premium Indigo accent styling with warm ivory grids. Best for startup roles." },
-                  { id: "executive", name: "Executive Suite", desc: "Formal Times serif formatting with deep oxblood highlights. Ideal for leadership titles." },
-                ].map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    onClick={() => handleExportPdf(tpl.id)}
-                    className="p-4 rounded-2xl border border-border hover:border-accent text-left bg-paper hover:bg-accent-bg transition flex flex-col justify-between items-stretch gap-2 group cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-xs text-ink group-hover:text-accent">
-                          {tpl.name}
-                        </span>
-                        {tpl.id === recommendedTemplate && (
-                          <span className="bg-emerald-500/10 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded">
-                            RECOMMENDED
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-ink-muted leading-normal mt-1">
-                        {tpl.desc}
-                      </p>
+          {/* === RIGHT INSPECTOR PANEL === */}
+          <div className="workspace-inspector">
+            {/* ATS Score Block */}
+            <div>
+              <p className="section-label mb-3">ATS Score</p>
+              <div className="inspector-score-block">
+                {score !== null ? (
+                  <>
+                    <div
+                      className={`text-4xl font-black font-mono mb-1 ${
+                        score >= 80
+                          ? "text-emerald-400"
+                          : score >= 60
+                            ? "text-amber-400"
+                            : "text-rose-400"
+                      }`}
+                    >
+                      {score}%
                     </div>
-                    <span className="text-[10px] font-semibold text-accent text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Download PDF <ArrowRight size={10} />
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex justify-end pt-2 border-t border-border">
-                <button
-                  onClick={() => setShowExportModal(false)}
-                  className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink hover:bg-paper-warm transition"
-                >
-                  Close
-                </button>
+                    <div className="text-[10px] font-mono text-ink-faint uppercase tracking-wider">
+                      ATS Compatibility
+                    </div>
+                    <div className="mt-3 h-1.5 rounded-full bg-paper-warm overflow-hidden">
+                      <div
+                        className={`h-full rounded-full score-bar ${
+                          score >= 80
+                            ? "bg-emerald-400"
+                            : score >= 60
+                              ? "bg-amber-400"
+                              : "bg-rose-400"
+                        }`}
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 text-[10px] text-ink-faint">
+                      {score >= 80
+                        ? "Strong match — recruiter ready"
+                        : score >= 60
+                          ? "Good — add more keywords"
+                          : "Needs improvement"}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-ink-faint text-xs py-2">Run scan to see score</div>
+                )}
               </div>
             </div>
+
+            {/* Rescan Button */}
+            <button
+              onClick={handleRecalculateScore}
+              disabled={isScanning}
+              className="w-full bg-paper border border-border text-ink hover:text-accent hover:border-accent-border py-2.5 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {isScanning ? (
+                <>
+                  <span className="animate-spin inline-flex">
+                    <Loader2 size={12} />
+                  </span>{" "}
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <ScanSearch size={12} /> Re-scan Match Score
+                </>
+              )}
+            </button>
+
+            {/* Keywords Checklist */}
+            {liveChecklist.length > 0 && (
+              <div>
+                <p className="section-label mb-3">
+                  Keywords
+                  <span className="ml-auto font-mono text-[10px] text-emerald-400 not-italic">
+                    {matchedCount}/{liveChecklist.length}
+                  </span>
+                </p>
+                <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
+                  {liveChecklist.map((kw, i) => (
+                    <div
+                      key={i}
+                      className={`kw-chip ${kw.matched ? "kw-chip-matched" : "kw-chip-missing"}`}
+                    >
+                      <span className="text-[9px]">{kw.matched ? "✓" : "–"}</span>
+                      <span className={kw.matched ? "line-through opacity-60" : ""}>{kw.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Progress ring */}
+            {liveChecklist.length > 0 && (
+              <div className="inspector-score-block">
+                <p className="text-[10px] font-mono text-ink-faint uppercase tracking-wider mb-2">
+                  Keyword Coverage
+                </p>
+                <div className="h-1.5 rounded-full bg-paper-warm overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-emerald-400 score-bar"
+                    style={{ width: `${Math.round((matchedCount / liveChecklist.length) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-[11px] font-bold text-ink mt-1.5">
+                  {Math.round((matchedCount / liveChecklist.length) * 100)}% covered
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="mt-auto pt-4 border-t border-border flex flex-col gap-2">
+              <button
+                onClick={() => setShowSaveModal(true)}
+                className="w-full btn-gradient py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer shadow hover:scale-[1.01] active:scale-[1] transition flex items-center justify-center gap-1.5"
+              >
+                Save as New Version
+              </button>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="w-full bg-paper border border-border text-ink-muted hover:text-accent hover:border-accent-border py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Download size={12} /> Export PDF
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
+      {/* Modal: Save Version Confirmation */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-paper-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <h3 className="font-display text-lg font-bold text-ink">Save Sandbox Version</h3>
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Save the current tailored draft as a new resume in your document library. This will
+              not overwrite your baseline reference copy.
+            </p>
 
-        {/* Multi-Job Matrix Modal */}
-        {showMatrixModal && (
-          <MultiJobMatrixModal
-            resumeText={originalText || "Sample Resume Content"}
-            onClose={() => setShowMatrixModal(false)}
-          />
-        )}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">
+                Document Version Name
+              </label>
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="e.g. Senior Frontend Resume (Tailored)"
+                className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink outline-none focus:border-accent transition"
+              />
+            </div>
 
-      </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowSaveModal(false)}
+                disabled={isSaving}
+                className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink hover:bg-paper-warm transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveResume}
+                disabled={isSaving || !saveName.trim()}
+                className="bg-accent hover:bg-accent/90 text-white font-semibold px-5 py-2 rounded-xl text-xs transition disabled:opacity-50 cursor-pointer shadow flex items-center gap-1.5"
+              >
+                {isSaving ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <span>Save Resume</span>
+                    <ArrowRight size={13} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: PDF Template Selector Download */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-paper-card border border-border rounded-2xl p-6 max-w-xl w-full shadow-2xl space-y-5">
+            <div className="flex justify-between items-center border-b border-border pb-3">
+              <h3 className="font-display text-lg font-bold text-ink flex items-center gap-2">
+                <FileText size={14} /> Export Vector PDF Template
+              </h3>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="text-ink-muted hover:text-ink text-sm p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Compile your tailored resume layout draft into a high-fidelity, ATS-safe vector PDF.
+              Select one of our premium design layouts to download:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  id: "minimal",
+                  name: "Minimalist CV",
+                  desc: "Spacious layout with clean Helvetica. Perfect for default universal styling.",
+                },
+                {
+                  id: "professional",
+                  name: "Professional Corporate",
+                  desc: "Classic Lora serif formatting with elegant spacing. Great for conservative fields.",
+                },
+                {
+                  id: "modern",
+                  name: "Modern Sidebar",
+                  desc: "Dual column system placing skills, links, and contact elements on a left-side panel.",
+                },
+                {
+                  id: "creative",
+                  name: "Creative Designer",
+                  desc: "Premium Indigo accent styling with warm ivory grids. Best for startup roles.",
+                },
+                {
+                  id: "executive",
+                  name: "Executive Suite",
+                  desc: "Formal Times serif formatting with deep oxblood highlights. Ideal for leadership titles.",
+                },
+              ].map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => handleExportPdf(tpl.id)}
+                  className="p-4 rounded-2xl border border-border hover:border-accent text-left bg-paper hover:bg-accent-bg transition flex flex-col justify-between items-stretch gap-2 group cursor-pointer"
+                >
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs text-ink group-hover:text-accent">
+                        {tpl.name}
+                      </span>
+                      {tpl.id === recommendedTemplate && (
+                        <span className="bg-emerald-500/10 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded">
+                          RECOMMENDED
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-ink-muted leading-normal mt-1">{tpl.desc}</p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-accent text-right mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Download PDF <ArrowRight size={10} />
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-border">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-ink-muted hover:text-ink hover:bg-paper-warm transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Job Matrix Modal */}
+      {showMatrixModal && (
+        <MultiJobMatrixModal
+          resumeText={originalText || "Sample Resume Content"}
+          onClose={() => setShowMatrixModal(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -160,7 +160,7 @@ export default function ModernPdfTemplate({ data, targetRole }: Props) {
   const tokens = DESIGN_TOKENS.modern;
   const containerStyle = [
     styles.container,
-    { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor }
+    { fontFamily: tokens.fontFamilyPdf, color: tokens.textColor },
   ];
 
   return (
@@ -188,6 +188,18 @@ export default function ModernPdfTemplate({ data, targetRole }: Props) {
               <Text>{data.contact.location}</Text>
             </View>
           )}
+          {(data.contact.links || []).map((link, i) => (
+            <View key={i} style={styles.sidebarItem}>
+              <Text style={styles.sidebarLabel}>
+                {link.toLowerCase().includes("linkedin")
+                  ? "LINKEDIN"
+                  : link.toLowerCase().includes("github")
+                    ? "GITHUB"
+                    : "PORTFOLIO"}
+              </Text>
+              <Text>{link}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Skills section */}
@@ -220,9 +232,7 @@ export default function ModernPdfTemplate({ data, targetRole }: Props) {
         {/* Header Block */}
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.name}>{data.contact.name || "Your Name"}</Text>
-          {targetRole && (
-            <Text style={styles.role}>{targetRole.toUpperCase()}</Text>
-          )}
+          {targetRole && <Text style={styles.role}>{targetRole.toUpperCase()}</Text>}
         </View>
 
         {/* Summary */}
@@ -242,13 +252,9 @@ export default function ModernPdfTemplate({ data, targetRole }: Props) {
                 <View style={styles.entryHeader}>
                   <Text style={styles.entryTitle}>
                     {exp.title}
-                    {exp.company && (
-                      <Text style={styles.entryCompany}> — {exp.company}</Text>
-                    )}
+                    {exp.company && <Text style={styles.entryCompany}> — {exp.company}</Text>}
                   </Text>
-                  {exp.dates && (
-                    <Text style={styles.entryDates}>{exp.dates}</Text>
-                  )}
+                  {exp.dates && <Text style={styles.entryDates}>{exp.dates}</Text>}
                 </View>
                 {exp.bullets.length > 0 && (
                   <View>

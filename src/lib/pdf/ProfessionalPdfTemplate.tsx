@@ -149,14 +149,22 @@ export default function ProfessionalPdfTemplate({ data, targetRole, customStyle 
     primaryColor: tokens.primaryColor,
   };
 
-  const resolvedFont = style.fontFamily === "sans" ? "Inter" : style.fontFamily === "mono" ? "Courier" : tokens.fontFamilyPdf;
-  
+  const resolvedFont =
+    style.fontFamily === "sans"
+      ? "Inter"
+      : style.fontFamily === "mono"
+        ? "Courier"
+        : tokens.fontFamilyPdf;
+
   // Convert pt/em strings to raw numbers for React-PDF StyleSheet overrides
   const resolvedFontSize = parseFloat(style.fontSize) || 10;
   const resolvedLineHeight = parseFloat(style.lineHeight) || 1.5;
   const resolvedColor = style.primaryColor || tokens.primaryColor;
 
-  const containerStyle = [styles.container, { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight }];
+  const containerStyle = [
+    styles.container,
+    { fontFamily: resolvedFont, fontSize: resolvedFontSize, lineHeight: resolvedLineHeight },
+  ];
   const headerStyle = [styles.header, { borderBottomColor: resolvedColor }];
   const nameStyle = [styles.name, { color: resolvedColor }];
   const roleStyle = [styles.role, { color: resolvedColor }];
@@ -167,14 +175,13 @@ export default function ProfessionalPdfTemplate({ data, targetRole, customStyle 
       {/* Header */}
       <View style={headerStyle}>
         <Text style={nameStyle}>{data.contact.name || "Your Name"}</Text>
-        {targetRole && (
-          <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>
-        )}
+        {targetRole && <Text style={roleStyle}>{targetRole.toUpperCase()}</Text>}
         <Text style={styles.contact}>
           {[
             data.contact.email,
             data.contact.phone,
             data.contact.location,
+            ...(data.contact.links || []),
           ]
             .filter(Boolean)
             .join("   |   ")}
@@ -200,9 +207,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole, customStyle 
                   {exp.title}
                   {exp.company ? ` - ${exp.company}` : ""}
                 </Text>
-                {exp.dates && (
-                  <Text style={styles.entryDates}>{exp.dates}</Text>
-                )}
+                {exp.dates && <Text style={styles.entryDates}>{exp.dates}</Text>}
               </View>
               {exp.bullets.length > 0 && (
                 <View style={styles.bulletList}>

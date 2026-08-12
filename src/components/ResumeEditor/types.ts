@@ -6,7 +6,8 @@ export interface ResumeVersion {
   created_at: string;
 }
 
-export type TemplateId = "professional" | "modern" | "creative" | "minimal" | "executive";
+export type TemplateId =
+  "tech-pro" | "professional" | "modern" | "creative" | "minimal" | "executive";
 
 export interface ResumeCustomStyle {
   fontFamily: "serif" | "sans" | "mono";

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-server";
 import { analyzeResume, previewAnalyzeResume, extractTextFromBuffer } from "@/lib/ai";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
+import { runAtsChecks } from "@/lib/atsRulesChecker";
 import { AnalyzeResponse } from "@/types";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
@@ -22,10 +23,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   // ── 2. Load user profile & check quota ───────────────────
   const profile = await getUserProfile(userId);
   if (!profile) {
-    return NextResponse.json(
-      { success: false, error: "Profile not found" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: "Profile not found" }, { status: 400 });
   }
 
   // ── 3. Parse request (multipart or JSON) ─────────────────
@@ -43,10 +41,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     targetRole = (form.get("targetRole") as string) || undefined;
 
     if (!file) {
-      return NextResponse.json(
-        { success: false, error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
     if (file.size > 10 * 1024 * 1024) {
@@ -113,10 +108,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     }
   }
 
-  // ── 5. Full analysis ──────────────────────────────────────
+  // ── 5. Full analysis — AI + deterministic rules run in parallel ───────────
   let result;
   try {
-    result = await analyzeResume(resumeText, jobDescription, targetRole);
+    const [aiResult, atsRules] = await Promise.all([
+      analyzeResume(resumeText, jobDescription, targetRole),
+      Promise.resolve(runAtsChecks(resumeText, jobDescription)),
+    ]);
+    result = { ...aiResult, ats_rules: atsRules };
   } catch (err: unknown) {
     const message = err instanceof Error ? (err as Error).message : "Analysis failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -127,14 +126,17 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   // client uses anon+session which hits RLS (no INSERT policy for users).
   const adminClient = createAdminClient();
   const [insertResult] = await Promise.all([
-    adminClient.from("analyses").insert({
-      user_id: userId,
-      score: result.score,
-      result_json: JSON.stringify(result),
-      target_role: targetRole || null,
-      resume_text: resumeText,
-      job_description: jobDescription || null,
-    }).select("id"),
+    adminClient
+      .from("analyses")
+      .insert({
+        user_id: userId,
+        score: result.score,
+        result_json: JSON.stringify(result),
+        target_role: targetRole || null,
+        resume_text: resumeText,
+        job_description: jobDescription || null,
+      })
+      .select("id"),
     incrementUsage(userId),
   ]);
 
@@ -154,7 +156,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "cookie": cookieHeader,
+        cookie: cookieHeader,
       },
       body: JSON.stringify({ resumeText, analysisId: insertedId }),
     }).catch((err) => {
@@ -164,4 +166,3 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
 
   return NextResponse.json({ success: true, data: result, extractedText: resumeText });
 }
-

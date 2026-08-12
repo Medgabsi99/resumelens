@@ -5,7 +5,12 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Let public API endpoints and CORS preflights pass through
-  if (pathname === "/api/webhook" || request.method === "OPTIONS") {
+  if (
+    pathname === "/api/webhook" ||
+    pathname === "/api/scrape-job" ||
+    pathname.startsWith("/api/extension/") ||
+    request.method === "OPTIONS"
+  ) {
     return NextResponse.next();
   }
 
@@ -24,9 +29,7 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({
             request: {
               headers: request.headers,
@@ -56,33 +59,36 @@ export async function proxy(request: NextRequest) {
         if (origin && origin.startsWith("chrome-extension://")) {
           errorRes.headers.set("Access-Control-Allow-Origin", origin);
           errorRes.headers.set("Access-Control-Allow-Credentials", "true");
-          errorRes.headers.set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+          errorRes.headers.set(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With"
+          );
           errorRes.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         }
       }
-      
+
       // Delete stale auth cookies to prevent infinite refresh error spam
-      request.cookies.getAll().forEach(c => {
+      request.cookies.getAll().forEach((c) => {
         if (c.name.startsWith("sb-")) {
           errorRes.cookies.delete(c.name);
         }
       });
-      
+
       return errorRes;
     }
-    
+
     if (pathname.startsWith("/dashboard")) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
       const redirectRes = NextResponse.redirect(redirectUrl);
-      
+
       // Delete stale auth cookies to prevent infinite refresh error spam
-      request.cookies.getAll().forEach(c => {
+      request.cookies.getAll().forEach((c) => {
         if (c.name.startsWith("sb-")) {
           redirectRes.cookies.delete(c.name);
         }
       });
-      
+
       return redirectRes;
     }
   }

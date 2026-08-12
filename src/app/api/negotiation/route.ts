@@ -1,5 +1,5 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
-import { requireUser } from "@/lib/auth";
+import { requireUserWithQuota, incrementUsage } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,8 +9,22 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   try {
-    // ── 1. Auth check ────────────────────────────────────────
-    const _user = await requireUser();
+    // ── 1. Auth & Quota check ──────────────────────────────────
+    let _user;
+    try {
+      const session = await requireUserWithQuota();
+      _user = session.user;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "QuotaExceeded") {
+        return NextResponse.json(
+          { success: false, error: "Upgrade required to run salary negotiation simulations" },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const rateLimit = await checkRateLimit(_user.id, "negotiation");
     if (!rateLimit.success) {
       return rateLimitResponse();
@@ -32,7 +46,12 @@ export async function POST(req: NextRequest) {
         if (!offer || typeof offer !== "object") {
           throw new Error(`${name} must be an object.`);
         }
-        if (typeof offer.base !== "number" || typeof offer.bonus !== "number" || typeof offer.equity !== "number" || typeof offer.signOn !== "number") {
+        if (
+          typeof offer.base !== "number" ||
+          typeof offer.bonus !== "number" ||
+          typeof offer.equity !== "number" ||
+          typeof offer.signOn !== "number"
+        ) {
           throw new Error(`${name} base, bonus, equity, and signOn must be numbers.`);
         }
         if (offer.other !== undefined && offer.other !== null) {
@@ -53,9 +72,16 @@ export async function POST(req: NextRequest) {
             throw new Error(`Message history entry at index ${i} is invalid.`);
           }
           if (m.role !== "user" && m.role !== "recruiter") {
-            throw new Error(`Message history entry role at index ${i} must be 'user' or 'recruiter'.`);
+            throw new Error(
+              `Message history entry role at index ${i} must be 'user' or 'recruiter'.`
+            );
           }
-          m.content = validateAndSanitizeInput(m.content, 4000, `Message history content at index ${i}`, true);
+          m.content = validateAndSanitizeInput(
+            m.content,
+            4000,
+            `Message history content at index ${i}`,
+            true
+          );
         }
       }
 
@@ -65,7 +91,9 @@ export async function POST(req: NextRequest) {
       if (
         typeof recruiterProfile.name !== "string" ||
         typeof recruiterProfile.avatar !== "string" ||
-        !["Stubborn", "Friendly", "Highly Analytical", "Tough"].includes(recruiterProfile.personality) ||
+        !["Stubborn", "Friendly", "Highly Analytical", "Tough"].includes(
+          recruiterProfile.personality
+        ) ||
         typeof recruiterProfile.description !== "string" ||
         typeof recruiterProfile.hiddenCeilingBudget !== "number" ||
         typeof recruiterProfile.concessionLimit !== "number" ||
@@ -77,6 +105,8 @@ export async function POST(req: NextRequest) {
       const errorMsg = err instanceof Error ? (err as Error).message : String(err);
       return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
     }
+
+    await incrementUsage(_user.id);
 
     // ── 3. Call AI ───────────────────────────────────────────
     const turn = await generateNegotiationResponse(
@@ -95,7 +125,12 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Salary negotiation API error:", error);
     return NextResponse.json(
-      { success: false, error: (error instanceof Error ? (error as Error).message : String(error)) || "Failed to negotiate" },
+      {
+        success: false,
+        error:
+          (error instanceof Error ? (error as Error).message : String(error)) ||
+          "Failed to negotiate",
+      },
       { status: 500 }
     );
   }

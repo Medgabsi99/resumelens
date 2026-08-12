@@ -7,10 +7,30 @@ export interface RewriteSuggestion {
 }
 
 export interface AtsBreakdown {
-  format: number;      // 1-100 — ATS-friendly formatting, no tables/columns/headers-footers
-  keywords: number;    // 1-100 — keyword match rate against job description (0 if no JD)
-  impact: number;      // 1-100 — action verbs, quantified achievements, results
+  format: number; // 1-100 — ATS-friendly formatting, no tables/columns/headers-footers
+  keywords: number; // 1-100 — keyword match rate against job description (0 if no JD)
+  impact: number; // 1-100 — action verbs, quantified achievements, results
   readability: number; // 1-100 — length, whitespace, clear section headings, scannability
+}
+
+// Deterministic per-criterion checks (from lib/atsRulesChecker)
+export type AtsCheckStatus = "pass" | "fail" | "warn";
+export type AtsCheckCategory = "contact" | "structure" | "content" | "keywords" | "formatting";
+export interface AtsCheck {
+  id: string;
+  category: AtsCheckCategory;
+  label: string;
+  status: AtsCheckStatus;
+  detail: string;
+  fix?: string;
+  score: number;
+}
+export interface AtsRulesResult {
+  checks: AtsCheck[];
+  passCount: number;
+  warnCount: number;
+  failCount: number;
+  deterministicScore: number;
 }
 
 export interface AnalysisResult {
@@ -22,6 +42,7 @@ export interface AnalysisResult {
   keywords_missing?: string[];
   suggestions: RewriteSuggestion[];
   ats_breakdown?: AtsBreakdown;
+  ats_rules?: AtsRulesResult; // ← deterministic 20-check results
 }
 
 // ─── API Request/Response ─────────────────────────────────
@@ -94,14 +115,14 @@ export interface CheckoutRequest {
 // ─── Application Tracker ──────────────────────────────────
 
 export type ApplicationStatus =
-  | "saved"        // saved but not applied
-  | "applied"      // submitted application
-  | "screening"    // phone/recruiter screen
+  | "saved" // saved but not applied
+  | "applied" // submitted application
+  | "screening" // phone/recruiter screen
   | "interviewing" // in interview process
-  | "offer"        // received offer
-  | "rejected"     // rejected
-  | "withdrawn"    // withdrew application
-  | "accepted";    // accepted offer
+  | "offer" // received offer
+  | "rejected" // rejected
+  | "withdrawn" // withdrew application
+  | "accepted"; // accepted offer
 
 export type Priority = "low" | "medium" | "high";
 
@@ -185,31 +206,30 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 
 // ─── Job Match ─────────────────────────────────────────────
 
-
 export interface JobMatchBreakdown {
-  skills: number;        // 1-100 — required skills match
-  experience: number;    // 1-100 — relevant experience level
-  education: number;     // 1-100 — education requirements
+  skills: number; // 1-100 — required skills match
+  experience: number; // 1-100 — relevant experience level
+  education: number; // 1-100 — education requirements
   responsibilities: number; // 1-100 — past responsibilities alignment
-  culture: number;       // 1-100 — culture/values fit
+  culture: number; // 1-100 — culture/values fit
 }
 
 export interface JobMatchResult {
-  overallScore: number;          // 0-100 weighted average
+  overallScore: number; // 0-100 weighted average
   fitVerdict: "strong" | "good" | "fair" | "weak";
   summary: string;
-  strengths: string[];            // Why you're a good fit
-  gaps: string[];                 // What's missing
-  matchedSkills: string[];       // Skills you have that they want
-  missingSkills: string[];        // Skills they want that you lack
-  matchedKeywords: string[];      // Important JD keywords present
-  missingKeywords: string[];      // Important JD keywords absent
+  strengths: string[]; // Why you're a good fit
+  gaps: string[]; // What's missing
+  matchedSkills: string[]; // Skills you have that they want
+  missingSkills: string[]; // Skills they want that you lack
+  matchedKeywords: string[]; // Important JD keywords present
+  missingKeywords: string[]; // Important JD keywords absent
   experienceMatch: {
-    required: string;             // What they ask for (e.g. "5+ years")
-    yours: string;                // What you have
+    required: string; // What they ask for (e.g. "5+ years")
+    yours: string; // What you have
     verdict: "exceeds" | "meets" | "slightly-below" | "below";
   };
-  topRecommendations: string[];   // 3-5 specific things to improve match
+  topRecommendations: string[]; // 3-5 specific things to improve match
   breakdown: JobMatchBreakdown;
 }
 
@@ -235,8 +255,6 @@ export interface SmartResumeResponse {
   enhancedText?: string;
   error?: string;
 }
-
-
 
 // ─── Salary Negotiation ──────────────────────────────────
 

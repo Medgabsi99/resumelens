@@ -12,6 +12,8 @@ interface Props {
   showGrade?: boolean;
   /** Show "ATS Score" label above the number. Default: true */
   showLabel?: boolean;
+  /** Show industry peer percentile benchmark badge. Default: true */
+  showPercentile?: boolean;
 }
 
 function getScoreTheme(score: number): {
@@ -24,7 +26,7 @@ function getScoreTheme(score: number): {
 } {
   if (score >= 85) {
     return {
-      color: "#10b981",       // emerald
+      color: "#10b981", // emerald
       glow: "rgba(16,185,129,0.35)",
       trackColor: "rgba(16,185,129,0.12)",
       grade: "A",
@@ -34,7 +36,7 @@ function getScoreTheme(score: number): {
   }
   if (score >= 70) {
     return {
-      color: "#6366f1",       // indigo / accent
+      color: "#6366f1", // indigo / accent
       glow: "rgba(99,102,241,0.35)",
       trackColor: "rgba(99,102,241,0.12)",
       grade: "B",
@@ -44,7 +46,7 @@ function getScoreTheme(score: number): {
   }
   if (score >= 55) {
     return {
-      color: "#f59e0b",       // amber
+      color: "#f59e0b", // amber
       glow: "rgba(245,158,11,0.35)",
       trackColor: "rgba(245,158,11,0.12)",
       grade: "C",
@@ -53,7 +55,7 @@ function getScoreTheme(score: number): {
     };
   }
   return {
-    color: "#ef4444",         // red
+    color: "#ef4444", // red
     glow: "rgba(239,68,68,0.35)",
     trackColor: "rgba(239,68,68,0.12)",
     grade: "D",
@@ -73,6 +75,7 @@ export default function ScoreRing({
   animate = true,
   showGrade = true,
   showLabel = true,
+  showPercentile = true,
 }: Props) {
   const score = typeof rawScore === "number" && !isNaN(rawScore) ? rawScore : 0;
   const RADIUS = 78;
@@ -80,6 +83,14 @@ export default function ScoreRing({
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
   const theme = getScoreTheme(score);
+  const percentileText =
+    score >= 85
+      ? "🔥 Top 8% Candidate"
+      : score >= 75
+        ? "⭐ Top 20% Candidate"
+        : score >= 60
+          ? "📈 Top 40% Candidate"
+          : "⚠️ Optimization Needed";
 
   // Animated display number (counts up)
   const [displayScore, setDisplayScore] = useState(animate ? 0 : score);
@@ -139,7 +150,8 @@ export default function ScoreRing({
   const strokeDashoffset = isNaN(CIRCUMFERENCE - (safeProgress / 100) * CIRCUMFERENCE)
     ? CIRCUMFERENCE
     : CIRCUMFERENCE - (safeProgress / 100) * CIRCUMFERENCE;
-  const safeDisplayScore = typeof displayScore === "number" && !isNaN(displayScore) ? displayScore : 0;
+  const safeDisplayScore =
+    typeof displayScore === "number" && !isNaN(displayScore) ? displayScore : 0;
 
   return (
     <div
@@ -236,20 +248,15 @@ export default function ScoreRing({
         />
 
         {/* Glowing dot at the tip of the arc */}
-        {progress > 3 && (() => {
-          const angle = ((progress / 100) * 2 * Math.PI) - Math.PI / 2;
-          const tipX = 100 + RADIUS * Math.cos(angle);
-          const tipY = 100 + RADIUS * Math.sin(angle);
-          return (
-            <circle
-              cx={tipX}
-              cy={tipY}
-              r={STROKE / 2 + 1}
-              fill={theme.color}
-              opacity={0.9}
-            />
-          );
-        })()}
+        {progress > 3 &&
+          (() => {
+            const angle = (progress / 100) * 2 * Math.PI - Math.PI / 2;
+            const tipX = 100 + RADIUS * Math.cos(angle);
+            const tipY = 100 + RADIUS * Math.sin(angle);
+            return (
+              <circle cx={tipX} cy={tipY} r={STROKE / 2 + 1} fill={theme.color} opacity={0.9} />
+            );
+          })()}
       </svg>
 
       {/* Center content — counter-rotate to stay upright */}
@@ -294,7 +301,7 @@ export default function ScoreRing({
             transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease",
           }}
         >
-          {safeDisplayScore}
+          {displayScore}
         </div>
 
         <div
@@ -343,6 +350,20 @@ export default function ScoreRing({
             >
               {theme.label}
             </span>
+          </div>
+        )}
+
+        {showPercentile && (
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: size * 0.05,
+              fontWeight: 700,
+              color: "var(--ink-muted)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {percentileText}
           </div>
         )}
       </div>

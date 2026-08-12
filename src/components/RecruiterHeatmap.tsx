@@ -196,7 +196,8 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
           >
             {isPlayingGaze ? (
               <>
-                <RotateCcw size={13} className="animate-spin" /> Replaying ({activeGazeStep + 1}/{heatmapData.fixations.length})
+                <RotateCcw size={13} className="animate-spin" /> Replaying ({activeGazeStep + 1}/
+                {heatmapData.fixations.length})
               </>
             ) : (
               <>
@@ -259,8 +260,8 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                   heatmapData.scannabilityScore >= 80
                     ? "#10b981"
                     : heatmapData.scannabilityScore >= 60
-                    ? "#f59e0b"
-                    : "#ef4444",
+                      ? "#f59e0b"
+                      : "#ef4444",
                 fontFamily: "DM Mono, monospace",
                 lineHeight: 1,
               }}
@@ -268,7 +269,14 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
               {heatmapData.scannabilityScore}
               <span style={{ fontSize: "16px", fontWeight: 600 }}>/100</span>
             </div>
-            <p style={{ margin: "8px 0 0 0", fontSize: "11px", color: "var(--ink-muted)", lineHeight: 1.5 }}>
+            <p
+              style={{
+                margin: "8px 0 0 0",
+                fontSize: "11px",
+                color: "var(--ink-muted)",
+                lineHeight: 1.5,
+              }}
+            >
               {heatmapData.summary}
             </p>
           </div>
@@ -277,11 +285,22 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px" }}>
               <span style={{ color: "var(--ink-muted)" }}>F-Pattern Readability</span>
-              <span style={{ fontWeight: 700, fontFamily: "DM Mono, monospace", color: "var(--ink)" }}>
+              <span
+                style={{ fontWeight: 700, fontFamily: "DM Mono, monospace", color: "var(--ink)" }}
+              >
                 {heatmapData.fPatternScore}%
               </span>
             </div>
-            <div style={{ height: "6px", width: "100%", background: "var(--paper)", borderRadius: "99px", overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div
+              style={{
+                height: "6px",
+                width: "100%",
+                background: "var(--paper)",
+                borderRadius: "99px",
+                overflow: "hidden",
+                border: "1px solid var(--border)",
+              }}
+            >
               <div
                 style={{
                   height: "100%",
@@ -292,13 +311,31 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", marginTop: "4px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "11.5px",
+                marginTop: "4px",
+              }}
+            >
               <span style={{ color: "var(--ink-muted)" }}>Quantified Metric Prominence</span>
-              <span style={{ fontWeight: 700, fontFamily: "DM Mono, monospace", color: "var(--ink)" }}>
+              <span
+                style={{ fontWeight: 700, fontFamily: "DM Mono, monospace", color: "var(--ink)" }}
+              >
                 {heatmapData.metricVisibilityScore}%
               </span>
             </div>
-            <div style={{ height: "6px", width: "100%", background: "var(--paper)", borderRadius: "99px", overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div
+              style={{
+                height: "6px",
+                width: "100%",
+                background: "var(--paper)",
+                borderRadius: "99px",
+                overflow: "hidden",
+                border: "1px solid var(--border)",
+              }}
+            >
               <div
                 style={{
                   height: "100%",
@@ -344,7 +381,14 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                   <div style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--ink)" }}>
                     {item.title}
                   </div>
-                  <div style={{ fontSize: "10.5px", color: "var(--ink-muted)", marginTop: "2px", lineHeight: 1.4 }}>
+                  <div
+                    style={{
+                      fontSize: "10.5px",
+                      color: "var(--ink-muted)",
+                      marginTop: "2px",
+                      lineHeight: 1.4,
+                    }}
+                  >
                     {item.reason}
                   </div>
                 </div>
@@ -385,7 +429,14 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                     <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#ef4444" }}>
                       {item.title}
                     </div>
-                    <div style={{ fontSize: "10.5px", color: "var(--ink-muted)", marginTop: "3px", lineHeight: 1.4 }}>
+                    <div
+                      style={{
+                        fontSize: "10.5px",
+                        color: "var(--ink-muted)",
+                        marginTop: "3px",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {item.recommendation}
                     </div>
                   </div>
@@ -395,8 +446,18 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
           )}
 
           {/* Sensitivity Slider */}
-          <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10.5px", color: "var(--ink-muted)", marginBottom: "4px" }}>
+          <div
+            style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid var(--border)" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "10.5px",
+                color: "var(--ink-muted)",
+                marginBottom: "4px",
+              }}
+            >
               <span>Heatmap Radius</span>
               <span>{heatRadius}px</span>
             </div>
@@ -429,7 +490,7 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
               width: "100%",
               maxWidth: "680px",
               minHeight: "680px",
-              background: "#ffffff",
+              background: "var(--paper-card)",
               borderRadius: "12px",
               border: "1px solid var(--border)",
               boxShadow: "0 12px 36px rgba(0,0,0,0.06)",
@@ -438,7 +499,7 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
               fontFamily: "DM Mono, monospace",
               fontSize: "11.5px",
               lineHeight: 1.8,
-              color: "#1e293b",
+              color: "var(--ink)",
               userSelect: "none",
               overflow: "hidden",
             }}
@@ -446,14 +507,15 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
             {/* Render Raw Resume Lines */}
             {lines.map((line, idx) => {
               const isHeader = idx === 0;
-              const isSection = /^(EXPERIENCE|WORK EXPERIENCE|EDUCATION|PROJECTS|SKILLS|SUMMARY)/i.test(line);
+              const isSection =
+                /^(EXPERIENCE|WORK EXPERIENCE|EDUCATION|PROJECTS|SKILLS|SUMMARY)/i.test(line);
               return (
                 <div
                   key={idx}
                   style={{
                     fontWeight: isHeader ? 800 : isSection ? 700 : 400,
                     fontSize: isHeader ? "15px" : isSection ? "12.5px" : "11px",
-                    color: isSection ? "var(--accent)" : "#1e293b",
+                    color: isSection ? "var(--accent)" : "var(--ink)",
                     marginTop: isSection ? "12px" : "2px",
                     borderBottom: isSection ? "1px solid var(--border)" : "none",
                     paddingBottom: isSection ? "2px" : "0",
@@ -516,7 +578,9 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                   <polyline
                     points={heatmapData.fixations
                       .slice(0, isPlayingGaze ? activeGazeStep + 1 : heatmapData.fixations.length)
-                      .map((f) => `${(f.xPercent / 100) * 650 + 20},${(f.yPercent / 100) * 650 + 20}`)
+                      .map(
+                        (f) => `${(f.xPercent / 100) * 650 + 20},${(f.yPercent / 100) * 650 + 20}`
+                      )
                       .join(" ")}
                     fill="none"
                     stroke="#ef4444"
@@ -562,43 +626,80 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                 })}
               </svg>
             )}
-
-            {/* Heatmap Legend Bar */}
-            {showLegend && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "14px",
-                  right: "16px",
-                  background: "rgba(15, 23, 42, 0.85)",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: "8px",
-                  padding: "6px 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  color: "#ffffff",
-                  fontSize: "10.5px",
-                  fontFamily: "DM Mono, monospace",
-                  zIndex: 30,
-                }}
-              >
-                <span style={{ color: "#cbd5e1" }}>Scan Attention:</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} /> High (Hotspot)
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b" }} /> Medium
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Moderate
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      {/* Heatmap Legend Bar — below the canvas */}
+      {showLegend && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            flexWrap: "wrap",
+            padding: "10px 16px",
+            marginTop: "8px",
+            background: "var(--paper-card)",
+            border: "1px solid var(--border)",
+            borderRadius: "10px",
+            fontSize: "11px",
+            fontFamily: "DM Mono, monospace",
+            color: "var(--ink-muted)",
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              fontSize: 10,
+            }}
+          >
+            Scan Attention
+          </span>
+          <div style={{ width: 1, height: 14, background: "var(--border)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                background: "#ef4444",
+                flexShrink: 0,
+                display: "inline-block",
+              }}
+            />
+            <span>High · Hotspot</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                background: "#f59e0b",
+                flexShrink: 0,
+                display: "inline-block",
+              }}
+            />
+            <span>Medium</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                background: "#10b981",
+                flexShrink: 0,
+                display: "inline-block",
+              }}
+            />
+            <span>Moderate</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

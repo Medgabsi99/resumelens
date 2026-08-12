@@ -2,7 +2,21 @@
 import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useMemo } from "react";
-import { Globe, ArrowDown, Loader2, Sparkles, AlertTriangle, Palette, PenLine, RefreshCw, Monitor, Smartphone, ChevronUp, ChevronDown, CheckCircle } from "lucide-react";
+import {
+  Globe,
+  ArrowDown,
+  Loader2,
+  Sparkles,
+  AlertTriangle,
+  Palette,
+  PenLine,
+  RefreshCw,
+  Monitor,
+  Smartphone,
+  ChevronUp,
+  ChevronDown,
+  CheckCircle,
+} from "lucide-react";
 import { PortfolioData } from "@/lib/ai";
 import { generatePortfolioHtml } from "@/lib/portfolioTemplate";
 
@@ -117,7 +131,10 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
   };
 
   // Update a single text field in portfolio copy
-  const updateField = (field: keyof PortfolioData, value: string | string[] | Record<string, unknown>) => {
+  const updateField = (
+    field: keyof PortfolioData,
+    value: string | string[] | Record<string, unknown>
+  ) => {
     if (!portfolioData) return;
     setPortfolioData((prev) => {
       if (!prev) return null;
@@ -178,7 +195,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
             }}
           >
             {[80, 100, 60, 90, 70].map((w, i) => (
-              <div key={i} className="skeleton" style={{ height: i === 1 ? 72 : 14, width: `${w}%`, borderRadius: 8 }} />
+              <div
+                key={i}
+                className="skeleton"
+                style={{ height: i === 1 ? 72 : 14, width: `${w}%`, borderRadius: 8 }}
+              />
             ))}
           </div>
           <div className="skeleton" style={{ margin: 16, borderRadius: 12 }} />
@@ -188,40 +209,50 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
   }
 
   return (
-    <div style={{
-      background: "var(--paper-card)",
-      border: "1.5px solid var(--border)",
-      borderRadius: "16px",
-      overflow: "hidden",
-      marginTop: "16px",
-    }}>
+    <div
+      style={{
+        background: "var(--paper-card)",
+        border: "1.5px solid var(--border)",
+        borderRadius: "16px",
+        overflow: "hidden",
+        marginTop: "16px",
+      }}
+    >
       {/* Title Header */}
-      <div style={{
-        padding: "18px 24px",
-        borderBottom: "1px solid var(--border)",
-        background: "var(--accent-bg)",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "12px",
-      }}>
+      <div
+        style={{
+          padding: "18px 24px",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--accent-bg)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
         <div>
-          <h3 style={{
-            margin: 0,
-            fontSize: "15px",
-            fontWeight: 700,
-            color: "var(--ink)",
-            fontFamily: "Instrument Sans, sans-serif",
-          }}>
-            Personal Portfolio Site Generator <Globe size={14} style={{ display: "inline", verticalAlign: "middle" }} />
+          <h3
+            style={{
+              margin: 0,
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "var(--ink)",
+              fontFamily: "Instrument Sans, sans-serif",
+            }}
+          >
+            Personal Portfolio Site Generator{" "}
+            <Globe size={14} style={{ display: "inline", verticalAlign: "middle" }} />
           </h3>
-          <p style={{
-            margin: "2px 0 0 0",
-            fontSize: "11px",
-            color: "var(--ink-muted)",
-          }}>
-            Transform your resume achievements into a beautiful, static web page copy and responsive showcase.
+          <p
+            style={{
+              margin: "2px 0 0 0",
+              fontSize: "11px",
+              color: "var(--ink-muted)",
+            }}
+          >
+            Transform your resume achievements into a beautiful, static web page copy and responsive
+            showcase.
           </p>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -258,7 +289,8 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                   boxShadow: "0 2px 8px var(--brand-glow)",
                 }}
               >
-                <ArrowDown size={13} style={{ display: "inline", verticalAlign: "middle" }} /> Download HTML File
+                <ArrowDown size={13} style={{ display: "inline", verticalAlign: "middle" }} />{" "}
+                Download HTML File
               </button>
             </>
           )}
@@ -267,32 +299,39 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
 
       {/* Main Grid Workspace */}
       {!portfolioData ? (
-        <div style={{
-          padding: "48px 24px",
-          textAlign: "center",
-          background: "var(--paper-warm)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
-            <Globe size={36} style={{ marginBottom: "16px", color: "var(--accent)" }} />
-          <h4 style={{
-            margin: "0 0 8px 0",
-            fontSize: "16px",
-            fontWeight: 700,
-            color: "var(--ink)",
-          }}>
+        <div
+          style={{
+            padding: "48px 24px",
+            textAlign: "center",
+            background: "var(--paper-warm)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Globe size={36} style={{ marginBottom: "16px", color: "var(--accent)" }} />
+          <h4
+            style={{
+              margin: "0 0 8px 0",
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--ink)",
+            }}
+          >
             Generate Your Online Brand
           </h4>
-          <p style={{
-            margin: "0 0 24px 0",
-            fontSize: "13px",
-            color: "var(--ink-muted)",
-            maxWidth: "480px",
-            lineHeight: 1.6,
-          }}>
-            gemini-2.5 will analyze your work experience, metrics, and skills to write high-impact headlines, formatted bios, and project portfolios optimized for the web.
+          <p
+            style={{
+              margin: "0 0 24px 0",
+              fontSize: "13px",
+              color: "var(--ink-muted)",
+              maxWidth: "480px",
+              lineHeight: 1.6,
+            }}
+          >
+            gemini-2.5 will analyze your work experience, metrics, and skills to write high-impact
+            headlines, formatted bios, and project portfolios optimized for the web.
           </p>
           <button
             onClick={handleGenerate}
@@ -315,50 +354,66 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
           >
             {isGenerating ? (
               <>
-                <span style={{ display: "inline-flex", animation: "spin 1s linear infinite" }}><Loader2 size={15} /></span>
+                <span style={{ display: "inline-flex", animation: "spin 1s linear infinite" }}>
+                  <Loader2 size={15} />
+                </span>
                 Writing Portfolio Site...
               </>
             ) : (
-              <><Sparkles size={14} /> Generate Portfolio Content</>
+              <>
+                <Sparkles size={14} /> Generate Portfolio Content
+              </>
             )}
           </button>
           {error && (
             <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "12px", fontWeight: 500 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={13} /> {error}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <AlertTriangle size={13} /> {error}
+              </span>
             </p>
           )}
         </div>
       ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "350px 1fr",
-          background: "var(--paper)",
-          minHeight: "580px",
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "350px 1fr",
+            background: "var(--paper)",
+            minHeight: "580px",
+          }}
+        >
           {/* Left panel: Config controls */}
-          <div style={{
-            borderRight: "1px solid var(--border)",
-            padding: "20px 16px",
-            background: "var(--paper-card)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            overflowY: "auto",
-            maxHeight: "700px",
-          }}>
+          <div
+            style={{
+              borderRight: "1px solid var(--border)",
+              padding: "20px 16px",
+              background: "var(--paper-card)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+              overflowY: "auto",
+              maxHeight: "700px",
+            }}
+          >
             {/* Theme Preset selector */}
             <div>
-              <label style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                color: "var(--ink-muted)",
-                fontFamily: "DM Mono, monospace",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                display: "block",
-                marginBottom: "8px",
-              }}>
-                <Palette size={11} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Theme Preset
+              <label
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "var(--ink-muted)",
+                  fontFamily: "DM Mono, monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  display: "block",
+                  marginBottom: "8px",
+                }}
+              >
+                <Palette
+                  size={11}
+                  style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}
+                />{" "}
+                Theme Preset
               </label>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {THEMES.map((theme) => {
@@ -381,18 +436,37 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                         transition: "all 0.15s ease",
                       }}
                     >
-                      <div style={{
-                        display: "flex",
-                        gap: "3px",
-                      }}>
-                        <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: theme.colors[0], border: "1px solid var(--border)" }} />
-                        <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: theme.colors[1] }} />
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "3px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            background: theme.colors[0],
+                            border: "1px solid var(--border)",
+                          }}
+                        />
+                        <span
+                          style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            background: theme.colors[1],
+                          }}
+                        />
                       </div>
-                      <span style={{
-                        fontSize: "12px",
-                        fontWeight: active ? 700 : 500,
-                        color: active ? "var(--accent)" : "var(--ink)",
-                      }}>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: active ? 700 : 500,
+                          color: active ? "var(--accent)" : "var(--ink)",
+                        }}
+                      >
                         {theme.label}
                       </span>
                     </button>
@@ -405,17 +479,23 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
 
             {/* Editable Content Copy Panels */}
             <div>
-              <label style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                color: "var(--ink-muted)",
-                fontFamily: "DM Mono, monospace",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                display: "block",
-                marginBottom: "10px",
-              }}>
-                <PenLine size={11} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} /> Edit Content Copy
+              <label
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "var(--ink-muted)",
+                  fontFamily: "DM Mono, monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  display: "block",
+                  marginBottom: "10px",
+                }}
+              >
+                <PenLine
+                  size={11}
+                  style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}
+                />{" "}
+                Edit Content Copy
               </label>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -427,7 +507,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                 >
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>Full Name</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        Full Name
+                      </span>
                       <input
                         type="text"
                         value={portfolioData.fullName}
@@ -436,7 +520,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                       />
                     </div>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>Headline Headline</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        Headline Headline
+                      </span>
                       <input
                         type="text"
                         value={portfolioData.headline}
@@ -445,7 +533,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                       />
                     </div>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>Subheading Description</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        Subheading Description
+                      </span>
                       <textarea
                         value={portfolioData.subheading}
                         onChange={(e) => updateField("subheading", e.target.value)}
@@ -463,7 +555,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                 >
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>Professional Bio</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        Professional Bio
+                      </span>
                       <textarea
                         value={portfolioData.aboutMe}
                         onChange={(e) => updateField("aboutMe", e.target.value)}
@@ -471,7 +567,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                       />
                     </div>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>Contact Email</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        Contact Email
+                      </span>
                       <input
                         type="email"
                         value={portfolioData.email}
@@ -490,7 +590,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                 >
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>GitHub Profile URL</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        GitHub Profile URL
+                      </span>
                       <input
                         type="text"
                         value={portfolioData.githubUrl || ""}
@@ -500,7 +604,11 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
                       />
                     </div>
                     <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}>LinkedIn Profile URL</span>
+                      <span
+                        style={{ fontSize: "10px", color: "var(--ink-muted)", fontWeight: 600 }}
+                      >
+                        LinkedIn Profile URL
+                      </span>
                       <input
                         type="text"
                         value={portfolioData.linkedinUrl || ""}
@@ -539,55 +647,63 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
             </div>
 
             {saveStatus && (
-              <div style={{
-                color: "#15803d",
-                background: "#e6ffec",
-                padding: "8px",
-                borderRadius: "6px",
-                fontSize: "11px",
-                fontWeight: 600,
-                textAlign: "center",
-                border: "1px solid #abf2af",
-              }}>
+              <div
+                style={{
+                  color: "#15803d",
+                  background: "#e6ffec",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  border: "1px solid #abf2af",
+                }}
+              >
                 {saveStatus}
               </div>
             )}
             {error && (
-              <div style={{
-                color: "#b91c1c",
-                background: "#ffebe9",
-                padding: "8px",
-                borderRadius: "6px",
-                fontSize: "11px",
-                fontWeight: 600,
-                textAlign: "center",
-                border: "1px solid #ffc1c1",
-              }}>
+              <div
+                style={{
+                  color: "#b91c1c",
+                  background: "#ffebe9",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  border: "1px solid #ffc1c1",
+                }}
+              >
                 {error}
               </div>
             )}
           </div>
 
           {/* Right panel: Preview viewport simulator */}
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            background: "var(--paper-warm)",
-            padding: "16px",
-            boxSizing: "border-box",
-            height: "700px",
-          }}>
-            {/* Viewport size controls */}
-            <div style={{
+          <div
+            style={{
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "12px",
-              background: "var(--paper-card)",
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: "1px solid var(--border)",
-            }}>
+              flexDirection: "column",
+              background: "var(--paper-warm)",
+              padding: "16px",
+              boxSizing: "border-box",
+              height: "700px",
+            }}
+          >
+            {/* Viewport size controls */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+                background: "var(--paper-card)",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--border)",
+              }}
+            >
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--ink)" }}>
                 Live Responsive Preview
               </span>
@@ -626,25 +742,30 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
             </div>
 
             {/* Simulating the device border */}
-            <div style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "stretch",
-              overflow: "hidden",
-              position: "relative",
-            }}>
-              <div style={{
-                width: viewportMode === "mobile" ? "375px" : "100%",
-                maxWidth: "100%",
-                border: viewportMode === "mobile" ? "8px solid #1c1917" : "1px solid var(--border)",
-                borderRadius: viewportMode === "mobile" ? "24px" : "8px",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
-                background: "white",
-                transition: "width 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+            <div
+              style={{
+                flex: 1,
                 display: "flex",
+                justifyContent: "center",
+                alignItems: "stretch",
                 overflow: "hidden",
-              }}>
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  width: viewportMode === "mobile" ? "375px" : "100%",
+                  maxWidth: "100%",
+                  border:
+                    viewportMode === "mobile" ? "8px solid #1c1917" : "1px solid var(--border)",
+                  borderRadius: viewportMode === "mobile" ? "24px" : "8px",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+                  background: "var(--paper-card)",
+                  transition: "width 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                  display: "flex",
+                  overflow: "hidden",
+                }}
+              >
                 <iframe
                   title="Portfolio Live Preview"
                   srcDoc={iframeSrcDoc}
@@ -678,12 +799,14 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{
-      border: "1px solid var(--border)",
-      borderRadius: "10px",
-      overflow: "hidden",
-      background: "var(--paper)",
-    }}>
+    <div
+      style={{
+        border: "1px solid var(--border)",
+        borderRadius: "10px",
+        overflow: "hidden",
+        background: "var(--paper)",
+      }}
+    >
       <button
         type="button"
         onClick={onToggle}
@@ -700,18 +823,12 @@ function CollapsibleSection({
           cursor: "pointer",
         }}
       >
-        <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)" }}>
-          {title}
-        </span>
+        <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)" }}>{title}</span>
         <span style={{ fontSize: "10px", color: "var(--ink-muted)" }}>
           {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </span>
       </button>
-      {isOpen && (
-        <div style={{ padding: "12px" }}>
-          {children}
-        </div>
-      )}
+      {isOpen && <div style={{ padding: "12px" }}>{children}</div>}
     </div>
   );
 }

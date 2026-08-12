@@ -41,13 +41,18 @@ export default function ToolbarButton({
       style={{
         ...styles[variant],
         borderRadius: 6,
-        padding: "4px 10px",
+        padding: "0 10px",
         fontSize: 11,
         fontWeight: 600,
         cursor: disabled ? "not-allowed" : "pointer",
         fontFamily: "Instrument Sans, sans-serif",
         opacity: disabled ? 0.5 : 1,
         transition: "all 0.15s",
+        height: 28,
+        display: "inline-flex",
+        alignItems: "center",
+        whiteSpace: "nowrap",
+        flexShrink: 0,
       }}
     >
       {label}

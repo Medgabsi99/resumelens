@@ -1,5 +1,5 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
-import { requireUser } from "@/lib/auth";
+import { requireUserWithQuota, incrementUsage } from "@/lib/auth";
 import { validateAndSanitizeInput } from "@/lib/validation";
 import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,8 +9,22 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   try {
-    // ── 1. Auth check ────────────────────────────────────────
-    const _user = await requireUser();
+    // ── 1. Auth & Quota check ──────────────────────────────────
+    let _user;
+    try {
+      const session = await requireUserWithQuota();
+      _user = session.user;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "QuotaExceeded") {
+        return NextResponse.json(
+          { success: false, error: "Upgrade required to run ATS structural scans" },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const rateLimit = await checkRateLimit(_user.id, "analyze-structure");
     if (!rateLimit.success) {
       return rateLimitResponse();
@@ -26,10 +40,7 @@ export async function POST(req: NextRequest) {
       const file = form.get("file") as File | null;
 
       if (!file) {
-        return NextResponse.json(
-          { success: false, error: "No file provided" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
       }
 
       if (file.size > 10 * 1024 * 1024) {
@@ -71,6 +82,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    await incrementUsage(_user.id);
+
     // ── 3. Call AI Layout Scanner ─────────────────────────────
     const analysis = await analyzePdfStructure(resumeText, pdfBuffer);
 
@@ -82,9 +95,6 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     logger.error("Structure scan API error:", error);
     const message = error instanceof Error ? (error as Error).message : "Failed to scan structure";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
