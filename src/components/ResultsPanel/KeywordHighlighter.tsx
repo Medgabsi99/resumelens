@@ -1,5 +1,4 @@
-"use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useDeferredValue } from "react";
 import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -21,7 +20,7 @@ function buildSegments(line: string, keywords: string[]): Segment[] {
   const escaped = keywords
     .filter(Boolean)
     .sort((a, b) => b.length - a.length)
-    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
   const regex = new RegExp(`\\b(?:${escaped.join("|")})\\b`, "gi");
 
@@ -52,26 +51,30 @@ interface Props {
 export default function KeywordHighlighter({ resumeText, matched, missing }: Props) {
   const [activeHint, setActiveHint] = useState<string | null>(null);
 
+  /* React 19 Deferred Values for Non-Blocking UI Renders */
+  const deferredResumeText = useDeferredValue(resumeText);
+  const deferredMatched = useDeferredValue(matched);
+
   /* Keywords that do NOT appear anywhere in the resume text */
   const trulyMissing = useMemo(
-    () => missing.filter(kw => !resumeText.toLowerCase().includes(kw.toLowerCase())),
-    [missing, resumeText]
+    () => missing.filter((kw) => !deferredResumeText.toLowerCase().includes(kw.toLowerCase())),
+    [missing, deferredResumeText]
   );
 
   /* Split into non-empty paragraphs */
   const paragraphs = useMemo(
-    () => resumeText.split(/\n+/).filter(p => p.trim()),
-    [resumeText]
+    () => deferredResumeText.split(/\n+/).filter((p) => p.trim()),
+    [deferredResumeText]
   );
 
   /* Highlight segments per paragraph */
   const highlighted = useMemo(
-    () => paragraphs.map(p => buildSegments(p, matched)),
-    [paragraphs, matched]
+    () => paragraphs.map((p) => buildSegments(p, deferredMatched)),
+    [paragraphs, deferredMatched]
   );
 
   const matchCount = matched.length;
-  const missCount  = trulyMissing.length;
+  const missCount = trulyMissing.length;
 
   return (
     <motion.div
@@ -94,24 +97,26 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
             borderRadius: 10,
           }}
         >
-          <div style={{
-            fontSize: 10,
-            fontFamily: "DM Mono, monospace",
-            color: "#b91c1c",
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-            fontWeight: 700,
-            marginBottom: 8,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontFamily: "DM Mono, monospace",
+              color: "#b91c1c",
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              fontWeight: 700,
+              marginBottom: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
             <Zap size={11} />
             <span>Not found in your resume — add these to boost ATS score</span>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {(trulyMissing || []).map(kw => (
+            {(trulyMissing || []).map((kw) => (
               <button
                 key={kw}
                 type="button"
@@ -152,7 +157,8 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
               }}
             >
               💡 Weave &ldquo;<strong>{activeHint}</strong>&rdquo; naturally into your{" "}
-              <strong>Summary</strong> or <strong>Skills</strong> section to raise your ATS match rate.
+              <strong>Summary</strong> or <strong>Skills</strong> section to raise your ATS match
+              rate.
             </motion.div>
           )}
         </div>
@@ -177,7 +183,14 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
         }}
       >
         {highlighted.length === 0 && (
-          <p style={{ color: "var(--ink-faint)", fontSize: 12, textAlign: "center", padding: "24px 0" }}>
+          <p
+            style={{
+              color: "var(--ink-faint)",
+              fontSize: 12,
+              textAlign: "center",
+              padding: "24px 0",
+            }}
+          >
             No resume text available to highlight.
           </p>
         )}
@@ -199,8 +212,12 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
                     cursor: "default",
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(224,93,46,0.28)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(224,93,46,0.15)"; }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(224,93,46,0.28)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(224,93,46,0.15)";
+                  }}
                 >
                   {seg.content}
                 </mark>
@@ -213,38 +230,48 @@ export default function KeywordHighlighter({ resumeText, matched, missing }: Pro
       </div>
 
       {/* ── Legend ────────────────────────────────────────────────────────── */}
-      <div style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 14,
-        marginTop: 10,
-        alignItems: "center",
-        fontSize: 10,
-        fontFamily: "DM Mono, monospace",
-        color: "var(--ink-muted)",
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 14,
+          marginTop: 10,
+          alignItems: "center",
+          fontSize: 10,
+          fontFamily: "DM Mono, monospace",
+          color: "var(--ink-muted)",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <mark style={{
-            background: "rgba(224, 93, 46, 0.15)",
-            color: "var(--accent)",
-            borderRadius: 3,
-            padding: "0 4px",
-            fontWeight: 700,
-            boxShadow: "0 0 0 1.5px rgba(224,93,46,0.22)",
-            fontSize: 10,
-          }}>keyword</mark>
+          <mark
+            style={{
+              background: "rgba(224, 93, 46, 0.15)",
+              color: "var(--accent)",
+              borderRadius: 3,
+              padding: "0 4px",
+              fontWeight: 700,
+              boxShadow: "0 0 0 1.5px rgba(224,93,46,0.22)",
+              fontSize: 10,
+            }}
+          >
+            keyword
+          </mark>
           <span>= found in JD</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{
-            background: "rgba(239,68,68,0.07)",
-            color: "#b91c1c",
-            border: "1px dashed #fca5a5",
-            borderRadius: 4,
-            padding: "0 6px",
-            fontSize: 10,
-            fontWeight: 700,
-          }}>+ missing</span>
+          <span
+            style={{
+              background: "rgba(239,68,68,0.07)",
+              color: "#b91c1c",
+              border: "1px dashed #fca5a5",
+              borderRadius: 4,
+              padding: "0 6px",
+              fontSize: 10,
+              fontWeight: 700,
+            }}
+          >
+            + missing
+          </span>
           <span>= add to resume</span>
         </div>
         <div style={{ marginLeft: "auto", color: "var(--ink-faint)" }}>
