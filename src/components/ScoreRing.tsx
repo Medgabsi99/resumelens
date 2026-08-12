@@ -103,16 +103,18 @@ export default function ScoreRing({
   const startTimeRef = useRef<number | null>(null);
   const DURATION = 1400; // ms
 
+  const prevScoreRef = useRef(0);
+
   useEffect(() => {
     if (!animate) {
       setDisplayScore(score);
       setProgress(score);
+      prevScoreRef.current = score;
       return;
     }
 
-    // Reset on score change
-    setDisplayScore(0);
-    setProgress(0);
+    const startScore = prevScoreRef.current;
+    const targetScore = score;
     setGlowPulse(false);
 
     // Small delay so the panel fade-in finishes first
@@ -125,20 +127,22 @@ export default function ScoreRing({
         const rawT = Math.min(elapsed / DURATION, 1);
         const t = easeOutExpo(rawT);
 
-        const currentScore = Math.round(t * score);
+        const currentScore = Math.round(startScore + t * (targetScore - startScore));
+        const currentProgress = startScore + t * (targetScore - startScore);
+
         setDisplayScore(isNaN(currentScore) ? 0 : currentScore);
-        setProgress(isNaN(t * score) ? 0 : t * score);
+        setProgress(isNaN(currentProgress) ? 0 : currentProgress);
 
         if (rawT < 1) {
           rafRef.current = requestAnimationFrame(tick);
         } else {
-          // Animation done — trigger glow pulse
           setGlowPulse(true);
+          prevScoreRef.current = targetScore;
         }
       }
 
       rafRef.current = requestAnimationFrame(tick);
-    }, 300);
+    }, 150);
 
     return () => {
       clearTimeout(delayTimer);

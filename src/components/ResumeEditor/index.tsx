@@ -107,6 +107,27 @@ export default function ResumeEditor({
     }
   }, [history, historyIndex]);
 
+  // Section Re-Ordering Helper for Resume Sections
+  const handleReorderSections = useCallback((sectionName: string, direction: "up" | "down") => {
+    setText((prevText) => {
+      const sectionRegex = /\n(?=[A-Z\s]{4,20}\n[=\-]{3,})/g;
+      const sections = prevText.split(sectionRegex);
+      const targetIndex = sections.findIndex((s) =>
+        s.toLowerCase().includes(sectionName.toLowerCase())
+      );
+      if (targetIndex === -1) return prevText;
+
+      const newIndex = direction === "up" ? targetIndex - 1 : targetIndex + 1;
+      if (newIndex < 0 || newIndex >= sections.length) return prevText;
+
+      const updated = [...sections];
+      const temp = updated[targetIndex];
+      updated[targetIndex] = updated[newIndex];
+      updated[newIndex] = temp;
+      return updated.join("\n");
+    });
+  }, []);
+
   const [copied, setCopied] = useState(false);
   const [appliedIndices, setAppliedIndices] = useState<Set<number>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("tech-pro");

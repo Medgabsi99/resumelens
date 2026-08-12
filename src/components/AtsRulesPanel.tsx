@@ -2,7 +2,15 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, AlertTriangle, ChevronDown, ChevronUp, Shield } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+  HelpCircle,
+} from "lucide-react";
 import type { AtsCheck, AtsCheckCategory, AtsRulesResult } from "@/types";
 
 interface Props {

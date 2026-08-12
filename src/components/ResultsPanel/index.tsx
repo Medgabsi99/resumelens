@@ -36,7 +36,9 @@ import {
   FileCheck,
   Wrench,
   Layout,
+  ArrowLeftRight,
 } from "lucide-react";
+import ResumeDiffViewer from "@/components/ResumeDiffViewer";
 
 function LinkedinIcon({ size = 16, style }: { size?: number; style?: React.CSSProperties }) {
   return (
@@ -224,6 +226,7 @@ export default function ResultsPanel({
 
   const componentRef = useRef<HTMLDivElement>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDiffViewer, setShowDiffViewer] = useState(false);
   const [showBragStudio, setShowBragStudio] = useState(false);
   const [highlightOpen, setHighlightOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "analysis" | "match" | "tools">(
@@ -834,6 +837,30 @@ export default function ResultsPanel({
             <Award size={13} />
             <span>Share Achievement</span>
             <span>🚀</span>
+          </button>
+
+          <button
+            onClick={() => setShowDiffViewer(true)}
+            className="print:hidden"
+            style={{
+              background: "var(--paper-card)",
+              color: "var(--ink)",
+              border: "1.5px solid var(--border-strong)",
+              borderRadius: 9,
+              padding: "0 14px",
+              height: 34,
+              fontSize: 11.5,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontFamily: "Instrument Sans, sans-serif",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <ArrowLeftRight size={13} style={{ color: "var(--accent)" }} />
+            <span>Compare Diff</span>
           </button>
 
           <div style={{ flex: 1 }} />
@@ -2060,6 +2087,12 @@ export default function ResultsPanel({
           onClose={() => setShowBragStudio(false)}
         />
       )}
+
+      <ResumeDiffViewer
+        isOpen={showDiffViewer}
+        onClose={() => setShowDiffViewer(false)}
+        defaultLeftId={analysisId}
+      />
     </div>
   );
 }
