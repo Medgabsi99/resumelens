@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "ResumeLens — 1-Click Job Clipper & ATS Analyzer",
+  "version": "1.0.0",
+  "description": "Clip job descriptions from LinkedIn, Indeed, & Glassdoor into ResumeLens with 1 click. Analyze ATS match instantly.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://*.indeed.com/*",
+    "https://*.glassdoor.com/*",
+    "https://*.ziprecruiter.com/*",
+    "http://localhost:3000/*",
+    "https://resumelens.vercel.app/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ResumeLens Job Clipper"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/*",
+        "https://*.indeed.com/*",
+        "https://*.glassdoor.com/*",
+        "https://*.ziprecruiter.com/*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
