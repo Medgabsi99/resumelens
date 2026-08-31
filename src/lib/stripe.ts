@@ -1,28 +1,21 @@
-import Stripe from "stripe";
-
-// Server-side Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-04-10",
-});
-
-// Plan limits
+// Stripe integration removed - all features are free and accessible.
 export const PLAN_LIMITS = {
-  free: 999, // Set to 999 for active development and testing phase
-  one_time: 999, // effectively unlimited (one-time payment)
-  monthly: 999, // unlimited on subscription
+  free: 999999,
+  one_time: 999999,
+  monthly: 999999,
 } as const;
 
 export const PRICES = {
   one_time: {
-    id: process.env.STRIPE_PRICE_ID_ONE_TIME!,
-    label: "Lifetime Access",
-    amount: 900, // $9.00 in cents
+    id: "price_free_lifetime",
+    label: "Free Access",
+    amount: 0,
     mode: "payment" as const,
   },
   monthly: {
-    id: process.env.STRIPE_PRICE_ID_MONTHLY!,
-    label: "Pro Monthly",
-    amount: 1900, // $19.00 in cents
+    id: "price_free_monthly",
+    label: "Free Pro Access",
+    amount: 0,
     mode: "subscription" as const,
   },
 };

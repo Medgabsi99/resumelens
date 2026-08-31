@@ -1,12 +1,7 @@
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  CreateApplicationRequest,
-  JobApplication,
-  ApplicationStatus,
-  Priority,
-} from "@/types";
+import { CreateApplicationRequest, JobApplication, ApplicationStatus, Priority } from "@/types";
 
 const VALID_STATUSES: ApplicationStatus[] = [
   "saved",
@@ -23,7 +18,12 @@ const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   // ── 2. Fetch applications ────────────────────────────────
@@ -43,7 +43,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   // ── 2. Parse and validate request ────────────────────────
@@ -95,11 +100,7 @@ export async function POST(req: NextRequest) {
     match_score: body.matchScore ?? null,
   };
 
-  const { data, error } = await supabase
-    .from("applications")
-    .insert(insertData)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("applications").insert(insertData).select().single();
 
   if (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);

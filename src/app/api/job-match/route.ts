@@ -11,7 +11,13 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const rateLimit = await checkRateLimit(_user.id, "job-match");
   if (!rateLimit.success) {
     return rateLimitResponse();
@@ -44,9 +50,9 @@ export async function POST(req: NextRequest) {
       companyName = validateAndSanitizeInput(companyName, 200, "Company name");
     }
   } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? (err as Error).message : String(err);
-      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
-    }
+    const errorMsg = err instanceof Error ? (err as Error).message : String(err);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
+  }
 
   // ── 4. Run job match ─────────────────────────────────────
   try {
@@ -55,8 +61,8 @@ export async function POST(req: NextRequest) {
       jobDescription,
       jobTitle,
       companyName,
-      _user.id,  // userId — enables embedding-based similarity grounding
-      supabase,         // authenticated client — for vector search
+      _user.id, // userId — enables embedding-based similarity grounding
+      supabase // authenticated client — for vector search
     );
 
     // ── 5. Persist match to database (optional) ─────────────

@@ -11,7 +11,12 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const rateLimit = await checkRateLimit(_user.id, "cover-letter");
   if (!rateLimit.success) {
     return rateLimitResponse();

@@ -1,7 +1,12 @@
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { createAdminClient } from "./supabase-server";
 import { UserProfile } from "@/types";
-import { PLAN_LIMITS } from "./stripe";
+
+export const PLAN_LIMITS = {
+  free: 999999,
+  one_time: 999999,
+  monthly: 999999,
+} as const;
 
 // Get current authenticated user from Supabase Auth server (verifies JWT, not just cookies)
 export async function getServerSession() {
@@ -28,20 +33,47 @@ export async function requireUser() {
   return user;
 }
 
+import { Redis } from "@upstash/redis";
+
+let redis: Redis | null = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  } catch {
+    redis = null;
+  }
+}
+
 interface CacheEntry {
   profile: UserProfile | null;
   expiresAt: number;
 }
 
 const profileCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5000; // 5 seconds cache lifetime is perfect for short-lived deduplication
+const CACHE_TTL_MS = 5000; // 5 seconds cache lifetime for deduplication
 
-// Get user profile (plan, usage etc.) from Supabase
+// Get user profile (plan, usage etc.) from Supabase with distributed caching
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const cacheKey = `profile:${userId}`;
+
+  // 1. Try distributed Redis cache
+  if (redis) {
+    try {
+      const cached = await redis.get<UserProfile>(cacheKey);
+      if (cached) return cached;
+    } catch {
+      // Fall through to memory or database on Redis error
+    }
+  }
+
+  // 2. Try in-memory fallback
   const now = Date.now();
-  const cached = profileCache.get(userId);
-  if (cached && cached.expiresAt > now) {
-    return cached.profile;
+  const memCached = profileCache.get(userId);
+  if (memCached && memCached.expiresAt > now) {
+    return memCached.profile;
   }
 
   const supabase = await createServerComponentClient();
@@ -54,6 +86,11 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 
   const profile = data as UserProfile;
   profileCache.set(userId, { profile, expiresAt: now + CACHE_TTL_MS });
+
+  if (redis) {
+    redis.set(cacheKey, profile, { ex: 5 }).catch(() => {});
+  }
+
   return profile;
 }
 
@@ -79,12 +116,18 @@ export async function incrementUsage(userId: string) {
   await admin.rpc("increment_analyses_used", { user_id: userId });
   // Invalidate cache immediately on update
   profileCache.delete(userId);
+  if (redis) {
+    redis.del(`profile:${userId}`).catch(() => {});
+  }
 }
 
 // Create profile row on first sign-up (called from webhook or sign-up handler)
 export async function createProfile(userId: string, email: string) {
   // Invalidate cache in case we check before insert
   profileCache.delete(userId);
+  if (redis) {
+    redis.del(`profile:${userId}`).catch(() => {});
+  }
 
   const admin = createAdminClient();
   const { data: existing } = await admin

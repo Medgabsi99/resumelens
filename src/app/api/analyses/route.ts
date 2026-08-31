@@ -4,7 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   // ── 2. Fetch analyses summary ────────────────────────────

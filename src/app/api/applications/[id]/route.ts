@@ -1,12 +1,7 @@
 import { createServerComponentClient } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  ApplicationStatus,
-  JobApplication,
-  Priority,
-  UpdateApplicationRequest,
-} from "@/types";
+import { ApplicationStatus, JobApplication, Priority, UpdateApplicationRequest } from "@/types";
 
 const VALID_STATUSES: ApplicationStatus[] = [
   "saved",
@@ -21,12 +16,14 @@ const VALID_STATUSES: ApplicationStatus[] = [
 
 const VALID_PRIORITIES: Priority[] = ["low", "medium", "high"];
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   const { id: applicationId } = await params;
@@ -59,7 +56,8 @@ export async function PUT(
   if (body.companyName !== undefined) updateData.company_name = body.companyName.trim();
   if (body.jobTitle !== undefined) updateData.job_title = body.jobTitle.trim();
   if (body.jobUrl !== undefined) updateData.job_url = body.jobUrl?.trim() || null;
-  if (body.jobDescription !== undefined) updateData.job_description = body.jobDescription?.trim() || null;
+  if (body.jobDescription !== undefined)
+    updateData.job_description = body.jobDescription?.trim() || null;
   if (body.status !== undefined) updateData.status = body.status;
   if (body.priority !== undefined) updateData.priority = body.priority;
   if (body.location !== undefined) updateData.location = body.location?.trim() || null;
@@ -99,12 +97,14 @@ export async function PUT(
   return NextResponse.json({ success: true, data: data as JobApplication });
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   const { id: applicationId } = await params;

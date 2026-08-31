@@ -5,7 +5,12 @@ import { SavedResume } from "@/types";
 
 // GET /api/resumes — list all saved resumes
 export async function GET() {
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   const { data, error } = await supabase
@@ -25,14 +30,22 @@ export async function GET() {
 
 // POST /api/resumes — save a new resume
 export async function POST(req: NextRequest) {
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
 
   const body = await req.json();
   const { name, resumeText, targetRole, targetCompany, jobDescription, lastScore } = body;
 
   if (!name?.trim() || !resumeText?.trim()) {
-    return NextResponse.json({ success: false, error: "Name and resume text are required" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Name and resume text are required" },
+      { status: 400 }
+    );
   }
 
   const { data, error } = await supabase

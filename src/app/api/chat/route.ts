@@ -12,7 +12,13 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth ──────────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const rateLimit = await checkRateLimit(_user.id, "chat");
   if (!rateLimit.success) {
     return rateLimitResponse();

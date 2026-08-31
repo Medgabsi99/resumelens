@@ -10,7 +10,13 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest) {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const rateLimit = await checkRateLimit(_user.id, "outreach");
   if (!rateLimit.success) {
     return rateLimitResponse();
@@ -64,7 +70,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     logger.error("Outreach API error:", err);
-    const message = err instanceof Error ? (err as Error).message : "Outreach message generation failed";
+    const message =
+      err instanceof Error ? (err as Error).message : "Outreach message generation failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

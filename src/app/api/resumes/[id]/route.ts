@@ -3,19 +3,17 @@ import { requireUser } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // DELETE /api/resumes/<id>
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const _user = await requireUser();
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
   const { id } = await params;
 
-  const { error } = await supabase
-    .from("resumes")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", _user.id);
+  const { error } = await supabase.from("resumes").delete().eq("id", id).eq("user_id", _user.id);
 
   if (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -26,11 +24,13 @@ export async function DELETE(
 }
 
 // PUT /api/resumes/<id> — update name/role/company/jd/text
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const _user = await requireUser();
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
   const supabase = await createServerComponentClient();
   const { id } = await params;
 

@@ -1,0 +1,27 @@
+name: Security & Dependency Audit
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # Runs weekly on Mondays at 4:00 AM UTC
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    name: NPM Dependency CVE Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Run NPM Audit (High/Critical Vulnerability Gate)
+        run: npm audit --audit-level=high

@@ -1,18 +1,28 @@
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 import { validateAndSanitizeInput } from "@/lib/validation";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-server";
 import { analyzeResume, previewAnalyzeResume, extractTextFromBuffer } from "@/lib/ai";
+import { generateAndStoreEmbeddings } from "@/lib/ai/embedPipeline";
 import { requireUser, getUserProfile, canAnalyze, incrementUsage } from "@/lib/auth";
 import { runAtsChecks } from "@/lib/atsRulesChecker";
 import { AnalyzeResponse } from "@/types";
+import { extractResumeStyle } from "@/lib/ai/extractResumeStyle";
+import { DEFAULT_STYLE_TOKENS } from "@/lib/resumeStyleDefaults";
+import type { ResumeStyleTokens } from "@/types";
 
 export const maxDuration = 60; // Allow up to 60s for AI response
 
 export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeResponse>> {
   // ── 1. Auth check ────────────────────────────────────────
-  const _user = await requireUser();
+  let _user;
+  try {
+    _user = await requireUser();
+  } catch {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const rateLimit = await checkRateLimit(_user.id, "analyze");
   if (!rateLimit.success) {
     return rateLimitResponse();
@@ -30,6 +40,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
   let resumeText = "";
   let jobDescription: string | undefined;
   let targetRole: string | undefined;
+  let fileBuffer: Buffer | null = null;
+  let fileMimeType = "";
 
   const contentType = req.headers.get("content-type") || "";
 
@@ -52,6 +64,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    fileBuffer = buffer;
+    fileMimeType = file.type;
     try {
       resumeText = await extractTextFromBuffer(buffer, file.type);
     } catch (err) {
@@ -110,12 +124,18 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
 
   // ── 5. Full analysis — AI + deterministic rules run in parallel ───────────
   let result;
+  let resumeStyleTokens: ResumeStyleTokens = DEFAULT_STYLE_TOKENS;
   try {
-    const [aiResult, atsRules] = await Promise.all([
+    // Run AI analysis + ATS rules + style extraction all in parallel
+    const [aiResult, atsRules, styleTokens] = await Promise.all([
       analyzeResume(resumeText, jobDescription, targetRole),
       Promise.resolve(runAtsChecks(resumeText, jobDescription)),
+      fileBuffer
+        ? extractResumeStyle(fileBuffer, fileMimeType).catch(() => DEFAULT_STYLE_TOKENS)
+        : Promise.resolve(DEFAULT_STYLE_TOKENS),
     ]);
     result = { ...aiResult, ats_rules: atsRules };
+    resumeStyleTokens = styleTokens;
   } catch (err: unknown) {
     const message = err instanceof Error ? (err as Error).message : "Analysis failed";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -144,25 +164,34 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeRespon
     logger.error("[analyze] DB insert failed:", insertResult.error.message);
   }
 
-  // ── 7. Fire-and-forget: embed resume chunks into pgvector ─
-  // Non-blocking — runs in background after response is returned.
-  // If embedding fails, chat/job-match gracefully falls back to full-text.
+  // ── 7. Safe Background Task: embed resume chunks into pgvector ─
+  // Uses Next.js after() to guarantee background execution finishes
+  // without being terminated prematurely by the serverless runtime.
   const insertedId = insertResult.data?.[0]?.id;
   if (!insertResult.error && insertedId) {
-    const embedUrl = new URL("/api/embed", req.nextUrl.origin).toString();
-    // Pass auth cookies so the embed endpoint can authenticate the request
-    const cookieHeader = req.headers.get("cookie") ?? "";
-    fetch(embedUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: cookieHeader,
-      },
-      body: JSON.stringify({ resumeText, analysisId: insertedId }),
-    }).catch((err) => {
-      logger.warn("[analyze] Background embed failed (non-fatal):", err?.message);
-    });
+    if (typeof after === "function") {
+      after(async () => {
+        await generateAndStoreEmbeddings({
+          userId,
+          resumeText,
+          analysisId: insertedId,
+        });
+      });
+    } else {
+      generateAndStoreEmbeddings({
+        userId,
+        resumeText,
+        analysisId: insertedId,
+      }).catch((err) => {
+        logger.warn("[analyze] Background embed failed (non-fatal):", err?.message);
+      });
+    }
   }
 
-  return NextResponse.json({ success: true, data: result, extractedText: resumeText });
+  return NextResponse.json({
+    success: true,
+    data: result,
+    extractedText: resumeText,
+    resumeStyleTokens,
+  });
 }

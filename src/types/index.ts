@@ -45,6 +45,37 @@ export interface AnalysisResult {
   ats_rules?: AtsRulesResult; // ← deterministic 20-check results
 }
 
+/**
+ * Visual style tokens extracted from the uploaded resume via Gemini Vision.
+ * Used to faithfully reproduce the original layout in the "Same Format" PDF.
+ */
+export interface ResumeStyleTokens {
+  /** Primary accent color in hex (e.g. "#0f766e") */
+  accentColor: string;
+  /** Secondary/body ink color (default "#1a1a1a") */
+  inkColor: string;
+  /** Detected font family name or closest match (e.g. "Lora", "Inter", "Roboto") */
+  fontFamily: "Inter" | "Lora" | string;
+  /** Whether the heading is styled differently from body */
+  sectionStyle: "colored-underline" | "all-caps-line" | "bold-only" | "colored-box" | "plain";
+  /** Left-aligned | centered (mainly for the name/header block) */
+  headerAlignment: "left" | "center";
+  /** Whether dates appear on the same line as titles or on a new line */
+  datePosition: "inline-right" | "new-line";
+  /** Whether the resume has a photo */
+  hasPhoto: boolean;
+  /** Whether a horizontal separator follows the header block */
+  hasSeparatorLine: boolean;
+  /** Layout type */
+  layout: "single-column" | "two-column" | "sidebar";
+  /** Name font size category */
+  nameSizeCategory: "large" | "medium";
+  /** Bullet style used */
+  bulletStyle: "dash" | "dot" | "circle" | "none";
+  /** Background color of the page */
+  backgroundColor: string;
+}
+
 // ─── API Request/Response ─────────────────────────────────
 
 export interface AnalyzeRequest {
@@ -269,3 +300,6 @@ export interface SavedNegotiationItem {
   created_at: string;
   isLocal?: boolean;
 }
+
+// ─── Canonical Resume Document Schema ────────────────────
+export * from "./resume";
