@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   plan             TEXT        NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'one_time', 'monthly')),
   analyses_used    INTEGER     NOT NULL DEFAULT 0,
   analyses_limit   INTEGER     NOT NULL DEFAULT 2,
-  stripe_customer_id TEXT,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

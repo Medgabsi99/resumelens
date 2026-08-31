@@ -25,7 +25,6 @@ interface UserProfile {
   plan: "free" | "one_time" | "monthly";
   analyses_used: number;
   analyses_limit: number;
-  stripe_customer_id: string | null;
 }
 
 export default function SettingsPage() {
@@ -45,9 +44,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
-
-  // Billing states
-  const [loadingPortal, setLoadingPortal] = useState(false);
 
   // Deletion modal
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -136,34 +132,6 @@ export default function SettingsPage() {
       toastError((err as Error).message || "Failed to update password.", "Error updating password");
     } finally {
       setUpdatingPassword(false);
-    }
-  }
-
-  async function handleManageBilling() {
-    if (!profile?.stripe_customer_id) {
-      toastError("No billing customer profile found.", "Error");
-      return;
-    }
-
-    setLoadingPortal(true);
-    try {
-      const res = await fetch("/api/create-portal-session", { method: "POST" });
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Failed to launch billing portal");
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: unknown) {
-      toastError(
-        (err as Error).message || "Failed to open billing portal.",
-        "Billing Portal Error"
-      );
-    } finally {
-      setLoadingPortal(false);
     }
   }
 

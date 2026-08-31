@@ -2,15 +2,15 @@ const path = require("path");
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' blob: data: https://*.supabase.co https://lh3.googleusercontent.com;
   font-src 'self' https://fonts.gstatic.com data:;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
-  frame-src 'self' https://js.stripe.com;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com ws: wss: https://fonts.gstatic.com data:;
+  frame-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co ws: wss: https://fonts.gstatic.com data:;
   upgrade-insecure-requests;
 `
   .replace(/\s{2,}/g, " ")

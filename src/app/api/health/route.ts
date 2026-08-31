@@ -17,7 +17,6 @@ export async function GET() {
     redisConfigured: Boolean(
       process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ),
-    stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
   };
 
   const isHealthy = envStatus.supabaseConfigured && envStatus.googleAiConfigured;

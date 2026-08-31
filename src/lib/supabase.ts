@@ -21,7 +21,6 @@ export type Database = {
           plan: "free" | "one_time" | "monthly";
           analyses_used: number;
           analyses_limit: number;
-          stripe_customer_id: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["profiles"]["Row"], "created_at">;
@@ -54,7 +53,10 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["resumes"]["Row"], "id" | "created_at" | "updated_at">;
+        Insert: Omit<
+          Database["public"]["Tables"]["resumes"]["Row"],
+          "id" | "created_at" | "updated_at"
+        >;
         Update: Partial<Database["public"]["Tables"]["resumes"]["Insert"]>;
       };
     };

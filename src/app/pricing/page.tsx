@@ -29,7 +29,6 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
-  const [loading, setLoading] = useState<string | null>(null);
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
@@ -39,21 +38,6 @@ export default function PricingPage() {
     });
   }, []);
 
-  async function checkout(plan: string) {
-    setLoading(plan);
-    try {
-      const res = await fetch("/api/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else if (res.status === 401) window.location.href = `/login?next=/pricing`;
-    } finally {
-      setLoading(null);
-    }
-  }
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
       {/* Background glow blobs */}

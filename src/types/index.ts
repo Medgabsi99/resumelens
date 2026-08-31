@@ -108,7 +108,6 @@ export interface UserProfile {
   plan: PlanType;
   analyses_used: number;
   analyses_limit: number;
-  stripe_customer_id?: string;
   created_at: string;
 }
 
@@ -134,13 +133,6 @@ export interface SaveResumeRequest {
   targetCompany?: string;
   jobDescription?: string;
   lastScore?: number;
-}
-
-// ─── Stripe ───────────────────────────────────────────────
-
-export interface CheckoutRequest {
-  priceId: string;
-  mode: "payment" | "subscription";
 }
 
 // ─── Application Tracker ──────────────────────────────────

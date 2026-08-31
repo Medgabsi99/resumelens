@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { X, Check } from "lucide-react";
 
 interface Props {
@@ -9,24 +6,6 @@ interface Props {
 }
 
 export default function UpgradeModal({ preview, onClose }: Props) {
-  const [loading, setLoading] = useState<string | null>(null);
-
-  async function checkout(plan: "one_time" | "monthly") {
-    setLoading(plan);
-    try {
-      const res = await fetch("/api/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else if (res.status === 401) window.location.href = "/login?next=/pricing";
-    } finally {
-      setLoading(null);
-    }
-  }
-
   return (
     <div
       onClick={onClose}
@@ -91,69 +70,6 @@ export default function UpgradeModal({ preview, onClose }: Props) {
           Continue with Full Report
         </button>
       </div>
-    </div>
-  );
-}
-
-function PlanCard({
-  title,
-  price,
-  desc,
-  cta,
-  featured,
-  loading,
-  onClick,
-}: {
-  title: string;
-  price: string;
-  desc: string;
-  cta: string;
-  featured?: boolean;
-  loading?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      className="border rounded-2xl p-5 relative flex flex-col justify-between transition-all duration-300 hover:scale-[1.01]"
-      style={{
-        borderColor: featured ? "var(--accent)" : "var(--border)",
-        borderWidth: featured ? "2px" : "1px",
-        background: featured ? "var(--accent-bg)" : "var(--paper)",
-      }}
-    >
-      {featured && (
-        <div
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[9px] font-mono font-bold tracking-widest text-white uppercase px-2.5 py-0.5 rounded-full"
-          style={{
-            background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
-            boxShadow: "0 2px 6px var(--brand-glow)",
-          }}
-        >
-          Popular
-        </div>
-      )}
-      <div>
-        <div className="font-semibold text-sm mb-1">{title}</div>
-        <div className="font-display text-2xl font-bold text-ink mb-2">{price}</div>
-        <div className="text-xs text-ink-muted leading-relaxed mb-4">{desc}</div>
-      </div>
-      <button
-        onClick={onClick}
-        disabled={loading}
-        className="w-full btn-gradient py-2 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
-        style={
-          !featured
-            ? {
-                background: "transparent",
-                border: "2px solid var(--accent)",
-                color: "var(--accent)",
-                boxShadow: "none",
-              }
-            : undefined
-        }
-      >
-        {loading ? "..." : cta}
-      </button>
     </div>
   );
 }
