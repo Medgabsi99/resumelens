@@ -1,11 +1,38 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Plus_Jakarta_Sans, Outfit, DM_Serif_Display, DM_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastProvider from "@/components/ToastProvider";
+import QueryProvider from "@/components/QueryProvider";
 import { ProgressProvider, RouteProgressTrigger } from "@/components/NavigationProgress";
-import FetchProgressInterceptor from "@/components/FetchProgressInterceptor";
 import { ContextMenuProvider } from "@/components/ContextMenu";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
+const dmSerif = DM_Serif_Display({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-dm-serif",
+  display: "swap",
+});
+
+const dmMono = DM_Mono({
+  weight: ["400", "500"],
+  subsets: ["latin"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
@@ -94,14 +121,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${plusJakarta.variable} ${outfit.variable} ${dmSerif.variable} ${dmMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font -- root layout is equivalent to _document; loading shared fonts here is intentional */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
         <Script
           id="theme-initializer"
           strategy="beforeInteractive"
@@ -121,13 +146,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-paper text-ink font-body antialiased">
         <ThemeProvider>
-          <ProgressProvider>
-            <ContextMenuProvider>
-              <RouteProgressTrigger />
-              <FetchProgressInterceptor />
-              <ToastProvider>{children}</ToastProvider>
-            </ContextMenuProvider>
-          </ProgressProvider>
+          <QueryProvider>
+            <ProgressProvider>
+              <ContextMenuProvider>
+                <RouteProgressTrigger />
+                <ToastProvider>{children}</ToastProvider>
+              </ContextMenuProvider>
+            </ProgressProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

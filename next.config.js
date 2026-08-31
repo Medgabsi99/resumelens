@@ -12,11 +12,15 @@ const cspHeader = `
   frame-src 'self' https://js.stripe.com;
   connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com ws: wss: https://fonts.gstatic.com data:;
   upgrade-insecure-requests;
-`.replace(/\s{2,}/g, ' ').trim();
+`
+  .replace(/\s{2,}/g, " ")
+  .trim();
 
 const nextConfig = {
-  turbopack: {
-    root: __dirname,
+  outputFileTracingRoot: __dirname,
+  turbopack: {},
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "@react-pdf/renderer"],
   },
   images: {
     // Disables the /_next/image optimization endpoint (DoS surface — GHSA-h64f-5h5j-jqjh).
@@ -58,7 +62,29 @@ const nextConfig = {
       },
     ];
   },
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      // Prevent Node.js-only modules (required by pdf-parse, mammoth, etc.)
+      // from being bundled into the browser build. These are server-only packages
+      // listed in serverExternalPackages above, but webpack still analyses their
+      // dependency graph during compilation which triggers "Can't resolve 'fs'".
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        http: false,
+        https: false,
+        url: false,
+        path: false,
+        stream: false,
+        crypto: false,
+        zlib: false,
+        net: false,
+        tls: false,
+        child_process: false,
+      };
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
-

@@ -1,233 +1,492 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Sparkles, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  X,
+  Briefcase,
+  Code2,
+  Award,
+  BarChart3,
+  Search,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
+import ConfettiCannon from "@/components/ConfettiCannon";
 
 const STORAGE_KEY = "resumelens_onboarding_done";
 
-// ─── Per-step SVG Illustrations ───────────────────────────────────────────────
+// ─── Step 1: Role Track Personalizer ─────────────────────────────────────────
+type RoleTrack = "swe" | "pm" | "exec" | "finance";
 
-function StepIllustrationWelcome() {
+interface RoleTrackInfo {
+  id: RoleTrack;
+  label: string;
+  icon: typeof Code2;
+  scoreTarget: string;
+  metricBoost: string;
+  focusArea: string;
+}
+
+const ROLE_TRACKS: RoleTrackInfo[] = [
+  {
+    id: "swe",
+    label: "Software Engineer",
+    icon: Code2,
+    scoreTarget: "96+ ATS Target",
+    metricBoost: "+4.2x Callbacks",
+    focusArea: "Google XYZ Metric Quantification & Tech Stacks",
+  },
+  {
+    id: "pm",
+    label: "Product & Design",
+    icon: Sparkles,
+    scoreTarget: "94+ ATS Target",
+    metricBoost: "+3.8x Callbacks",
+    focusArea: "User Growth, ARR Impact & Cross-Functional Scale",
+  },
+  {
+    id: "exec",
+    label: "Executive & Lead",
+    icon: Award,
+    scoreTarget: "98+ ATS Target",
+    metricBoost: "+5.1x Callbacks",
+    focusArea: "P&L Scale, Board Narrative & Organizational Growth",
+  },
+  {
+    id: "finance",
+    label: "Finance & Strategy",
+    icon: BarChart3,
+    scoreTarget: "95+ ATS Target",
+    metricBoost: "+3.5x Callbacks",
+    focusArea: "EBITDA Expansion, ROI Metrics & Financial Modeling",
+  },
+];
+
+function RolePersonalizerWidget({
+  activeTrack,
+  onSelectTrack,
+}: {
+  activeTrack: RoleTrack;
+  onSelectTrack: (track: RoleTrack) => void;
+}) {
+  const current = useMemo(
+    () => ROLE_TRACKS.find((r) => r.id === activeTrack) || ROLE_TRACKS[0],
+    [activeTrack]
+  );
+
   return (
-    <svg width="140" height="130" viewBox="0 0 140 130" fill="none" aria-hidden="true">
-      {/* Glow blob */}
-      <ellipse cx="70" cy="65" rx="52" ry="46" fill="var(--accent)" opacity="0.07" />
-      {/* Resume page */}
-      <rect x="38" y="12" width="64" height="86" rx="8" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.5" />
-      <rect x="38" y="12" width="64" height="20" rx="8" fill="var(--accent)" opacity="0.12" />
-      <rect x="38" y="24" width="64" height="8" fill="var(--accent)" opacity="0.08" />
-      {/* Avatar */}
-      <circle cx="56" cy="22" r="6" fill="var(--accent)" opacity="0.3" />
-      <circle cx="56" cy="22" r="3.5" fill="var(--accent)" opacity="0.6" />
-      {/* Name line */}
-      <rect x="66" y="18" width="24" height="3.5" rx="1.75" fill="var(--ink)" opacity="0.25" />
-      <rect x="66" y="24" width="17" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.4" />
-      {/* Content lines */}
-      <rect x="46" y="40" width="48" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="46" y="46" width="38" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.25" />
-      <rect x="46" y="52" width="44" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="46" y="62" width="20" height="3" rx="1.5" fill="var(--accent)" opacity="0.4" />
-      <rect x="46" y="70" width="48" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="46" y="76" width="32" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.25" />
-      <rect x="46" y="82" width="40" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      {/* Score ring */}
-      <circle cx="108" cy="108" r="20" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.5" />
-      <circle cx="108" cy="108" r="20" fill="none" stroke="var(--accent)" strokeWidth="3" strokeDasharray="82 44" strokeLinecap="round" transform="rotate(-90 108 108)" opacity="0.7" />
-      <text x="108" y="113" textAnchor="middle" fontSize="11" fontWeight="800" fill="var(--accent)" fontFamily="DM Serif Display, serif">87</text>
-      {/* Sparkles */}
-      <circle cx="28" cy="20" r="3" fill="var(--accent)" opacity="0.3" />
-      <circle cx="120" cy="28" r="2" fill="var(--accent)" opacity="0.25" />
-      <circle cx="24" cy="96" r="2" fill="var(--accent)" opacity="0.2" />
-    </svg>
+    <div className="w-full flex flex-col gap-3 max-w-md">
+      {/* Role Track Chips */}
+      <div className="grid grid-cols-2 gap-2">
+        {ROLE_TRACKS.map((t) => {
+          const isSelected = t.id === activeTrack;
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onSelectTrack(t.id)}
+              className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all text-left ${
+                isSelected
+                  ? "bg-accent/10 border-accent text-accent shadow-xs"
+                  : "bg-paper-warm/40 border-border text-ink-muted hover:border-border-strong hover:text-ink"
+              }`}
+            >
+              <Icon size={14} className={isSelected ? "text-accent" : "text-ink-muted"} />
+              <span className="truncate">{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Dynamic Profile Metric Preview */}
+      <div className="p-3 rounded-xl bg-paper-warm/60 border border-border/80 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-bold text-ink">{current.scoreTarget}</span>
+          <span className="text-ink-muted font-mono">({current.metricBoost})</span>
+        </div>
+        <span className="text-[11px] text-accent font-semibold truncate max-w-[170px]">
+          {current.focusArea.split("&")[0]}
+        </span>
+      </div>
+    </div>
   );
 }
 
-function StepIllustrationAnalyzer() {
+// ─── Step 2: Interactive Google XYZ Rewriter Sandbox ─────────────────────────
+function XyzRewriterWidget() {
+  const [isOptimized, setIsOptimized] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleToggle = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsOptimized((v) => !v);
+      setIsAnimating(false);
+    }, 150);
+  };
+
   return (
-    <svg width="140" height="130" viewBox="0 0 140 130" fill="none" aria-hidden="true">
-      <ellipse cx="70" cy="65" rx="52" ry="46" fill="#10b981" opacity="0.06" />
-      {/* Document */}
-      <rect x="28" y="18" width="60" height="78" rx="7" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.5" />
-      {/* Header */}
-      <rect x="28" y="18" width="60" height="16" rx="7" fill="#10b981" opacity="0.12" />
-      <rect x="36" y="23" width="30" height="3" rx="1.5" fill="#10b981" opacity="0.5" />
-      <rect x="36" y="29" width="20" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.4" />
-      {/* Score bars */}
-      <rect x="36" y="42" width="44" height="2" rx="1" fill="var(--border)" />
-      <rect x="36" y="42" width="36" height="2" rx="1" fill="#10b981" opacity="0.6" />
-      <rect x="36" y="50" width="44" height="2" rx="1" fill="var(--border)" />
-      <rect x="36" y="50" width="26" height="2" rx="1" fill="#f59e0b" opacity="0.6" />
-      <rect x="36" y="58" width="44" height="2" rx="1" fill="var(--border)" />
-      <rect x="36" y="58" width="40" height="2" rx="1" fill="#10b981" opacity="0.5" />
-      {/* Labels */}
-      <rect x="36" y="68" width="16" height="2" rx="1" fill="var(--ink-faint)" opacity="0.35" />
-      <rect x="36" y="74" width="42" height="2" rx="1" fill="var(--ink-faint)" opacity="0.25" />
-      <rect x="36" y="80" width="36" height="2" rx="1" fill="var(--ink-faint)" opacity="0.25" />
-      {/* AI badge floating */}
-      <rect x="90" y="25" width="38" height="50" rx="9" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.5" />
-      <rect x="90" y="25" width="38" height="14" rx="9" fill="#10b981" opacity="0.15" />
-      <text x="109" y="36" textAnchor="middle" fontSize="8" fontWeight="700" fill="#10b981" opacity="0.8">AI SCAN</text>
-      {/* AI checkmarks */}
-      <circle cx="98" cy="50" r="4" fill="#10b981" opacity="0.2" />
-      <text x="98" y="53.5" textAnchor="middle" fontSize="7" fill="#10b981" opacity="0.9">✓</text>
-      <rect x="105" y="47" width="18" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      <circle cx="98" cy="61" r="4" fill="#f59e0b" opacity="0.2" />
-      <text x="98" y="64.5" textAnchor="middle" fontSize="7" fill="#f59e0b" opacity="0.9">!</text>
-      <rect x="105" y="58" width="14" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      <circle cx="98" cy="72" r="4" fill="#10b981" opacity="0.2" />
-      <text x="98" y="75.5" textAnchor="middle" fontSize="7" fill="#10b981" opacity="0.9">✓</text>
-      <rect x="105" y="69" width="16" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      {/* Upload arrow */}
-      <circle cx="32" cy="110" r="12" fill="#10b981" opacity="0.12" />
-      <text x="32" y="115" textAnchor="middle" fontSize="14" fill="#10b981" opacity="0.7">↑</text>
-    </svg>
+    <div className="w-full flex flex-col gap-3 max-w-md text-left">
+      <div className="p-3.5 rounded-xl bg-paper-warm/70 border border-border/80 relative overflow-hidden flex flex-col gap-2.5">
+        {/* Card Header & Live Score Meter */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full transition-colors ${
+                isOptimized
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+              }`}
+            >
+              {isOptimized ? "Google XYZ Formatted" : "Unquantified Draft"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 font-mono text-xs font-bold">
+            <span className="text-ink-muted">ATS Score:</span>
+            <span
+              className={`transition-colors ${
+                isOptimized ? "text-emerald-500 font-extrabold" : "text-amber-500"
+              }`}
+            >
+              {isOptimized ? "96 / 100" : "54 / 100"}
+            </span>
+          </div>
+        </div>
+
+        {/* Live Bullet Text */}
+        <p
+          className={`text-xs leading-relaxed transition-opacity ${
+            isAnimating ? "opacity-30" : "opacity-100"
+          } ${isOptimized ? "text-ink font-medium" : "text-ink-muted"}`}
+        >
+          {isOptimized
+            ? "“Engineered high-throughput cloud microservices with React & Node.js, reducing p99 latency by 42% and preventing $140K in downtime across 250K daily active users.”"
+            : "“Managed company website servers and resolved bugs during weekly sprint cycles.”"}
+        </p>
+
+        {/* Action Trigger Button */}
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="self-end inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-accent to-accent-hover hover:opacity-95 shadow-sm transition cursor-pointer"
+        >
+          {isOptimized ? (
+            <>
+              <RefreshCw size={12} />
+              <span>Reset Sample</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={12} />
+              <span>✨ Apply Google XYZ Formula</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
-function StepIllustrationTracker() {
+// ─── Step 3: Interactive Application CRM Kanban Sandbox ──────────────────────
+const KANBAN_STAGES = [
+  { id: "applied", label: "Applied", color: "text-ink-muted", bg: "bg-paper-card" },
+  { id: "screen", label: "Recruiter Screen", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { id: "tech", label: "Technical Drill", color: "text-blue-500", bg: "bg-blue-500/10" },
+  { id: "offer", label: "Offer: $175K 🎉", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+];
+
+function KanbanTrackerWidget() {
+  const [stageIndex, setStageIndex] = useState(1);
+
+  const handleAdvance = () => {
+    setStageIndex((prev) => (prev + 1) % KANBAN_STAGES.length);
+  };
+
+  const currentStage = KANBAN_STAGES[stageIndex];
+
   return (
-    <svg width="140" height="130" viewBox="0 0 140 130" fill="none" aria-hidden="true">
-      <ellipse cx="70" cy="65" rx="52" ry="46" fill="#f59e0b" opacity="0.06" />
-      {/* Kanban columns */}
-      {/* Column 1: Applied */}
-      <rect x="8" y="22" width="36" height="88" rx="7" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.2" />
-      <rect x="8" y="22" width="36" height="12" rx="7" fill="var(--accent)" opacity="0.12" />
-      <rect x="14" y="27" width="16" height="2.5" rx="1.25" fill="var(--accent)" opacity="0.5" />
-      <rect x="11" y="38" width="30" height="18" rx="4" fill="var(--paper-warm)" stroke="var(--border)" strokeWidth="1" />
-      <rect x="14" y="41" width="20" height="2.5" rx="1.25" fill="var(--ink)" opacity="0.3" />
-      <rect x="14" y="46" width="14" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="11" y="60" width="30" height="18" rx="4" fill="var(--paper-warm)" stroke="var(--border)" strokeWidth="1" />
-      <rect x="14" y="63" width="18" height="2.5" rx="1.25" fill="var(--ink)" opacity="0.3" />
-      <rect x="14" y="68" width="12" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      {/* Column 2: Interview */}
-      <rect x="52" y="22" width="36" height="88" rx="7" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.2" />
-      <rect x="52" y="22" width="36" height="12" rx="7" fill="#f59e0b" opacity="0.12" />
-      <rect x="58" y="27" width="20" height="2.5" rx="1.25" fill="#f59e0b" opacity="0.5" />
-      <rect x="55" y="38" width="30" height="18" rx="4" fill="var(--paper-warm)" stroke="var(--border)" strokeWidth="1" />
-      <rect x="58" y="41" width="16" height="2.5" rx="1.25" fill="var(--ink)" opacity="0.3" />
-      <rect x="58" y="46" width="20" height="2" rx="1" fill="var(--ink-faint)" opacity="0.3" />
-      {/* Column 3: Offer */}
-      <rect x="96" y="22" width="36" height="88" rx="7" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.2" />
-      <rect x="96" y="22" width="36" height="12" rx="7" fill="#10b981" opacity="0.12" />
-      <rect x="102" y="27" width="14" height="2.5" rx="1.25" fill="#10b981" opacity="0.5" />
-      <rect x="99" y="38" width="30" height="18" rx="4" fill="#10b981" opacity="0.15" stroke="#10b981" strokeWidth="1" />
-      <rect x="102" y="41" width="18" height="2.5" rx="1.25" fill="var(--ink)" opacity="0.3" />
-      <rect x="102" y="46" width="22" height="2" rx="1" fill="#10b981" opacity="0.4" />
-      {/* Drag arrow */}
-      <path d="M46 56 L50 56" stroke="var(--ink-faint)" strokeWidth="1.5" strokeLinecap="round" markerEnd="url(#arr)" opacity="0.5" />
-      <text x="48" y="55" textAnchor="middle" fontSize="8" fill="var(--ink-faint)" opacity="0.6">→</text>
-    </svg>
+    <div className="w-full flex flex-col gap-3 max-w-md text-left">
+      <div className="p-3.5 rounded-xl bg-paper-warm/70 border border-border/80 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Briefcase size={14} className="text-amber-500" />
+            <strong className="text-xs text-ink font-bold font-display">
+              Senior Full-Stack Engineer
+            </strong>
+          </div>
+          <span className="text-[10px] font-mono text-ink-muted">Acme Cloud Corp</span>
+        </div>
+
+        {/* Stage Timeline Stepper */}
+        <div className="grid grid-cols-4 gap-1.5">
+          {KANBAN_STAGES.map((s, idx) => {
+            const isPassed = idx <= stageIndex;
+            const isCurrent = idx === stageIndex;
+            return (
+              <div
+                key={s.id}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  isPassed ? (isCurrent ? "bg-amber-500" : "bg-emerald-500") : "bg-border"
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <span
+            className={`text-xs font-bold font-mono px-2.5 py-1 rounded-md border border-border/60 ${currentStage.bg} ${currentStage.color}`}
+          >
+            Stage: {currentStage.label}
+          </span>
+
+          <button
+            type="button"
+            onClick={handleAdvance}
+            className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline cursor-pointer"
+          >
+            <span>Advance Stage</span>
+            <ArrowRight size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function StepIllustrationNegotiator() {
+// ─── Step 4: Interactive Salary Leverage Simulator ───────────────────────────
+function SalaryNegotiatorWidget() {
+  const [leverageStep, setLeverageStep] = useState(0);
+
+  const baseComp = 145000 + leverageStep * 8000;
+  const equityComp = 25000 + leverageStep * 4000;
+  const signOnComp = 10000 + leverageStep * 3000;
+  const totalComp = baseComp + equityComp + signOnComp;
+
+  const handleCounter = () => {
+    setLeverageStep((prev) => (prev < 3 ? prev + 1 : 0));
+  };
+
   return (
-    <svg width="140" height="130" viewBox="0 0 140 130" fill="none" aria-hidden="true">
-      <ellipse cx="70" cy="65" rx="52" ry="46" fill="#8b5cf6" opacity="0.06" />
-      {/* Chat bubble — Recruiter */}
-      <rect x="10" y="16" width="80" height="32" rx="10" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.5" />
-      <path d="M20 48 L14 56 L28 48" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.2" />
-      <rect x="18" y="24" width="56" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.4" />
-      <rect x="18" y="30" width="44" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="18" y="36" width="50" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      {/* Recruiter label */}
-      <rect x="10" y="8" width="40" height="10" rx="4" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" strokeWidth="1" />
-      <text x="30" y="16" textAnchor="middle" fontSize="7" fontWeight="700" fill="#8b5cf6" opacity="0.8">🤖 RECRUITER</text>
-      {/* Chat bubble — User */}
-      <rect x="50" y="68" width="80" height="32" rx="10" fill="#8b5cf6" opacity="0.18" stroke="#8b5cf6" strokeWidth="1.5" />
-      <path d="M120 100 L126 108 L112 100" fill="#8b5cf6" opacity="0.12" />
-      <rect x="58" y="76" width="56" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.4" />
-      <rect x="58" y="82" width="44" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      <rect x="58" y="88" width="48" height="2.5" rx="1.25" fill="var(--ink-faint)" opacity="0.3" />
-      {/* You label */}
-      <rect x="98" y="112" width="32" height="10" rx="4" fill="#8b5cf6" opacity="0.2" />
-      <text x="114" y="120" textAnchor="middle" fontSize="7" fontWeight="700" fill="#8b5cf6" opacity="0.8">YOU 💪</text>
-      {/* $ gain chip */}
-      <rect x="52" y="16" width="76" height="22" rx="7" fill="var(--paper-card)" stroke="var(--border)" strokeWidth="1.2" />
-      <text x="90" y="31" textAnchor="middle" fontSize="10" fontWeight="800" fill="#10b981" fontFamily="DM Serif Display, serif">+$18,500 gained</text>
-    </svg>
+    <div className="w-full flex flex-col gap-2.5 max-w-md text-left">
+      <div className="p-3.5 rounded-xl bg-paper-warm/70 border border-border/80 flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-mono font-bold text-ink-muted uppercase">
+            Total Compensation Package
+          </span>
+          <span className="text-base font-extrabold font-display text-emerald-600 dark:text-emerald-400">
+            ${totalComp.toLocaleString()} / yr
+          </span>
+        </div>
+
+        {/* Breakdown bar */}
+        <div className="w-full h-2 rounded-full overflow-hidden bg-paper flex border border-border/40">
+          <div
+            className="bg-indigo-500 h-full transition-all duration-300"
+            style={{ width: `${(baseComp / totalComp) * 100}%` }}
+            title="Base"
+          />
+          <div
+            className="bg-sky-500 h-full transition-all duration-300 border-l border-white/10"
+            style={{ width: `${(equityComp / totalComp) * 100}%` }}
+            title="Equity"
+          />
+          <div
+            className="bg-emerald-500 h-full transition-all duration-300 border-l border-white/10"
+            style={{ width: `${(signOnComp / totalComp) * 100}%` }}
+            title="Sign-on"
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-[11px] text-ink-muted">
+          <span>Base: ${baseComp.toLocaleString()}</span>
+          <span>Equity: ${equityComp.toLocaleString()}</span>
+          <span>Sign-on: ${signOnComp.toLocaleString()}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCounter}
+          className="w-full mt-1 py-1.5 px-3 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 shadow-sm flex items-center justify-center gap-1.5 transition cursor-pointer"
+        >
+          <TrendingUp size={13} />
+          <span>
+            {leverageStep < 3
+              ? `Simulate +$15,000 Counter-Offer Script (Gain: +$${(leverageStep * 15000).toLocaleString()})`
+              : "Reset Counter Simulation"}
+          </span>
+        </button>
+      </div>
+    </div>
   );
 }
 
-// ─── Step definitions ─────────────────────────────────────────────────────────
-const STEPS = [
+// ─── Step 5: Interactive Command Center Sandbox ──────────────────────────────
+function CommandPaletteSandboxWidget() {
+  const [activeQuery, setActiveQuery] = useState("ATS");
+
+  const queries = ["ATS Scanner", "Resume Builder", "Salary Negotiator", "Interview Prep"];
+
+  const handleSelectQuery = (q: string) => {
+    setActiveQuery(q);
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-2.5 max-w-md text-left">
+      <div className="p-3.5 rounded-xl bg-paper-warm/80 border border-border/80 flex flex-col gap-2.5">
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-paper border border-border">
+          <Search size={14} className="text-accent" />
+          <span className="text-xs font-semibold text-ink font-mono flex-1">{activeQuery}</span>
+          <span className="flex items-center gap-0.5">
+            <kbd className="font-mono text-[9px] bg-paper-warm border border-border rounded px-1.5 py-0.5">
+              Ctrl
+            </kbd>
+            <kbd className="font-mono text-[9px] bg-paper-warm border border-border rounded px-1.5 py-0.5">
+              K
+            </kbd>
+          </span>
+        </div>
+
+        {/* Quick query chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {queries.map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => handleSelectQuery(q)}
+              className={`px-2 py-1 rounded-md text-[11px] font-bold border transition cursor-pointer ${
+                activeQuery === q
+                  ? "bg-accent/10 border-accent text-accent"
+                  : "bg-paper border-border/70 text-ink-muted hover:text-ink"
+              }`}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tour Steps Configuration ────────────────────────────────────────────────
+interface TourStepConfig {
+  id: string;
+  accentColor: string;
+  accentRgb: string;
+  badgeLabel: string;
+  title: string;
+  description: string;
+  widget: (props: {
+    activeTrack: RoleTrack;
+    onSelectTrack: (track: RoleTrack) => void;
+  }) => React.ReactNode;
+  ctaLabel: string;
+  secondaryCta?: { label: string; href: string };
+  primaryHref?: string;
+}
+
+const TOUR_STEPS: TourStepConfig[] = [
   {
     id: "welcome",
     accentColor: "var(--accent)",
-    accentRgb: "99,102,241",
-    label: "Welcome",
-    title: "Welcome to ResumeLens",
+    accentRgb: "224, 93, 46",
+    badgeLabel: "Step 1 of 5 • Welcome",
+    title: "Your Career Acceleration Suite",
     description:
-      "Your AI-powered career acceleration suite is ready. In the next 30 seconds, we'll show you exactly where everything lives — so you can hit the ground running.",
-    illustration: <StepIllustrationWelcome />,
-    ctaLabel: "Let's go",
-    link: null as string | null,
+      "Select your career focus below to tailor algorithmic resume scoring benchmarks, keyword weights, and executive recruiter expectations.",
+    widget: ({ activeTrack, onSelectTrack }) => (
+      <RolePersonalizerWidget activeTrack={activeTrack} onSelectTrack={onSelectTrack} />
+    ),
+    ctaLabel: "Next: ATS Scanner",
   },
   {
-    id: "analyzer",
+    id: "scanner",
     accentColor: "#10b981",
-    accentRgb: "16,185,129",
-    label: "AI Analyzer",
-    title: "AI Resume Analyzer",
+    accentRgb: "16, 185, 129",
+    badgeLabel: "Step 2 of 5 • ATS Optimizer",
+    title: "Deterministic ATS Audit & XYZ Rewriter",
     description:
-      "Upload any resume and get an instant ATS compatibility score, a detailed strength & weakness breakdown, and AI-rewritten bullet points to maximize your impact.",
-    illustration: <StepIllustrationAnalyzer />,
-    ctaLabel: "Next",
-    link: null,
+      "Test how our Google XYZ formula rewrites weak bullet points into high-impact, quantified achievements that pass Workday, Greenhouse, and Taleo filters.",
+    widget: () => <XyzRewriterWidget />,
+    ctaLabel: "Next: Job CRM",
   },
   {
     id: "tracker",
     accentColor: "#f59e0b",
-    accentRgb: "245,158,11",
-    label: "Job Tracker",
-    title: "Job Application Tracker",
+    accentRgb: "245, 158, 11",
+    badgeLabel: "Step 3 of 5 • Application CRM",
+    title: "Kanban Application Tracker",
     description:
-      "Track every opportunity in a drag-and-drop Kanban board. Log roles, companies, interview stages, and follow-up deadlines — never let a hot lead go cold.",
-    illustration: <StepIllustrationTracker />,
-    ctaLabel: "Next",
-    link: null,
+      "Manage every opportunity from initial outreach to final offer letter. Track interview deadlines, recruiter contacts, and stage progressions in one place.",
+    widget: () => <KanbanTrackerWidget />,
+    ctaLabel: "Next: Salary Negotiator",
   },
   {
     id: "negotiator",
-    accentColor: "#8b5cf6",
-    accentRgb: "139,92,246",
-    label: "Negotiator",
-    title: "Salary Negotiation Simulator",
+    accentColor: "#2563eb",
+    accentRgb: "37, 99, 235",
+    badgeLabel: "Step 4 of 5 • Compensation",
+    title: "AI Salary Negotiation Simulator",
     description:
-      "Practice live salary negotiations against an AI recruiter with a hidden budget. Build the confidence and vocabulary to ask for exactly what you're worth.",
-    illustration: <StepIllustrationNegotiator />,
-    ctaLabel: "Get Started",
-    link: "/dashboard",
+      "Simulate counter-offers against hiring managers with hidden budget bands. Calculate real-time equity, base salary, and sign-on multiplier leverage.",
+    widget: () => <SalaryNegotiatorWidget />,
+    ctaLabel: "Next: Command Center",
+  },
+  {
+    id: "command",
+    accentColor: "var(--accent)",
+    accentRgb: "224, 93, 46",
+    badgeLabel: "Step 5 of 5 • Ready to Launch",
+    title: "Command Palette & Quick-Jump",
+    description:
+      "Press Ctrl+K anytime from anywhere in the app to navigate instantly across all tools, run one-click optimizations, or switch themes.",
+    widget: () => <CommandPaletteSandboxWidget />,
+    ctaLabel: "🚀 Launch ATS Audit",
+    primaryHref: "/dashboard/scanner",
+    secondaryCta: { label: "Explore Dashboard", href: "/dashboard" },
   },
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Onboarding Tour Component ──────────────────────────────────────────
 interface OnboardingTourProps {
-  /** Force-show the tour (e.g. from Settings "Replay tour" button) */
   forceOpen?: boolean;
   onClose?: () => void;
 }
 
 export default function OnboardingTour({ forceOpen = false, onClose }: OnboardingTourProps) {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [animating, setAnimating] = useState(false);
+  const [activeTrack, setActiveTrack] = useState<RoleTrack>("swe");
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Show only once (or when forced)
   useEffect(() => {
     if (forceOpen) {
       setStep(0);
       setOpen(true);
+      setShowConfetti(false);
       return;
     }
     try {
       const done = localStorage.getItem(STORAGE_KEY);
       if (!done) setOpen(true);
-    } catch {
-      // localStorage unavailable — don't show
-    }
+    } catch {}
   }, [forceOpen]);
 
   const dismiss = useCallback(() => {
@@ -246,13 +505,16 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
       setTimeout(() => {
         setStep(nextStep);
         setAnimating(false);
-      }, 180);
+        if (nextStep === TOUR_STEPS.length - 1) {
+          setShowConfetti(true);
+        }
+      }, 160);
     },
     [animating]
   );
 
   const handleNext = useCallback(() => {
-    if (step < STEPS.length - 1) {
+    if (step < TOUR_STEPS.length - 1) {
       navigate(step + 1, "forward");
     } else {
       dismiss();
@@ -270,375 +532,437 @@ export default function OnboardingTour({ forceOpen = false, onClose }: Onboardin
       if (e.key === "Escape") dismiss();
       if (e.key === "ArrowRight" || e.key === "Enter") handleNext();
       if (e.key === "ArrowLeft") handleBack();
+      // Number keys 1-5
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= TOUR_STEPS.length) {
+        navigate(num - 1, num - 1 > step ? "forward" : "back");
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, handleNext, handleBack, dismiss]);
+  }, [open, step, handleNext, handleBack, navigate, dismiss]);
 
-  if (!open) return null;
+  if (!mounted || !open) return null;
 
-  const current = STEPS[step];
-  const isLast = step === STEPS.length - 1;
+  const current = TOUR_STEPS[step];
+  const isLast = step === TOUR_STEPS.length - 1;
 
-  return (
+  const modalContent = (
     <>
       <style>{`
-        @keyframes tourBackdropIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
+        @keyframes tourBackdropIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes tourModalIn {
-          from { opacity: 0; transform: scale(0.93) translateY(16px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0px); }
+          from { opacity: 0; transform: scale(0.95) translateY(12px); }
+          to { opacity: 1; transform: scale(1) translateY(0px); }
         }
         @keyframes tourSlideForward {
-          from { opacity: 0; transform: translateX(32px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateX(24px); }
+          to { opacity: 1; transform: translateX(0); }
         }
         @keyframes tourSlideBack {
-          from { opacity: 0; transform: translateX(-32px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateX(-24px); }
+          to { opacity: 1; transform: translateX(0); }
         }
-        @keyframes tourIllusFloat {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
-        }
-        .tour-backdrop {
-          animation: tourBackdropIn 0.25s ease forwards;
-        }
-        .tour-modal {
-          animation: tourModalIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .tour-content-forward {
-          animation: tourSlideForward 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .tour-content-back {
-          animation: tourSlideBack 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .tour-illus {
-          animation: tourIllusFloat 3.5s ease-in-out infinite;
-          will-change: transform;
-        }
+        .tour-overlay { animation: tourBackdropIn 0.22s ease forwards; }
+        .tour-modal { animation: tourModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .tour-content-forward { animation: tourSlideForward 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .tour-content-back { animation: tourSlideBack 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @media (prefers-reduced-motion: reduce) {
-          .tour-backdrop, .tour-modal, .tour-content-forward, .tour-content-back { animation: none; }
-          .tour-illus { animation: none; }
+          .tour-overlay, .tour-modal, .tour-content-forward, .tour-content-back { animation: none; }
         }
       `}</style>
 
-      {/* Backdrop */}
+      {/* Confetti Celebration on Step 5 */}
+      {showConfetti && <ConfettiCannon score={96} trigger={true} />}
+
+      {/* Fullscreen Overlay with Absolute Viewport Centering */}
       <div
-        className="tour-backdrop"
-        onClick={dismiss}
+        className="tour-overlay fixed inset-0 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
         style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(0,0,0,0.55)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
+          background: "rgba(0, 0, 0, 0.65)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
           zIndex: 99990,
         }}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="ResumeLens onboarding tour"
-        className="tour-modal"
-        style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "min(520px, calc(100vw - 32px))",
-          background: "var(--paper-card)",
-          border: "1px solid var(--border)",
-          borderRadius: 22,
-          boxShadow: `0 32px 80px -16px rgba(0,0,0,0.45), 0 0 0 1px var(--border), 0 0 60px -20px rgba(${current.accentRgb},0.25)`,
-          zIndex: 99991,
-          overflow: "hidden",
-          fontFamily: "Instrument Sans, system-ui, sans-serif",
-        }}
+        onClick={dismiss}
       >
-        {/* Accent top strip — morphs color per step */}
+        {/* Main Tour Modal Card */}
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="ResumeLens Interactive Guided Tour"
+          className="tour-modal relative w-full my-auto"
           style={{
-            height: 3,
-            background: `linear-gradient(90deg, ${current.accentColor} 0%, rgba(${current.accentRgb},0.3) 100%)`,
-            transition: "background 0.4s ease",
-          }}
-        />
-
-        {/* Step dot progress + skip */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "14px 20px 0",
-          }}
-        >
-          <div style={{ display: "flex", gap: 6 }}>
-            {STEPS.map((s, i) => (
-              <button
-                key={s.id}
-                onClick={() => navigate(i, i > step ? "forward" : "back")}
-                aria-label={`Go to step ${i + 1}: ${s.label}`}
-                style={{
-                  width: i === step ? 22 : 7,
-                  height: 7,
-                  borderRadius: 4,
-                  border: "none",
-                  background: i === step
-                    ? current.accentColor
-                    : i < step
-                    ? `rgba(${current.accentRgb}, 0.35)`
-                    : "var(--border)",
-                  cursor: "pointer",
-                  transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                  padding: 0,
-                }}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={dismiss}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: 11,
-              fontWeight: 500,
-              color: "var(--ink-faint)",
-              cursor: "pointer",
-              padding: "2px 4px",
-              fontFamily: "inherit",
-              transition: "color 0.15s",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink-muted)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-faint)")}
-          >
-            <span>Skip tour</span>
-            <X size={11} />
-          </button>
-        </div>
-
-        {/* Step content — animated on step change */}
-        <div
-          key={step}
-          className={animating ? "" : direction === "forward" ? "tour-content-forward" : "tour-content-back"}
-          style={{
-            padding: "20px 28px 28px",
+            maxWidth: 580,
+            background: "var(--paper-card)",
+            border: "1px solid var(--border)",
+            borderRadius: 24,
+            boxShadow: `0 32px 80px -16px rgba(0,0,0,0.5), 0 0 0 1px var(--border), 0 0 60px -20px rgba(${current.accentRgb}, 0.25)`,
+            zIndex: 99991,
+            overflow: "hidden",
+            fontFamily: "Instrument Sans, system-ui, sans-serif",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Illustration */}
+          {/* Dynamic Morphing Accent Top Strip */}
           <div
-            className="tour-illus"
             style={{
-              marginBottom: 18,
-              position: "relative",
+              height: 3.5,
+              background: `linear-gradient(90deg, ${current.accentColor} 0%, rgba(${current.accentRgb}, 0.25) 100%)`,
+              transition: "background 0.35s ease",
+            }}
+          />
+
+          {/* Modal Header: Step Dots, Read Time & Close Controls */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 22px 0",
             }}
           >
-            {/* Ambient glow behind illustration */}
+            {/* Progress Step Pills */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {TOUR_STEPS.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => navigate(i, i > step ? "forward" : "back")}
+                  aria-label={`Jump to ${s.badgeLabel}`}
+                  style={{
+                    width: i === step ? 24 : 8,
+                    height: 7,
+                    borderRadius: 4,
+                    border: "none",
+                    background:
+                      i === step
+                        ? current.accentColor
+                        : i < step
+                          ? `rgba(${current.accentRgb}, 0.4)`
+                          : "var(--border)",
+                    cursor: "pointer",
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    padding: 0,
+                  }}
+                />
+              ))}
+              <span
+                style={{
+                  marginLeft: 6,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  fontFamily: "DM Mono, monospace",
+                  color: "var(--ink-faint)",
+                }}
+              >
+                ⏱️ 45s overview
+              </span>
+            </div>
+
+            {/* Skip Control */}
+            <button
+              type="button"
+              onClick={dismiss}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--ink-faint)",
+                cursor: "pointer",
+                padding: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-faint)")}
+            >
+              <span>Skip</span>
+              <X size={12} />
+            </button>
+          </div>
+
+          {/* Step Content with Dynamic Animation */}
+          <div
+            key={step}
+            className={
+              animating
+                ? ""
+                : direction === "forward"
+                  ? "tour-content-forward"
+                  : "tour-content-back"
+            }
+            style={{
+              padding: "18px 26px 26px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            {/* Badge */}
             <div
               style={{
-                position: "absolute",
-                inset: "-24px",
-                background: `radial-gradient(circle, rgba(${current.accentRgb}, 0.18) 0%, transparent 70%)`,
-                borderRadius: "50%",
-                filter: "blur(16px)",
-                pointerEvents: "none",
+                fontSize: 10.5,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: current.accentColor,
+                background: `rgba(${current.accentRgb}, 0.1)`,
+                border: `1px solid rgba(${current.accentRgb}, 0.2)`,
+                borderRadius: 6,
+                padding: "3px 10px",
+                marginBottom: 10,
+                fontFamily: "DM Mono, monospace",
               }}
-            />
-            <div style={{ position: "relative", zIndex: 1 }}>
-              {current.illustration}
+            >
+              {current.badgeLabel}
             </div>
-          </div>
 
-          {/* Step number label */}
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: current.accentColor,
-              background: `rgba(${current.accentRgb}, 0.1)`,
-              border: `1px solid rgba(${current.accentRgb}, 0.2)`,
-              borderRadius: 6,
-              padding: "3px 10px",
-              marginBottom: 12,
-              fontFamily: "DM Mono, monospace",
-            }}
-          >
-            Step {step + 1} of {STEPS.length} — {current.label}
-          </div>
+            {/* Title */}
+            <h2
+              style={{
+                fontSize: 21,
+                fontWeight: 800,
+                color: "var(--ink)",
+                letterSpacing: "-0.02em",
+                margin: "0 0 8px",
+                fontFamily: "Instrument Sans, system-ui, sans-serif",
+                lineHeight: 1.25,
+              }}
+            >
+              {current.title}
+            </h2>
 
-          {/* Title */}
-          <h2
-            style={{
-              fontSize: 22,
-              fontWeight: 800,
-              color: "var(--ink)",
-              letterSpacing: "-0.02em",
-              margin: "0 0 10px",
-              fontFamily: "Instrument Sans, system-ui, sans-serif",
-              lineHeight: 1.25,
-            }}
-          >
-            {current.title}
-          </h2>
+            {/* Description */}
+            <p
+              style={{
+                fontSize: 13.5,
+                color: "var(--ink-muted)",
+                lineHeight: 1.6,
+                margin: "0 0 18px",
+                maxWidth: 440,
+              }}
+            >
+              {current.description}
+            </p>
 
-          {/* Description */}
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--ink-muted)",
-              lineHeight: 1.65,
-              margin: "0 0 26px",
-              maxWidth: 380,
-            }}
-          >
-            {current.description}
-          </p>
+            {/* Interactive Step Simulator Sandbox */}
+            <div style={{ width: "100%", marginBottom: 22 }}>
+              {current.widget({
+                activeTrack,
+                onSelectTrack: setActiveTrack,
+              })}
+            </div>
 
-          {/* CTA area */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
-            {/* Back button */}
-            {step > 0 && (
-              <button
-                onClick={handleBack}
+            {/* CTA Footer Navigation */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              {/* Back Button */}
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: 12,
+                    border: "1.5px solid var(--border)",
+                    background: "transparent",
+                    color: "var(--ink-muted)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition: "all 0.15s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-strong)";
+                    e.currentTarget.style.color = "var(--ink)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.color = "var(--ink-muted)";
+                  }}
+                >
+                  <ArrowLeft size={13} />
+                  <span>Back</span>
+                </button>
+              )}
+
+              {/* Secondary CTA on Final Step */}
+              {isLast && current.secondaryCta && (
+                <Link
+                  href={current.secondaryCta.href}
+                  onClick={dismiss}
+                  style={{
+                    padding: "11px 18px",
+                    borderRadius: 12,
+                    border: "1.5px solid var(--border)",
+                    background: "var(--paper-warm)",
+                    color: "var(--ink)",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>{current.secondaryCta.label}</span>
+                </Link>
+              )}
+
+              {/* Primary Action Button */}
+              {isLast && current.primaryHref ? (
+                <Link
+                  href={current.primaryHref}
+                  onClick={dismiss}
+                  style={{
+                    flex: 1,
+                    maxWidth: 240,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "12px 24px",
+                    borderRadius: 13,
+                    background: `linear-gradient(135deg, ${current.accentColor} 0%, rgba(${current.accentRgb}, 0.85) 100%)`,
+                    color: "white",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    textDecoration: "none",
+                    boxShadow: `0 6px 20px rgba(${current.accentRgb}, 0.35)`,
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <span>{current.ctaLabel}</span>
+                  <Sparkles size={14} />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  style={{
+                    flex: 1,
+                    maxWidth: step === 0 ? 220 : 200,
+                    padding: "12px 24px",
+                    borderRadius: 13,
+                    border: "none",
+                    background: `linear-gradient(135deg, ${current.accentColor} 0%, rgba(${current.accentRgb}, 0.85) 100%)`,
+                    color: "white",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    boxShadow: `0 6px 20px rgba(${current.accentRgb}, 0.35)`,
+                    transition: "all 0.2s",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = `0 10px 28px rgba(${current.accentRgb}, 0.45)`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = `0 6px 20px rgba(${current.accentRgb}, 0.35)`;
+                  }}
+                >
+                  <span>{current.ctaLabel}</span>
+                  <ArrowRight size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Keyboard Hint Footer */}
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 10,
+                color: "var(--ink-faint)",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                fontFamily: "DM Mono, monospace",
+              }}
+            >
+              <kbd
                 style={{
-                  padding: "10px 18px",
-                  borderRadius: 12,
-                  border: "1.5px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--ink-muted)",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border-strong)";
-                  e.currentTarget.style.color = "var(--ink)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border)";
-                  e.currentTarget.style.color = "var(--ink-muted)";
+                  background: "var(--paper-warm)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                  fontSize: 9,
                 }}
               >
-                <ArrowLeft size={13} />
-                <span>Back</span>
-              </button>
-            )}
-
-            {/* Primary CTA */}
-            {isLast && current.link ? (
-              <Link
-                href={current.link}
-                onClick={dismiss}
+                ←
+              </kbd>
+              <kbd
                 style={{
-                  flex: 1,
-                  maxWidth: 240,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  padding: "12px 24px",
-                  borderRadius: 13,
-                  background: `linear-gradient(135deg, ${current.accentColor} 0%, rgba(${current.accentRgb},0.8) 100%)`,
-                  color: "white",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  boxShadow: `0 6px 20px rgba(${current.accentRgb}, 0.35)`,
-                  transition: "all 0.2s",
+                  background: "var(--paper-warm)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                  fontSize: 9,
                 }}
               >
-                <span>{current.ctaLabel}</span>
-                <Sparkles size={14} />
-              </Link>
-            ) : (
-              <button
-                onClick={handleNext}
+                →
+              </kbd>
+              <span>navigate</span>
+              <span style={{ opacity: 0.4 }}>•</span>
+              <kbd
                 style={{
-                  flex: 1,
-                  maxWidth: step === 0 ? 200 : 180,
-                  padding: "12px 24px",
-                  borderRadius: 13,
-                  border: "none",
-                  background: `linear-gradient(135deg, ${current.accentColor} 0%, rgba(${current.accentRgb},0.8) 100%)`,
-                  color: "white",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  boxShadow: `0 6px 20px rgba(${current.accentRgb}, 0.35)`,
-                  transition: "all 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = `0 10px 28px rgba(${current.accentRgb}, 0.45)`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = `0 6px 20px rgba(${current.accentRgb}, 0.35)`;
+                  background: "var(--paper-warm)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                  fontSize: 9,
                 }}
               >
-                <span>{current.ctaLabel}</span>
-                <ArrowRight size={14} />
-              </button>
-            )}
-          </div>
-
-          {/* Keyboard hint */}
-          <div
-            style={{
-              marginTop: 16,
-              fontSize: 10,
-              color: "var(--ink-faint)",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontFamily: "DM Mono, monospace",
-            }}
-          >
-            <kbd style={{ background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 4, padding: "1px 5px", fontSize: 9 }}>←</kbd>
-            <kbd style={{ background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 4, padding: "1px 5px", fontSize: 9 }}>→</kbd>
-            <span>navigate</span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <kbd style={{ background: "var(--paper-warm)", border: "1px solid var(--border)", borderRadius: 4, padding: "1px 5px", fontSize: 9 }}>Esc</kbd>
-            <span>skip</span>
+                1-5
+              </kbd>
+              <span>jump</span>
+              <span style={{ opacity: 0.4 }}>•</span>
+              <kbd
+                style={{
+                  background: "var(--paper-warm)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  padding: "1px 5px",
+                  fontSize: 9,
+                }}
+              >
+                Esc
+              </kbd>
+              <span>skip</span>
+            </div>
           </div>
         </div>
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 // Export helper to reset the tour (for Settings page)

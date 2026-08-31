@@ -157,7 +157,8 @@ function ProgressBar({ value, visible, finishing }: ProgressBarProps) {
             left: 0,
             height: "100%",
             width: `${value}%`,
-            background: "linear-gradient(90deg, var(--accent) 0%, #a78bfa 50%, var(--accent) 100%)",
+            background:
+              "linear-gradient(90deg, var(--accent) 0%, var(--accent-hover) 50%, var(--accent) 100%)",
             backgroundSize: "200% 100%",
             borderRadius: "0 3px 3px 0",
             transition: finishing
@@ -216,8 +217,17 @@ export function RouteProgressTrigger() {
   const { start, done } = useProgress();
   const prevPath = useRef(pathname);
   const isFirstRender = useRef(true);
+  const [ready, setReady] = useState(false);
+
+  // Wait one frame after mount before listening to route changes
+  // to avoid "Router action dispatched before initialization" during hydration
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
+    if (!ready) return;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       prevPath.current = pathname;
@@ -225,12 +235,16 @@ export function RouteProgressTrigger() {
     }
     if (pathname === prevPath.current) return;
     prevPath.current = pathname;
-    start();
-    // Pages compile fast in dev; give a small window then auto-complete
-    const t = setTimeout(done, 600);
-    return () => clearTimeout(t);
+    try {
+      start();
+      // Pages compile fast in dev; give a small window then auto-complete
+      const t = setTimeout(done, 600);
+      return () => clearTimeout(t);
+    } catch {
+      // Swallow any router-not-initialized errors during hydration
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, ready]);
 
   return null;
 }

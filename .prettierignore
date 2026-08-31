@@ -5,7 +5,7 @@ dist
 build
 package-lock.json
 public
-.gemini-2.5
+.gemini-3.6
 .agents
 CVS
 .svn

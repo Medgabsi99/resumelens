@@ -553,7 +553,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                 )}
                 <div className="flex items-center justify-between px-1">
-                  <ThemeToggle />
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                  </div>
 
                   <button
                     onClick={() => setShortcutsOpen(true)}
@@ -632,7 +634,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <NotificationBell />
               <span className="status-pill status-pill-accent text-[10px]">
                 <span className="pulse-live" />
-                AI Suite
+                Executive Suite
               </span>
             </div>
           </header>

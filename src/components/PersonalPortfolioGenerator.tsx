@@ -28,9 +28,9 @@ interface Props {
 type ThemeType = "modern-dark" | "minimal-light" | "creative-neon" | "warm-professional";
 
 const THEMES: { id: ThemeType; label: string; colors: string[] }[] = [
-  { id: "modern-dark", label: "Modern Dark", colors: ["#090d16", "#8b5cf6"] },
+  { id: "modern-dark", label: "Modern Dark", colors: ["#090d16", "#2563eb"] },
   { id: "minimal-light", label: "Minimal Light", colors: ["#fafaf9", "#1c1917"] },
-  { id: "creative-neon", label: "Creative Neon", colors: ["#09090b", "#10b981"] },
+  { id: "creative-neon", label: "Creative Emerald", colors: ["#09090b", "#10b981"] },
   { id: "warm-professional", label: "Warm Professional", colors: ["#fafaf9", "#064e3b"] },
 ];
 
@@ -330,14 +330,14 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
               lineHeight: 1.6,
             }}
           >
-            gemini-2.5 will analyze your work experience, metrics, and skills to write high-impact
+            gemini-3.6 will analyze your work experience, metrics, and skills to write high-impact
             headlines, formatted bios, and project portfolios optimized for the web.
           </p>
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
             style={{
-              background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+              background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
               color: "white",
               border: "none",
               borderRadius: "10px",
@@ -345,7 +345,7 @@ export default function PersonalPortfolioGenerator({ analysisId, resumeText }: P
               fontSize: "13px",
               fontWeight: 700,
               cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
+              boxShadow: "0 4px 14px var(--brand-glow)",
               display: "flex",
               alignItems: "center",
               gap: "8px",

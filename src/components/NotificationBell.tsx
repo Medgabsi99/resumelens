@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -18,7 +12,7 @@ import {
   AlertOctagon,
   Calendar,
   Award,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -121,7 +115,14 @@ function synthesize(
         href: `/dashboard/${a.id}`,
         createdAt: new Date(a.created_at),
         read: readIds.has(id),
-        icon: a.score >= 75 ? <Sparkles size={16} className="text-amber-500" /> : a.score >= 55 ? <Activity size={16} className="text-blue-500" /> : <AlertTriangle size={16} className="text-rose-500" />,
+        icon:
+          a.score >= 75 ? (
+            <Sparkles size={16} className="text-amber-500" />
+          ) : a.score >= 55 ? (
+            <Activity size={16} className="text-blue-500" />
+          ) : (
+            <AlertTriangle size={16} className="text-rose-500" />
+          ),
       });
     });
 
@@ -152,7 +153,12 @@ function synthesize(
         href: "/dashboard/applications",
         createdAt: new Date(app.follow_up_at!),
         read: readIds.has(id),
-        icon: d === 0 ? <Bell size={16} className="text-amber-500" /> : <Clock size={16} className="text-slate-400" />,
+        icon:
+          d === 0 ? (
+            <Bell size={16} className="text-amber-500" />
+          ) : (
+            <Clock size={16} className="text-slate-400" />
+          ),
       });
     }
   });
@@ -171,7 +177,12 @@ function synthesize(
         href: "/dashboard/applications",
         createdAt: new Date(app.deadline_at!),
         read: readIds.has(id),
-        icon: d === 0 ? <AlertOctagon size={16} className="text-red-500" /> : <Calendar size={16} className="text-slate-400" />,
+        icon:
+          d === 0 ? (
+            <AlertOctagon size={16} className="text-red-500" />
+          ) : (
+            <Calendar size={16} className="text-slate-400" />
+          ),
       });
     }
   });
@@ -210,10 +221,7 @@ export default function NotificationBell() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   // Load data and synthesize
   useEffect(() => {
@@ -221,14 +229,16 @@ export default function NotificationBell() {
       setLoading(true);
       try {
         const [analysesRes, appsRes] = await Promise.all([
-          fetch("/api/analyses"),
-          fetch("/api/applications"),
+          fetch("/api/analyses").catch(() => null),
+          fetch("/api/applications").catch(() => null),
         ]);
-        const analysesData = await analysesRes.json();
-        const appsData = await appsRes.json();
+        const analysesData =
+          analysesRes && analysesRes.ok ? await analysesRes.json().catch(() => ({})) : {};
+        const appsData = appsRes && appsRes.ok ? await appsRes.json().catch(() => ({})) : {};
 
-        const analyses: ApiAnalysis[] = analysesData.success ? analysesData.data : [];
-        const applications: ApiApplication[] = appsData.success ? appsData.data : [];
+        const analyses: ApiAnalysis[] =
+          analysesData && analysesData.success ? analysesData.data : [];
+        const applications: ApiApplication[] = appsData && appsData.success ? appsData.data : [];
 
         const readIds = getReadIds();
         setNotifications(synthesize(analyses, applications, readIds));
@@ -274,9 +284,7 @@ export default function NotificationBell() {
   const handleNotifClick = useCallback(
     (notif: Notification) => {
       markRead([notif.id]);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
       setOpen(false);
       if (notif.href) router.push(notif.href);
     },
@@ -380,9 +388,7 @@ export default function NotificationBell() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
-                Activity
-              </span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>Activity</span>
               {unreadCount > 0 && (
                 <span
                   style={{

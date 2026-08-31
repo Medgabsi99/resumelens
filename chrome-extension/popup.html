@@ -2,23 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ResumeLens Job Matcher</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <title>ResumeLens AI Job Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --paper: #111827;
-      --paper-card: #1f2937;
-      --border: rgba(255, 255, 255, 0.08);
-      --ink: #f9fafb;
-      --ink-muted: #9ca3af;
-      --ink-faint: #6b7280;
-      --accent: #8b5cf6;
-      --accent-glow: rgba(139, 92, 246, 0.15);
+      --bg: #07090e;
+      --surface: rgba(15, 19, 32, 0.85);
+      --surface-elevated: rgba(22, 28, 48, 0.9);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-border-glow: rgba(59, 130, 246, 0.35);
+      
+      --ink: #f8fafc;
+      --ink-muted: #94a3b8;
+      --ink-faint: #64748b;
+      
+      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0284c7 100%);
+      --accent-glow: rgba(37, 99, 235, 0.3);
+      
       --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.1);
+      --success-glow: rgba(16, 185, 129, 0.25);
       --warn: #f59e0b;
-      --danger: #ef4444;
+      --danger: #f43f5e;
     }
 
     * {
@@ -28,82 +34,197 @@
     }
 
     body {
-      width: 380px;
+      width: 400px;
       max-height: 600px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.18), transparent 70%),
+        radial-gradient(circle 200px at 100% 100%, rgba(16, 185, 129, 0.08), transparent 60%);
       color: var(--ink);
       padding: 16px;
       overflow-y: auto;
       font-size: 13px;
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Scrollbar */
-    body::-webkit-scrollbar {
-      width: 6px;
+    /* Ultra-sleek Custom Scrollbar */
+    body::-webkit-scrollbar, textarea::-webkit-scrollbar {
+      width: 5px;
     }
-    body::-webkit-scrollbar-track {
+    body::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track {
       background: transparent;
     }
-    body::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
+    body::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+    }
+    body::-webkit-scrollbar-thumb:hover, textarea::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
     }
 
+    /* Ambient Header */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--surface-border);
+      position: relative;
     }
 
-    .logo {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .brand-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(16, 185, 129, 0.2));
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.3);
+      position: relative;
+    }
+
+    .brand-icon::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.4), transparent);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .logo-text {
       font-family: 'Outfit', sans-serif;
-      font-size: 16px;
+      font-size: 17.5px;
       font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 60%, #93c5fd 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3.5px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--ink-muted);
+      border: 1px solid var(--surface-border);
+      backdrop-filter: blur(10px);
+      letter-spacing: 0.02em;
+    }
+
+    .badge .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+    }
+
+    .badge.connected {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    }
+    .badge.connected .status-dot {
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a5b4fc;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .badge {
-      font-size: 10px;
+    /* Rescrape Action Button */
+    .rescrape-btn {
+      background: rgba(139, 92, 246, 0.12);
+      color: #c4b5fd;
+      border: 1px solid rgba(167, 139, 250, 0.25);
+      border-radius: 7px;
+      font-size: 11px;
       font-weight: 600;
-      padding: 2px 6px;
-      border-radius: 12px;
-      background: var(--border);
-      color: var(--ink-muted);
+      padding: 3.5px 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
     }
-    .badge.connected {
-      background: var(--success-glow);
-      color: var(--success);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+    .rescrape-btn:hover {
+      background: rgba(139, 92, 246, 0.25);
+      border-color: rgba(167, 139, 250, 0.5);
+      color: #ffffff;
+      transform: translateY(-0.5px);
     }
-
-    .card {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
+    .rescrape-btn:active svg {
+      transform: rotate(180deg);
     }
-
-    h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--ink-muted);
-      margin-bottom: 10px;
+    .rescrape-btn svg {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Form Fields */
     .form-group {
       margin-bottom: 10px;
     }
@@ -113,112 +234,278 @@
 
     label {
       font-size: 11px;
-      font-weight: 500;
-      color: var(--ink-faint);
+      font-weight: 600;
+      color: var(--ink-muted);
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
+      letter-spacing: 0.02em;
     }
 
     input, select, textarea {
       width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
+      background: rgba(10, 14, 24, 0.85);
+      border: 1px solid var(--surface-border);
+      border-radius: 9px;
+      padding: 9px 12px;
       color: var(--ink);
       font-family: inherit;
       font-size: 12.5px;
       outline: none;
-      transition: border-color 0.15s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    input:hover, select:hover, textarea:hover {
+      border-color: rgba(255, 255, 255, 0.16);
     }
     input:focus, select:focus, textarea:focus {
-      border-color: var(--accent);
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.04);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+    select option {
+      background: #0f1320;
+      color: var(--ink);
     }
 
     textarea {
-      height: 70px;
+      height: 74px;
       resize: none;
+      line-height: 1.45;
     }
 
-    button {
-      width: 100%;
-      background: var(--accent);
-      color: white;
+    /* Accordion Toggle for Description Details */
+    .drawer-toggle {
+      background: transparent;
       border: none;
-      border-radius: 8px;
-      padding: 10px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
+      color: #60a5fa;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+      margin-top: 2px;
+      transition: color 0.15s;
+    }
+    .drawer-toggle:hover {
+      color: #c4b5fd;
+    }
+
+    /* Primary Luminescent CTA */
+    .primary-btn {
+      width: 100%;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 11px;
+      padding: 12px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--accent-glow), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      position: relative;
+      overflow: hidden;
     }
-    button:hover {
-      opacity: 0.9;
+    .primary-btn::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: rotate(25deg);
+      transition: all 0.7s;
+      opacity: 0;
     }
-    button:disabled {
-      opacity: 0.6;
+    .primary-btn:hover:not(:disabled)::after {
+      opacity: 1;
+      transform: rotate(25deg) translate(50%, 50%);
+    }
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 26px rgba(139, 92, 246, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      filter: brightness(1.05);
+    }
+    .primary-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .primary-btn:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: transparent;
+      color: rgba(255, 255, 255, 0.25);
+      box-shadow: none;
       cursor: not-allowed;
     }
 
-    /* Loading states */
+    .secondary-btn {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--ink-muted);
+      border: 1px solid var(--surface-border);
+      border-radius: 9px;
+      padding: 9.5px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Alerts */
+    .error-notice {
+      color: #fca5a5;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+
+    .success-alert {
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      margin-top: 10px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+
+    /* Loading Orb */
     .loader {
       display: none;
       text-align: center;
-      padding: 24px;
+      padding: 40px 16px;
     }
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+    .orb-spinner {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 16px;
+      border: 3px solid rgba(255, 255, 255, 0.06);
       border-radius: 50%;
-      border-top-color: var(--accent);
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 10px;
+      border-top-color: #2563eb;
+      border-right-color: #3b82f6;
+      animation: spin 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Results layout */
+    /* Results Dashboard View */
     #results {
       display: none;
     }
 
-    .score-container {
+    /* Segmented Tab Navigation */
+    .tab-bar {
+      display: flex;
+      background: rgba(10, 14, 24, 0.8);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--ink-muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .tab-btn.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Score Radial Gauge */
+    .score-hero {
       display: flex;
       align-items: center;
       gap: 16px;
       margin-bottom: 12px;
     }
 
-    /* Custom SVG Score Ring */
     .score-ring {
       position: relative;
-      width: 64px;
-      height: 64px;
+      width: 70px;
+      height: 70px;
+      flex-shrink: 0;
     }
     .score-ring svg {
       transform: rotate(-90deg);
       width: 100%;
       height: 100%;
+      filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.35));
     }
     .score-ring circle {
       fill: none;
-      stroke-width: 5;
+      stroke-width: 4.5;
     }
     .score-ring .bg {
-      stroke: var(--border);
+      stroke: rgba(255, 255, 255, 0.07);
     }
     .score-ring .val {
-      stroke: var(--accent);
+      stroke: url(#scoreGradient);
       stroke-linecap: round;
-      transition: stroke-dashoffset 0.5s ease-out;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .score-text {
       position: absolute;
@@ -226,220 +513,302 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-family: 'Outfit', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
+      font-size: 18px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.03em;
     }
 
     .fit-badge {
       display: inline-block;
       font-size: 11px;
       font-weight: 700;
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: 6px;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .fit-badge.strong {
-      background: var(--success-glow);
-      color: var(--success);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
     .fit-badge.good {
-      background: rgba(139, 92, 246, 0.1);
-      color: #a78bfa;
-      border: 1px solid rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.15);
+      color: #c4b5fd;
+      border: 1px solid rgba(167, 139, 250, 0.35);
     }
     .fit-badge.fair {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warn);
-      border: 1px solid rgba(245, 158, 11, 0.2);
+      background: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.35);
     }
     .fit-badge.weak {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border: 1px solid rgba(239, 68, 68, 0.2);
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.35);
     }
 
     .summary-text {
       font-size: 12.5px;
-      opacity: 0.85;
-      line-height: 1.45;
-      margin-bottom: 12px;
+      color: #cbd5e1;
+      line-height: 1.5;
     }
 
+    /* Keyword Chips */
     .keyword-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 12px;
     }
 
     .chip {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 500;
-      padding: 2.5px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
+      padding: 3.5px 8.5px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .chip.matched {
-      background: var(--success-glow);
-      color: var(--success);
-      border-color: rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.25);
     }
     .chip.missing {
-      background: rgba(239, 68, 68, 0.08);
+      background: rgba(244, 63, 94, 0.1);
       color: #fca5a5;
-      border-color: rgba(239, 68, 68, 0.15);
+      border-color: rgba(244, 63, 94, 0.25);
     }
 
     .rec-item {
-      font-size: 11.5px;
-      margin-bottom: 6px;
-      padding-left: 14px;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      padding-left: 18px;
       position: relative;
-      opacity: 0.85;
+      line-height: 1.45;
+    }
+    .rec-item:last-child {
+      margin-bottom: 0;
     }
     .rec-item::before {
-      content: "•";
-      color: var(--accent);
+      content: "✦";
+      color: #60a5fa;
       position: absolute;
-      left: 2px;
-      font-weight: bold;
-    }
-
-    .error-notice {
-      color: var(--danger);
-      font-size: 12px;
-      margin-top: 10px;
-      text-align: center;
-      font-weight: 500;
-      display: none;
-    }
-
-    .success-alert {
-      color: var(--success);
-      font-size: 12px;
-      margin-top: 10px;
-      text-align: center;
-      font-weight: 600;
-      display: none;
+      left: 0;
+      font-size: 11px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Top Ambient Header -->
   <header>
-    <div class="logo">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: #a78bfa;">
-        <path d="M2 12h5l3.5 9L15 3l3.5 9H22"/>
-      </svg>
-      ResumeLens
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12h5l3.5 9L15 3l3.5 9H22"/>
+        </svg>
+      </div>
+      <span class="logo-text">ResumeLens</span>
     </div>
-    <span id="connectionBadge" class="badge">Checking connection...</span>
+    <span id="connectionBadge" class="badge">
+      <span class="status-dot"></span>
+      <span>Checking...</span>
+    </span>
   </header>
 
-  <!-- Setup State (Job Info + Resume Select) -->
+  <!-- Setup State -->
   <div id="setup">
+    <!-- Scraped Job Card with Live Capsule -->
     <div class="card">
-      <h3>💼 Scraped Job Details</h3>
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          Detected Listing
+        </span>
+        <button id="rescrapeBtn" type="button" class="rescrape-btn" title="Rescrape Active Tab">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+          </svg>
+          Rescrape
+        </button>
+      </div>
+
       <div class="form-group">
         <label>Job Title</label>
-        <input type="text" id="jobTitle" placeholder="Scraping title...">
+        <input type="text" id="jobTitle" placeholder="Extracting role title...">
       </div>
       <div class="form-group">
         <label>Company Name</label>
-        <input type="text" id="companyName" placeholder="Scraping company...">
+        <input type="text" id="companyName" placeholder="Extracting company name...">
       </div>
       <div class="form-group">
         <label>Job Description</label>
-        <textarea id="jobDescription" placeholder="Scraping description..."></textarea>
+        <textarea id="jobDescription" placeholder="Extracting job description content..."></textarea>
       </div>
     </div>
 
+    <!-- Active Resume Card -->
     <div class="card">
-      <h3>📄 Match With Resume</h3>
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Target Resume
+        </span>
+      </div>
       <div class="form-group">
-        <label>Select Target Resume</label>
+        <label>Active Tailoring Resume</label>
         <select id="resumeSelector">
-          <option value="">-- Load resumes from library --</option>
+          <option value="">-- Choose a resume from library --</option>
         </select>
       </div>
     </div>
 
-    <button id="matchBtn" disabled>Evaluate Match Score</button>
+    <!-- Primary Action CTA -->
+    <button id="matchBtn" class="primary-btn" disabled>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="M5 3v4"/>
+        <path d="M19 17v4"/>
+        <path d="M3 5h4"/>
+        <path d="M17 19h4"/>
+      </svg>
+      Evaluate Match Score
+    </button>
     <div id="setupError" class="error-notice"></div>
   </div>
 
   <!-- Loading State -->
   <div id="loader" class="loader">
-    <div class="spinner"></div>
-    <p style="font-weight: 600; color: var(--ink-muted);">Calculating Match Score...</p>
-    <p style="font-size: 11px; color: var(--ink-faint); margin-top: 4px;">Analyzing keywords and checking gaps using gemini-2.5</p>
+    <div class="orb-spinner"></div>
+    <p style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: #ffffff;">Evaluating Match Score...</p>
+    <p style="font-size: 12px; color: var(--ink-muted); margin-top: 6px;">Running neural keyword analysis & ATS gap scan</p>
   </div>
 
   <!-- Results Dashboard -->
   <div id="results">
+    <!-- Score Hero Summary -->
     <div class="card">
-      <div class="score-container">
-        <!-- Circular Progress Ring -->
+      <div class="score-hero">
         <div class="score-ring">
           <svg viewBox="0 0 36 36">
+            <defs>
+              <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6"/>
+                <stop offset="60%" stop-color="#10b981"/>
+                <stop offset="100%" stop-color="#34d399"/>
+              </linearGradient>
+            </defs>
             <circle class="bg" cx="18" cy="18" r="15.915"></circle>
             <circle class="val" id="scoreValCircle" cx="18" cy="18" r="15.915" stroke-dasharray="100" stroke-dashoffset="100"></circle>
           </svg>
           <div class="score-text" id="scoreText">0%</div>
         </div>
-        <div>
+        <div style="flex: 1; min-width: 0;">
           <span id="fitVerdict" class="fit-badge good">Good Fit</span>
-          <p style="font-size: 11px; color: var(--ink-faint); margin-top: 4px;" id="companyRoleText"></p>
+          <p style="font-size: 12px; font-weight: 600; color: var(--ink); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="companyRoleText"></p>
         </div>
       </div>
-
       <p class="summary-text" id="matchSummary"></p>
     </div>
 
-    <div class="card">
-      <h3>🔍 Keywords & Skills</h3>
-      <div class="keyword-grid" id="keywordGrid">
-        <!-- Matched and missing keyword badges -->
+    <!-- Segmented Tab Navigation -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="keywordsTab">
+        <span>🔍</span> Skills
+      </button>
+      <button class="tab-btn" data-tab="recsTab">
+        <span>💡</span> Insights
+      </button>
+      <button class="tab-btn" data-tab="pitchTab">
+        <span>✉️</span> Outreach
+      </button>
+    </div>
+
+    <!-- Tab 1: Keywords & Skills -->
+    <div id="keywordsTab" class="tab-panel active">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Keyword Alignment</span>
+        </div>
+        <div class="keyword-grid" id="keywordGrid">
+          <!-- Chips -->
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h3>💡 Recommendations</h3>
-      <div id="recommendationsList">
-        <!-- List of actionable items -->
+    <!-- Tab 2: Key Recommendations -->
+    <div id="recsTab" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ATS Action Plan</span>
+        </div>
+        <div id="recommendationsList">
+          <!-- Recommendations -->
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h3>✉️ Cold Outreach Pitch</h3>
-      <div class="form-group">
-        <label>Recruiter Name (Optional)</label>
-        <input type="text" id="recruiterName" placeholder="e.g. Sarah">
+    <!-- Tab 3: Outreach Pitch Drafter -->
+    <div id="pitchTab" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Direct Outreach Pitch</span>
+        </div>
+        <div class="form-group">
+          <label>Recruiter / Manager Name (Optional)</label>
+          <input type="text" id="recruiterName" placeholder="e.g. Sarah">
+        </div>
+        <div class="form-group">
+          <label>Recipient Tone</label>
+          <select id="outreachType">
+            <option value="recruiter">Hiring Manager (Professional & Direct)</option>
+            <option value="peer">Future Peer (Technical & Conversational)</option>
+          </select>
+        </div>
+        <button id="outreachBtn" class="secondary-btn" style="margin-top: 10px; background: rgba(139, 92, 246, 0.15); border-color: rgba(167, 139, 250, 0.3); color: #c4b5fd; font-weight: 700;">
+          Draft Custom Pitch ✨
+        </button>
+        
+        <div id="outreachResultBox" style="display: none; margin-top: 10px; padding: 12px; background: rgba(10, 14, 24, 0.9); border: 1px solid var(--surface-border); border-radius: 9px;">
+          <textarea id="outreachText" style="height: 110px; font-size: 11.5px; line-height: 1.45; border: none; background: transparent; padding: 0; color: var(--ink); width: 100%; resize: vertical;" readonly></textarea>
+          <button id="copyOutreachBtn" class="rescrape-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #34d399; margin-top: 8px;">
+            Copy Pitch 📋
+          </button>
+        </div>
+        <div id="outreachLoader" class="loader" style="padding: 12px 0 0 0;">
+          <div class="orb-spinner" style="width: 20px; height: 20px; border-width: 2px; margin-bottom: 6px;"></div>
+          <p style="font-size: 11px; color: var(--ink-muted);">Generating outreach pitch...</p>
+        </div>
+        <div id="outreachError" class="error-notice" style="margin-top: 8px;"></div>
       </div>
-      <div class="form-group">
-        <label>Recipient Type</label>
-        <select id="outreachType">
-          <option value="recruiter">Recruiter / Hiring Manager (Professional)</option>
-          <option value="peer">Future Peer / Engineer (Collaborative)</option>
-        </select>
-      </div>
-      <button id="outreachBtn" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); margin-top: 8px;">Generate Outreach Pitch ✨</button>
-      
-      <div id="outreachResultBox" style="display: none; margin-top: 10px; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;">
-        <textarea id="outreachText" style="height: 110px; font-size: 11px; line-height: 1.45; border: none; background: transparent; padding: 0; color: var(--ink); width: 100%; resize: vertical;" readonly></textarea>
-        <button id="copyOutreachBtn" style="background: var(--success); font-size: 11px; padding: 5px 10px; margin-top: 8px; width: auto; font-family: inherit; display: inline-flex;">Copy Pitch</button>
-      </div>
-      <div id="outreachLoader" class="loader" style="padding: 10px 0 0 0;">
-        <div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin-bottom: 4px;"></div>
-        <p style="font-size: 10.5px; color: var(--ink-muted);">Drafting pitch message...</p>
-      </div>
-      <div id="outreachError" class="error-notice" style="margin-top: 8px;"></div>
     </div>
 
-    <button id="trackBtn">Add to Job Tracker 🎯</button>
-    <button id="backBtn" style="background: transparent; border: 1px solid var(--border); color: var(--ink-muted); margin-top: 8px; font-weight: 600;">← Back to details</button>
+    <!-- Action Bar -->
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+      <button id="trackBtn" class="primary-btn">
+        Add to Job Tracker 🎯
+      </button>
+      <button id="backBtn" class="secondary-btn">
+        ← Back to Details
+      </button>
+    </div>
     
     <div id="resultError" class="error-notice"></div>
     <div id="successAlert" class="success-alert"></div>

@@ -6,67 +6,24 @@ import { createBrowserClient } from "@/lib/supabase";
 
 const PLANS = [
   {
-    key: "free",
-    name: "Free",
+    key: "community",
+    name: "Community",
     price: "$0",
-    period: "",
-    desc: "Test-drive the core features",
+    period: "forever",
+    desc: "100% Free & Open Access for all job seekers",
     features: [
-      { name: "2 resume reviews included", included: true },
-      { name: "Core ATS scoring & summary", included: true },
-      { name: "Top strengths & weaknesses", included: true },
-      { name: "Cover letter generator", included: false },
-      { name: "Professional outreach generator", included: false },
-      { name: "Interactive Mock Interview room", included: false },
-      { name: "Skill-gap custom learning paths", included: false },
-      { name: "Salary negotiation sandbox", included: false },
-      { name: "Personal portfolio website generator", included: false },
-    ],
-    cta: "Get started",
-    href: "/login",
-    stripe: false,
-    featured: false,
-  },
-  {
-    key: "one_time",
-    name: "Lifetime",
-    price: "$9",
-    period: "one-time",
-    desc: "Pay once, review resumes forever",
-    features: [
-      { name: "Unlimited resume reviews", included: true },
-      { name: "Full AI rewrite suggestions", included: true },
-      { name: "ATS keyword gap analysis", included: true },
-      { name: "Cover letter generator (Basic)", included: true },
-      { name: "Outreach generator (Basic)", included: true },
-      { name: "Interactive Mock Interview room", included: false },
-      { name: "Skill-gap custom learning paths", included: false },
-      { name: "Salary negotiation sandbox", included: false },
-      { name: "Personal portfolio website generator", included: false },
-    ],
-    cta: "Buy Lifetime Access",
-    stripe: true,
-    featured: false,
-  },
-  {
-    key: "monthly",
-    name: "Pro",
-    price: "$19",
-    period: "/ month",
-    desc: "For active, aggressive job seekers",
-    features: [
-      { name: "Unlimited resume reviews", included: true },
-      { name: "Full AI rewrite suggestions", included: true },
-      { name: "ATS keyword gap analysis", included: true },
-      { name: "Cover letter generator (Premium)", included: true },
-      { name: "Professional outreach generator", included: true },
+      { name: "Unlimited AI resume reviews & ATS scans", included: true },
+      { name: "Full AI resume rewrite & bullet enhancement", included: true },
+      { name: "ATS keyword gap & match scoring", included: true },
+      { name: "Custom cover letter generator", included: true },
+      { name: "Professional recruiter outreach generator", included: true },
       { name: "Interactive Mock Interview simulator", included: true },
       { name: "Skill-gap custom learning paths", included: true },
       { name: "Salary negotiation sandbox", included: true },
       { name: "Personal portfolio website generator", included: true },
     ],
-    cta: "Start Pro",
-    stripe: true,
+    cta: "Launch Dashboard",
+    href: "/dashboard",
     featured: true,
   },
 ];
@@ -96,11 +53,15 @@ export default function PricingPage() {
     } finally {
       setLoading(null);
     }
-  }  return (
+  }
+  return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
       {/* Background glow blobs */}
       <div className="glow-blob top-[-50px] right-[-50px] w-[350px] h-[350px]" />
-      <div className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]" style={{ animationDelay: "-1s" }} />
+      <div
+        className="glow-blob bottom-[-50px] left-[-50px] w-[300px] h-[300px]"
+        style={{ animationDelay: "-1s" }}
+      />
 
       <nav
         className="sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between py-4 px-6 md:px-12 transition-all duration-300"
@@ -109,7 +70,10 @@ export default function PricingPage() {
           borderColor: "var(--border)",
         }}
       >
-        <a href="/" className="font-display text-2xl font-bold tracking-tight no-underline text-ink">
+        <a
+          href="/"
+          className="font-display text-2xl font-bold tracking-tight no-underline text-ink"
+        >
           Resume<span style={{ color: "var(--accent)" }}>Lens</span>
         </a>
         {isSignedIn === null ? (
@@ -136,11 +100,15 @@ export default function PricingPage() {
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
         <div className="text-center max-w-xl mx-auto mb-16 fade-up">
-          <h1 className="font-display tracking-tight leading-tight mb-4" style={{ fontSize: "clamp(32px, 5vw, 48px)" }}>
+          <h1
+            className="font-display tracking-tight leading-tight mb-4"
+            style={{ fontSize: "clamp(32px, 5vw, 48px)" }}
+          >
             Simple, honest pricing
           </h1>
           <p className="text-ink-muted text-base md:text-lg max-w-md mx-auto leading-relaxed">
-            Choose the plan that matches your job search speed. Upgrades pay for themselves in just one application review.
+            Choose the plan that matches your job search speed. Upgrades pay for themselves in just
+            one application review.
           </p>
         </div>
 
@@ -158,7 +126,8 @@ export default function PricingPage() {
                 <div
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[10px] font-mono font-bold tracking-widest text-white uppercase px-3 py-1 rounded-full"
                   style={{
-                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+                    background:
+                      "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                     boxShadow: "0 4px 10px var(--brand-glow)",
                   }}
                 >
@@ -175,14 +144,10 @@ export default function PricingPage() {
                     {plan.price}
                   </span>
                   {plan.period && (
-                    <span className="text-sm font-medium text-ink-faint">
-                      {plan.period}
-                    </span>
+                    <span className="text-sm font-medium text-ink-faint">{plan.period}</span>
                   )}
                 </div>
-                <p className="text-xs text-ink-muted leading-relaxed mb-6">
-                  {plan.desc}
-                </p>
+                <p className="text-xs text-ink-muted leading-relaxed mb-6">{plan.desc}</p>
 
                 <div className="h-px w-full my-6" style={{ background: "var(--border)" }} />
 
@@ -199,7 +164,12 @@ export default function PricingPage() {
                       >
                         {f.included ? <Check size={14} /> : "—"}
                       </span>
-                      <span style={{ textDecoration: f.included ? "none" : "line-through", opacity: f.included ? 1 : 0.6 }}>
+                      <span
+                        style={{
+                          textDecoration: f.included ? "none" : "line-through",
+                          opacity: f.included ? 1 : 0.6,
+                        }}
+                      >
                         {f.name}
                       </span>
                     </li>
@@ -207,35 +177,19 @@ export default function PricingPage() {
                 </ul>
               </div>
 
-              {plan.stripe ? (
-                <button
-                  onClick={() => checkout(plan.key)}
-                  disabled={loading === plan.key}
-                  className="w-full btn-gradient py-3 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
-                  style={!plan.featured ? {
-                    background: "transparent",
-                    border: "2px solid var(--accent)",
-                    color: "var(--accent)",
-                    boxShadow: "none",
-                  } : undefined}
-                >
-                  {loading === plan.key ? "Connecting..." : plan.cta}
-                </button>
-              ) : (
-                <a
-                  href={plan.href}
-                  className="w-full flex items-center justify-center border border-border-strong hover:border-ink rounded-xl py-3 text-sm font-semibold text-ink-muted hover:text-ink no-underline transition-all duration-200 text-center"
-                  style={{ background: "var(--paper)" }}
-                >
-                  {plan.cta}
-                </a>
-              )}
+              <a
+                href={plan.href}
+                className="w-full btn-gradient py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 no-underline text-white cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 text-center"
+              >
+                <span>{plan.cta}</span>
+                <ArrowRight size={16} />
+              </a>
             </div>
           ))}
         </div>
 
         <p className="text-center text-xs text-ink-faint mt-10">
-          Secure checkout and billing handled via Stripe. Cancel subscription anytime with one click in your settings.
+          All tools are 100% free and open for personal career development.
         </p>
       </main>
     </div>

@@ -16,6 +16,8 @@ import {
   Zap,
   Lock,
 } from "lucide-react";
+import InteractiveRadarShowcase from "./InteractiveRadarShowcase";
+import SpotlightCard from "./SpotlightCard";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -339,6 +341,9 @@ export default function HomepageMarketing() {
         </div>
       </section>
 
+      {/* Interactive 6-Axis Radar Showcase */}
+      <InteractiveRadarShowcase />
+
       {/* Feature Grid */}
       <section className="max-w-5xl mx-auto px-6 mb-28">
         <motion.div
@@ -366,22 +371,27 @@ export default function HomepageMarketing() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-40px" }}
-              className="luxury-card luxury-card-hover p-6 rounded-2xl flex flex-col justify-between"
+              className="h-full"
             >
-              <div>
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm"
-                  style={{
-                    background: "var(--accent-bg)",
-                    color: "var(--accent)",
-                    border: "1px solid var(--accent-border)",
-                  }}
-                >
-                  <feat.icon size={18} />
+              <SpotlightCard
+                className="specular-border p-6 rounded-2xl flex flex-col justify-between h-full"
+                specularBorder={true}
+              >
+                <div>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 shadow-sm"
+                    style={{
+                      background: "var(--accent-bg)",
+                      color: "var(--accent)",
+                      border: "1px solid var(--accent-border)",
+                    }}
+                  >
+                    <feat.icon size={18} />
+                  </div>
+                  <h3 className="font-heading font-bold text-sm text-ink mb-2">{feat.title}</h3>
+                  <p className="text-xs text-ink-muted leading-relaxed">{feat.body}</p>
                 </div>
-                <h3 className="font-heading font-bold text-sm text-ink mb-2">{feat.title}</h3>
-                <p className="text-xs text-ink-muted leading-relaxed">{feat.body}</p>
-              </div>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>

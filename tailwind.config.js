@@ -8,9 +8,15 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["DM Serif Display", "Georgia", "serif"],
-        body: ["Instrument Sans", "system-ui", "sans-serif"],
-        mono: ["DM Mono", "monospace"],
+        display: [
+          "var(--font-outfit)",
+          "var(--font-dm-serif)",
+          "DM Serif Display",
+          "Georgia",
+          "serif",
+        ],
+        body: ["var(--font-plus-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        mono: ["var(--font-dm-mono)", "DM Mono", "monospace"],
       },
       colors: {
         ink: {
@@ -31,12 +37,12 @@ module.exports = {
         },
         brand: {
           glow: "var(--brand-glow)",
-        }
+        },
       },
       boxShadow: {
         premium: "0 10px 30px -10px var(--shadow-color)",
         glow: "0 0 20px 2px var(--brand-glow)",
-      }
+      },
     },
   },
   plugins: [],

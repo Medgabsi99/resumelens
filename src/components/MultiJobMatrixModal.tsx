@@ -52,13 +52,30 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
     const jobResults = jobs.map((j) => {
       const jdWords = j.jobDescription
         ? Array.from(new Set(j.jobDescription.match(/\b[A-Za-z0-9+#.-]{3,15}\b/g) || []))
-            .filter((w) => !["and", "the", "for", "with", "that", "this", "your", "will", "have", "from"].includes(w.toLowerCase()))
+            .filter(
+              (w) =>
+                ![
+                  "and",
+                  "the",
+                  "for",
+                  "with",
+                  "that",
+                  "this",
+                  "your",
+                  "will",
+                  "have",
+                  "from",
+                ].includes(w.toLowerCase())
+            )
             .slice(0, 15)
         : ["TypeScript", "React", "Next.js", "GraphQL", "Performance", "CI/CD", "System Design"];
 
       const matched = jdWords.filter((w) => resLower.includes(w.toLowerCase()));
       const missing = jdWords.filter((w) => !resLower.includes(w.toLowerCase()));
-      const score = Math.min(98, Math.max(55, Math.round((matched.length / Math.max(1, jdWords.length)) * 100)));
+      const score = Math.min(
+        98,
+        Math.max(55, Math.round((matched.length / Math.max(1, jdWords.length)) * 100))
+      );
 
       return {
         id: j.id,
@@ -144,15 +161,15 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: "rgba(139, 92, 246, 0.15)",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "12px",
+                background: "var(--accent-bg)",
+                border: "1px solid var(--accent-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#8b5cf6",
+                color: "var(--accent)",
               }}
             >
               <Layers size={20} />
@@ -162,7 +179,8 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
                 Multi-Job Matrix Tailor ("Tailor Engine v2")
               </h3>
               <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--ink-muted)" }}>
-                Compare your resume against 3 target job descriptions simultaneously & extract common keyword gaps.
+                Compare your resume against 3 target job descriptions simultaneously & extract
+                common keyword gaps.
               </p>
             </div>
           </div>
@@ -182,7 +200,13 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
         </div>
 
         {/* 3 Job Inputs Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "14px",
+          }}
+        >
           {jobs.map((job, idx) => (
             <div
               key={job.id}
@@ -196,7 +220,14 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
                 gap: "10px",
               }}
             >
-              <span style={{ fontSize: "11px", fontWeight: 700, color: "#8b5cf6", fontFamily: "DM Mono, monospace" }}>
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: "var(--accent)",
+                  fontFamily: "DM Mono, monospace",
+                }}
+              >
                 Target Job #{idx + 1}
               </span>
 
@@ -271,7 +302,7 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
             onClick={handleAnalyzeMatrix}
             disabled={isAnalyzing}
             style={{
-              background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
+              background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
               color: "white",
               border: "none",
               borderRadius: "12px",
@@ -283,11 +314,13 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
               alignItems: "center",
               justifyContent: "center",
               gap: "8px",
-              boxShadow: "0 6px 20px rgba(139, 92, 246, 0.35)",
+              boxShadow: "0 6px 20px var(--brand-glow)",
             }}
           >
             {isAnalyzing ? <Sparkles size={16} className="animate-spin" /> : <Zap size={16} />}
-            <span>{isAnalyzing ? "Calculating Multi-Job Matrix..." : "Run Side-by-Side Matrix Analysis"}</span>
+            <span>
+              {isAnalyzing ? "Calculating Multi-Job Matrix..." : "Run Side-by-Side Matrix Analysis"}
+            </span>
           </button>
         )}
 
@@ -295,7 +328,13 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
         {analyzed && matrixAnalysis && (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {/* Side-by-Side Comparison Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: "14px",
+              }}
+            >
               {matrixAnalysis.jobResults.map((jRes) => (
                 <div
                   key={jRes.id}
@@ -311,42 +350,98 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
                   }}
                 >
                   <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "var(--ink)" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          color: "var(--ink)",
+                        }}
+                      >
                         {jRes.companyName}
                       </h4>
                       <span
                         style={{
                           fontSize: "13px",
                           fontWeight: 800,
-                          color: jRes.score >= 80 ? "#10b981" : jRes.score >= 65 ? "#f59e0b" : "#ef4444",
+                          color:
+                            jRes.score >= 80 ? "#10b981" : jRes.score >= 65 ? "#f59e0b" : "#ef4444",
                           fontFamily: "DM Mono, monospace",
                         }}
                       >
                         {jRes.score}% Match
                       </span>
                     </div>
-                    <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-muted)" }}>
+                    <p
+                      style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-muted)" }}
+                    >
                       {jRes.roleTitle}
                     </p>
 
-                    <div style={{ fontSize: "11px", marginBottom: "6px", color: "#10b981", fontWeight: 700 }}>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        marginBottom: "6px",
+                        color: "#10b981",
+                        fontWeight: 700,
+                      }}
+                    >
                       Matched Keywords ({jRes.matchedKeywords.length}):
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "4px",
+                        marginBottom: "10px",
+                      }}
+                    >
                       {jRes.matchedKeywords.slice(0, 5).map((kw) => (
-                        <span key={kw} style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981", padding: "2px 6px", borderRadius: "4px", fontSize: "10px" }}>
+                        <span
+                          key={kw}
+                          style={{
+                            background: "rgba(16, 185, 129, 0.1)",
+                            color: "#10b981",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontSize: "10px",
+                          }}
+                        >
                           {kw}
                         </span>
                       ))}
                     </div>
 
-                    <div style={{ fontSize: "11px", marginBottom: "6px", color: "#ef4444", fontWeight: 700 }}>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        marginBottom: "6px",
+                        color: "#ef4444",
+                        fontWeight: 700,
+                      }}
+                    >
                       Missing Keywords ({jRes.missingKeywords.length}):
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                       {jRes.missingKeywords.slice(0, 5).map((kw) => (
-                        <span key={kw} style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", padding: "2px 6px", borderRadius: "4px", fontSize: "10px" }}>
+                        <span
+                          key={kw}
+                          style={{
+                            background: "rgba(239, 68, 68, 0.1)",
+                            color: "#ef4444",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontSize: "10px",
+                          }}
+                        >
                           {kw}
                         </span>
                       ))}
@@ -359,17 +454,25 @@ export default function MultiJobMatrixModal({ resumeText, onClose }: Props) {
             {/* Common Overlapping Keyword Gaps */}
             <div
               style={{
-                background: "rgba(139, 92, 246, 0.08)",
-                border: "1px solid rgba(139, 92, 246, 0.25)",
+                background: "var(--accent-bg)",
+                border: "1px solid var(--accent-border)",
                 borderRadius: "14px",
                 padding: "16px",
               }}
             >
-              <h4 style={{ margin: "0 0 6px 0", fontSize: "13.5px", fontWeight: 800, color: "#8b5cf6" }}>
+              <h4
+                style={{
+                  margin: "0 0 6px 0",
+                  fontSize: "13.5px",
+                  fontWeight: 800,
+                  color: "var(--accent)",
+                }}
+              >
                 🎯 Universal Overlapping Keyword Gaps Across All 3 Jobs
               </h4>
               <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-muted)" }}>
-                Adding these key terms will boost your ATS match score for ALL target companies simultaneously:
+                Adding these key terms will boost your ATS match score for ALL target companies
+                simultaneously:
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {matrixAnalysis.universalGaps.map((gapKw) => (

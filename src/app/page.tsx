@@ -4,7 +4,9 @@ import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { runAtsChecks } from "@/lib/atsRulesChecker";
 import { useAutoSaveDraft } from "@/lib/useAutoSaveDraft";
-import { AnalysisResult } from "@/types";
+import { AnalysisResult, ResumeStyleTokens } from "@/types";
+import { DEFAULT_STYLE_TOKENS } from "@/lib/resumeStyleDefaults";
+
 import ResultsPanel from "@/components/ResultsPanel";
 import UpgradeModal from "@/components/UpgradeModal";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -13,7 +15,26 @@ import AuroraBackground from "@/components/AuroraBackground";
 import ConfettiCannon from "@/components/ConfettiCannon";
 import ParsingProgressVisualizer from "@/components/ParsingProgressVisualizer";
 import HomepageMarketing from "@/components/HomepageMarketing";
-import { FileText, Upload, Sparkles, Menu, X, Play, ArrowRight, TrendingUp } from "lucide-react";
+import InteractiveResumeSandbox from "@/components/InteractiveResumeSandbox";
+import SpotlightCard from "@/components/SpotlightCard";
+import { detectAtsVendorFromUrl } from "@/lib/atsFingerprinter";
+import { DEMO_ARCHETYPES } from "@/lib/sampleDemoData";
+import DemoConversionBanner from "@/components/DemoConversionBanner";
+import SocialProofTicker from "@/components/SocialProofTicker";
+import CommandPalette from "@/components/CommandPalette";
+import {
+  FileText,
+  Upload,
+  Sparkles,
+  Menu,
+  X,
+  Play,
+  ArrowRight,
+  TrendingUp,
+  Zap,
+  ShieldCheck,
+  Search,
+} from "lucide-react";
 
 const LOADING_STEPS = [
   "Reading your resume...",
@@ -37,6 +58,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [demoArchetype, setDemoArchetype] = useState<"swe" | "pm" | "ml">("swe");
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [preview, setPreview] = useState<{
     score: number;
     summary: string;
@@ -55,6 +79,8 @@ export default function HomePage() {
   // Increments each time a milestone score is achieved → triggers confetti
   const [confettiKey, setConfettiKey] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [resumeStyleTokens, setResumeStyleTokens] =
+    useState<ResumeStyleTokens>(DEFAULT_STYLE_TOKENS);
 
   const { hasSavedDraft, savedDraft, clearSavedDraft } = useAutoSaveDraft(
     resumeText,
@@ -71,26 +97,51 @@ export default function HomePage() {
     }
   };
 
+  // ── Global Cmd+K Command Palette Shortcut ────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // ── Load session + handle ?rerun= ──────────────────────
   useEffect(() => {
-    const supabase = createBrowserClient();
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        setUserEmail(session.user.email || null);
+    try {
+      const supabase = createBrowserClient();
+      supabase.auth
+        .getSession()
+        .then(async ({ data: { session } = { session: null } }) => {
+          if (session?.user) {
+            setUserEmail(session.user.email || null);
 
-        // Fetch active plan and quota limits from database profile
-        const { data } = await supabase
-          .from("profiles")
-          .select("plan, analyses_used, analyses_limit")
-          .eq("id", session.user.id)
-          .single();
+            // Fetch active plan and quota limits from database profile
+            try {
+              const { data } = await supabase
+                .from("profiles")
+                .select("plan, analyses_used, analyses_limit")
+                .eq("id", session.user.id)
+                .single();
 
-        if (data) {
-          setProfile(data);
-        }
-      }
+              if (data) {
+                setProfile(data);
+              }
+            } catch {
+              // Non-critical profile load fallback
+            }
+          }
+          setIsSessionLoaded(true);
+        })
+        .catch(() => {
+          setIsSessionLoaded(true);
+        });
+    } catch {
       setIsSessionLoaded(true);
-    });
+    }
 
     // Handle ?rerun= parameter — pre-populate form from a past analysis
     const rerunId = new URLSearchParams(window.location.search).get("rerun");
@@ -157,6 +208,54 @@ Qualifications:
     setFileName(null);
   };
 
+  const handleLoadArchetypeSample = (sampleResume: string, sampleJob: string, role: string) => {
+    setResumeText(sampleResume);
+    setJobDescription(sampleJob);
+    setTargetRole(role);
+    setUploadedFile(null);
+    setFileName(null);
+    const scannerElem = document.getElementById("scanner-form");
+    if (scannerElem) {
+      scannerElem.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleStartDemo = (archetypeKey: "swe" | "pm" | "ml" = "swe") => {
+    const archetype = DEMO_ARCHETYPES[archetypeKey];
+    setDemoArchetype(archetypeKey);
+    setIsDemoMode(true);
+    setResult(archetype.result);
+    setExtractedText(archetype.resumeText);
+    setResumeText(archetype.resumeText);
+    setJobDescription(archetype.jobDescription);
+    setTargetRole(archetype.role);
+    setError(null);
+    setRequiresUpgrade(false);
+  };
+
+  const handleSelectDemoArchetype = (archetypeKey: "swe" | "pm" | "ml") => {
+    handleStartDemo(archetypeKey);
+  };
+
+  const handleExitDemo = () => {
+    setIsDemoMode(false);
+    setResult(null);
+    setExtractedText("");
+    setResumeText("");
+    setJobDescription("");
+    setTargetRole("");
+  };
+
+  const handleScrollToUpload = () => {
+    handleExitDemo();
+    setTimeout(() => {
+      const scannerElem = document.getElementById("scanner-form");
+      if (scannerElem) {
+        scannerElem.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
   // ── File drop ────────────────────────────────────────────
   const onDrop = useCallback((accepted: File[]) => {
     const file = accepted[0];
@@ -175,6 +274,42 @@ Qualifications:
     },
     maxFiles: 1,
   });
+
+  // ── Universal ⌘+V Clipboard Paste Anywhere ────────────────
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) {
+        return;
+      }
+
+      if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+        const file = e.clipboardData.files[0];
+        if (
+          file.type.includes("pdf") ||
+          file.name.endsWith(".pdf") ||
+          file.name.endsWith(".docx")
+        ) {
+          e.preventDefault();
+          onDrop([file]);
+          return;
+        }
+      }
+
+      const text = e.clipboardData?.getData("text");
+      if (text && text.trim().length > 80) {
+        e.preventDefault();
+        setResumeText(text.trim());
+        setFileName(null);
+        setUploadedFile(null);
+        const el = document.getElementById("scanner-form");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [onDrop]);
 
   // ── Scrape job URL ──────────────────────────────────────────
   async function handleScrapeUrl() {
@@ -218,6 +353,7 @@ Qualifications:
     setRequiresUpgrade(false);
     setLoadingStep(0);
     setExtractedText("");
+    setResumeStyleTokens(DEFAULT_STYLE_TOKENS);
 
     // Cycle loading messages
     const interval = setInterval(() => {
@@ -259,6 +395,10 @@ Qualifications:
         setExtractedText(data.extractedText);
       } else if (!uploadedFile) {
         setExtractedText(resumeText);
+      }
+
+      if (data.resumeStyleTokens) {
+        setResumeStyleTokens(data.resumeStyleTokens);
       }
 
       if (data.requiresUpgrade) {
@@ -306,7 +446,7 @@ Qualifications:
           >
             Resume<span style={{ color: "var(--accent)" }}>Lens</span>
           </div>
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -319,7 +459,18 @@ Qualifications:
         </div>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-4">
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-paper-card text-ink-muted hover:text-ink hover:border-accent/40 text-xs font-medium cursor-pointer transition-all duration-150"
+            title="Open Command Palette (Cmd+K)"
+          >
+            <Search size={13} className="text-orange-500" />
+            <span>Search commands</span>
+            <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-paper-warm border border-border text-ink-faint">
+              ⌘K
+            </kbd>
+          </button>
           <ThemeToggle />
           <a
             href="/pricing"
@@ -404,23 +555,59 @@ Qualifications:
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-16">
         {/* Hero */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20 mb-4 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+            <span>⚡ NEXT-GEN ATS INTELLIGENCE 2.0</span>
+          </div>
           <h1
-            className="font-display tracking-tight leading-tight mb-4"
+            className="font-display tracking-tight leading-tight mb-4 text-ink"
             style={{
-              fontSize: "clamp(36px, 5.5vw, 60px)",
-              letterSpacing: "-1px",
+              fontSize: "clamp(38px, 5.8vw, 64px)",
+              letterSpacing: "-1.5px",
             }}
           >
             Your resume,{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-indigo-500 italic inline-block pr-3">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-amber-500 to-indigo-500 italic inline-block pr-3">
               honestly reviewed
             </span>
           </h1>
-          <p className="text-ink-muted text-base md:text-lg leading-relaxed max-w-xl mx-auto">
-            Get instant, deep analysis on your resume. Identify ATS keywords gaps, receive tailored
-            rewrite suggestions, and match yourself perfectly to target jobs.
+          <p className="text-ink-muted text-base md:text-lg leading-relaxed max-w-xl mx-auto mb-6">
+            Get instant, deep analysis on your resume. Identify ATS keyword gaps, receive quantified
+            XYZ rewrite suggestions, and match yourself perfectly to target jobs.
           </p>
+
+          {/* Hero CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 mb-8">
+            <button
+              onClick={() => handleStartDemo("swe")}
+              className="px-6 py-3 rounded-xl font-bold text-sm text-white flex items-center gap-2 cursor-pointer shadow-lg shadow-orange-500/20 hover:shadow-orange-500/35 transition-all duration-200"
+              style={{
+                background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-1px)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
+            >
+              <Sparkles size={16} className="text-amber-300" />
+              <span>⚡ Try Live Interactive Demo</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const el = document.getElementById("scanner-form");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
+              className="px-6 py-3 rounded-xl font-bold text-sm text-ink bg-paper-card border border-border hover:border-accent/40 flex items-center gap-2 cursor-pointer transition-all duration-200 shadow-xs"
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-1px)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
+            >
+              <Upload size={15} className="text-accent" />
+              <span>Upload My Resume</span>
+            </button>
+          </div>
+
+          {/* Social Proof & Trust Ticker */}
+          <SocialProofTicker />
         </div>
 
         {/* Unsaved Draft Recovery Banner */}
@@ -498,13 +685,16 @@ Qualifications:
         ) : (
           <>
             {/* Input Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <div
+              id="scanner-form"
+              className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 scroll-mt-24"
+            >
               {/* Left — Resume */}
               <Panel label="Your Resume">
                 {/* Drop zone */}
                 <div
                   {...getRootProps()}
-                  className="border-2 border-dashed rounded-xl p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-3.5 transition-all duration-300 group"
+                  className="bento-card p-6 cursor-pointer text-center flex flex-col items-center justify-center gap-3.5 transition-all duration-300 group hover:border-accent/50"
                   style={{
                     borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
                     background: isDragActive ? "var(--accent-bg)" : "var(--paper-warm)",
@@ -513,28 +703,41 @@ Qualifications:
                   <input {...getInputProps()} />
                   <div className="flex items-center justify-center">
                     {fileName ? (
-                      <FileText size={28} className="text-accent" />
+                      <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20">
+                        <FileText size={28} className="text-accent" />
+                      </div>
                     ) : (
-                      <Upload
-                        size={28}
-                        className="text-ink-muted group-hover:text-accent transition-colors"
-                      />
+                      <div className="p-3 rounded-2xl bg-paper-card border border-border group-hover:border-accent/40 group-hover:scale-105 transition">
+                        <Upload
+                          size={28}
+                          className="text-ink-muted group-hover:text-accent transition-colors"
+                        />
+                      </div>
                     )}
                   </div>
-                  <p className="text-xs text-ink-muted font-mono leading-relaxed max-w-xs mx-auto mb-3">
-                    {fileName
-                      ? `${fileName}`
-                      : isDragActive
-                        ? "Drop your file here..."
-                        : "Drop PDF, DOCX, or TXT here, or click to browse"}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-ink font-semibold font-mono leading-relaxed max-w-xs mx-auto">
+                      {fileName
+                        ? `${fileName}`
+                        : isDragActive
+                          ? "Release to upload resume..."
+                          : "Drop PDF, DOCX, or TXT here, or click to browse"}
+                    </p>
+                    <span className="text-[10px] text-ink-faint font-mono">
+                      (or press{" "}
+                      <kbd className="px-1.5 py-0.5 rounded bg-paper-card border border-border text-[9px] font-bold text-ink">
+                        ⌘+V
+                      </kbd>{" "}
+                      anywhere to paste)
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleLoadSample();
                     }}
-                    className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-full text-[11px] font-mono font-bold bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
                   >
                     <span>⚡ Try with Sample Resume</span>
                   </button>
@@ -663,6 +866,20 @@ Qualifications:
                         {isScraping ? "Fetching..." : "Fetch"}
                       </button>
                     </div>
+
+                    {jobUrl.trim() && (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/5 border border-accent/15 text-[11px] font-mono animate-fadeIn">
+                        <ShieldCheck size={13} className="text-accent shrink-0" />
+                        <span className="text-ink-muted">Detected Parser:</span>
+                        <strong className="text-ink font-bold">
+                          {detectAtsVendorFromUrl(jobUrl).vendorName}
+                        </strong>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-paper text-ink-faint border border-border">
+                          {detectAtsVendorFromUrl(jobUrl).spec.category}
+                        </span>
+                      </div>
+                    )}
+
                     {scrapeError && (
                       <div style={{ fontSize: 11, color: "#ef4444", lineHeight: 1.4 }}>
                         ⚠️ {scrapeError}
@@ -740,6 +957,14 @@ Qualifications:
         {/* Results */}
         {result && (
           <>
+            {isDemoMode && (
+              <DemoConversionBanner
+                activeArchetype={demoArchetype}
+                onSelectArchetype={handleSelectDemoArchetype}
+                onExitDemo={handleExitDemo}
+                onUploadOwn={handleScrollToUpload}
+              />
+            )}
             {confettiKey > 0 && (
               <ConfettiCannon score={result.score} trigger={confettiKey % 2 === 1} />
             )}
@@ -749,6 +974,7 @@ Qualifications:
               resumeText={extractedText}
               jobDescription={jobDescription}
               targetRole={targetRole}
+              resumeStyleTokens={resumeStyleTokens}
             />
           </>
         )}
@@ -771,19 +997,40 @@ Qualifications:
         )}
       </main>
 
-      {/* Marketing / trust sections — only when no result is active */}
-      {!result && !requiresUpgrade && <HomepageMarketing />}
+      {/* Interactive Sandbox & Marketing — only when no result is active */}
+      {!result && !requiresUpgrade && (
+        <div className="max-w-5xl mx-auto px-6">
+          <InteractiveResumeSandbox onSelectSample={handleLoadArchetypeSample} />
+          <HomepageMarketing />
+        </div>
+      )}
 
       {showUpgradeModal && (
         <UpgradeModal preview={preview} onClose={() => setShowUpgradeModal(false)} />
       )}
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onStartDemo={(arch) => handleStartDemo(arch)}
+        onToggleTheme={() => {
+          const themeBtn = document.querySelector(
+            '[aria-label="Toggle theme"]'
+          ) as HTMLButtonElement;
+          if (themeBtn) themeBtn.click();
+        }}
+      />
     </div>
   );
 }
 
 function Panel({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="glass-card rounded-2xl overflow-hidden flex flex-col h-full bg-paper-card">
+    <SpotlightCard
+      className="specular-border rounded-2xl overflow-hidden flex flex-col h-full bg-paper-card"
+      specularBorder={true}
+    >
       <div
         className="px-5 py-3 border-b flex items-center gap-2 bg-paper-warm/40"
         style={{ borderColor: "var(--border)" }}
@@ -794,6 +1041,6 @@ function Panel({ label, children }: { label: string; children: React.ReactNode }
         </span>
       </div>
       <div className="p-5 flex-1 flex flex-col justify-between">{children}</div>
-    </div>
+    </SpotlightCard>
   );
 }

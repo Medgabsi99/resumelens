@@ -107,7 +107,7 @@ function useFABConfig(): FABConfig | null {
     return {
       primaryIcon: <Mic size={22} />,
       primaryLabel: "Start Interview",
-      primaryColor: "#8b5cf6",
+      primaryColor: "var(--accent)",
       actions: [
         {
           label: "New Interview",
@@ -234,7 +234,9 @@ export default function FloatingActionButton() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on outside click or Escape
   useEffect(() => {
@@ -257,7 +259,9 @@ export default function FloatingActionButton() {
 
   // Close when route changes
   const pathname = usePathname();
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   if (!config || !mounted) return null;
 
@@ -353,7 +357,9 @@ export default function FloatingActionButton() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", lineHeight: 1.2 }}>
+                  <span
+                    style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", lineHeight: 1.2 }}
+                  >
                     {action.label}
                   </span>
                   <span style={{ fontSize: 10, color: "var(--ink-faint)", lineHeight: 1.2 }}>
@@ -385,11 +391,13 @@ export default function FloatingActionButton() {
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.transform = "scale(1.1)";
-                    (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.22)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 4px 16px rgba(0,0,0,0.22)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-                    (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.16)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 2px 10px rgba(0,0,0,0.16)";
                   }}
                 >
                   {action.icon}
@@ -420,21 +428,29 @@ export default function FloatingActionButton() {
             justifyContent: "center",
             cursor: "pointer",
             color: "#fff",
-            transition: reduced ? "none" : "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease",
-            transform: reduced ? "none" : (open ? "rotate(45deg) scale(1.05)" : "rotate(0deg) scale(1)"),
+            transition: reduced
+              ? "none"
+              : "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease",
+            transform: reduced
+              ? "none"
+              : open
+                ? "rotate(45deg) scale(1.05)"
+                : "rotate(0deg) scale(1)",
             position: "relative",
             overflow: "hidden",
           }}
           onMouseEnter={(e) => {
             if (!open && !reduced) {
               (e.currentTarget as HTMLElement).style.transform = "scale(1.08)";
-              (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.28), 0 0 0 4px ${color}22`;
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                `0 8px 24px rgba(0,0,0,0.28), 0 0 0 4px ${color}22`;
             }
           }}
           onMouseLeave={(e) => {
             if (!open && !reduced) {
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.22), 0 0 0 0px transparent";
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                "0 4px 16px rgba(0,0,0,0.22), 0 0 0 0px transparent";
             }
           }}
         >

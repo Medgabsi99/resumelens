@@ -21,20 +21,31 @@ interface Particle {
 
 // ─── Color palettes by milestone ────────────────────────────
 const PALETTE_80 = [
-  "#f59e0b", "#fbbf24", "#fcd34d",  // amber / gold
-  "#6366f1", "#818cf8",              // indigo (brand)
-  "#10b981", "#34d399",              // emerald
-  "#f8fafc", "#e2e8f0",              // white / silver
+  "#f59e0b",
+  "#fbbf24",
+  "#fcd34d", // amber / gold
+  "#6366f1",
+  "#818cf8", // indigo (brand)
+  "#10b981",
+  "#34d399", // emerald
+  "#f8fafc",
+  "#e2e8f0", // white / silver
 ];
 
 const PALETTE_90 = [
-  "#f59e0b", "#fbbf24",              // gold
-  "#ef4444", "#f87171",              // red
-  "#6366f1", "#a78bfa",              // purple / indigo
-  "#10b981", "#6ee7b7",              // emerald
-  "#ec4899", "#f9a8d4",              // pink
-  "#06b6d4", "#67e8f9",              // cyan
-  "#f8fafc",                          // white
+  "#f59e0b",
+  "#fbbf24", // gold
+  "#ef4444",
+  "#f87171", // red
+  "#e05d2e",
+  "#f97316", // terracotta / amber
+  "#10b981",
+  "#6ee7b7", // emerald
+  "#ec4899",
+  "#f9a8d4", // pink
+  "#06b6d4",
+  "#67e8f9", // cyan
+  "#f8fafc", // white
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -209,7 +220,7 @@ export default function ConfettiCannon({ score, trigger }: Props) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       canvas.remove();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
 
   return null; // renders nothing — canvas is appended to body directly

@@ -9,7 +9,14 @@ interface Props {
   className?: string;
 }
 
-const FILLER_PATTERNS = [/\bum\b/gi, /\buh\b/gi, /\blike\b/gi, /\bbasically\b/gi, /\bactually\b/gi, /\byou know\b/gi];
+const FILLER_PATTERNS = [
+  /\bum\b/gi,
+  /\buh\b/gi,
+  /\blike\b/gi,
+  /\bbasically\b/gi,
+  /\bactually\b/gi,
+  /\byou know\b/gi,
+];
 
 export default function AudioSpectrumVisualizer({
   isRecording,
@@ -65,8 +72,14 @@ export default function AudioSpectrumVisualizer({
 
   const pacingStatus = useMemo(() => {
     if (wpm === 0) return { label: "Listening...", color: "var(--ink-muted)", bg: "var(--paper)" };
-    if (wpm < 110) return { label: "Pacing: Slow (< 110 WPM)", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.12)" };
-    if (wpm > 165) return { label: "Pacing: Fast (> 165 WPM)", color: "#ef4444", bg: "rgba(239, 68, 68, 0.12)" };
+    if (wpm < 110)
+      return {
+        label: "Pacing: Slow (< 110 WPM)",
+        color: "#f59e0b",
+        bg: "rgba(245, 158, 11, 0.12)",
+      };
+    if (wpm > 165)
+      return { label: "Pacing: Fast (> 165 WPM)", color: "#ef4444", bg: "rgba(239, 68, 68, 0.12)" };
     return { label: "Pacing: Ideal Pace 🎯", color: "#10b981", bg: "rgba(16, 185, 129, 0.12)" };
   }, [wpm]);
 
@@ -97,7 +110,9 @@ export default function AudioSpectrumVisualizer({
         }
         streamRef.current = stream;
 
-        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         const audioCtx = new AudioContextClass();
         audioCtxRef.current = audioCtx;
 
@@ -142,9 +157,9 @@ export default function AudioSpectrumVisualizer({
             const x = i * (barWidth + barGap);
             const y = canvas.height - barHeight;
 
-            // Dynamic Gradient: Cyan -> Purple -> Emerald
+            // Dynamic Gradient: Sapphire -> Cyan -> Emerald
             const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
-            grad.addColorStop(0, "#8b5cf6");
+            grad.addColorStop(0, "#2563eb");
             grad.addColorStop(0.5, "#06b6d4");
             grad.addColorStop(1, "#10b981");
 
@@ -190,7 +205,7 @@ export default function AudioSpectrumVisualizer({
           const y = canvas.height - barHeight;
 
           const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
-          grad.addColorStop(0, "#8b5cf6");
+          grad.addColorStop(0, "#2563eb");
           grad.addColorStop(1, "#34d399");
 
           ctx.fillStyle = grad;
@@ -229,11 +244,35 @@ export default function AudioSpectrumVisualizer({
       }}
       className={className}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "10px",
+          flexWrap: "wrap",
+          gap: "8px",
+        }}
+      >
         {/* Recording Status & Frequency Meter */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444", animation: "pulse 1.5s infinite" }} />
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)", fontFamily: "DM Mono, monospace" }}>
+          <span
+            style={{
+              width: "10px",
+              height: "10px",
+              borderRadius: "50%",
+              background: "#ef4444",
+              animation: "pulse 1.5s infinite",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "var(--ink)",
+              fontFamily: "DM Mono, monospace",
+            }}
+          >
             LIVE VOICE SPECTRUM
           </span>
         </div>
@@ -256,7 +295,16 @@ export default function AudioSpectrumVisualizer({
       </div>
 
       {/* 60fps Canvas Frequency Equalizer */}
-      <div style={{ width: "100%", height: "48px", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "12px" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "48px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "12px",
+        }}
+      >
         <canvas ref={canvasRef} width={400} height={48} style={{ width: "100%", height: "48px" }} />
       </div>
 
@@ -274,7 +322,7 @@ export default function AudioSpectrumVisualizer({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Clock size={13} style={{ color: "#8b5cf6" }} />
+          <Clock size={13} style={{ color: "var(--accent)" }} />
           <span>
             Duration: <strong style={{ color: "var(--ink)" }}>{elapsedSeconds}s</strong>
           </span>
@@ -291,7 +339,9 @@ export default function AudioSpectrumVisualizer({
           <AlertCircle size={13} style={{ color: fillerCount > 3 ? "#ef4444" : "#10b981" }} />
           <span>
             Fillers (um/uh):{" "}
-            <strong style={{ color: fillerCount > 3 ? "#ef4444" : "#10b981" }}>{fillerCount}</strong>
+            <strong style={{ color: fillerCount > 3 ? "#ef4444" : "#10b981" }}>
+              {fillerCount}
+            </strong>
           </span>
         </div>
       </div>

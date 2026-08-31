@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -66,7 +66,7 @@ function RecruiterSandboxContent({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<RecruiterReviewData | null>(null);
 
-  const handleRunSimulation = async () => {
+  const handleRunSimulation = useCallback(async () => {
     if (!resumeText || resumeText.length < 50) {
       toastError("Resume text is too short to simulate a recruiter review.");
       return;
@@ -91,13 +91,13 @@ function RecruiterSandboxContent({
     } finally {
       setLoading(false);
     }
-  };
+  }, [resumeText, jobDescription, targetRole, toastError]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && !data && !loading) {
       handleRunSimulation();
     }
-  }, [isOpen]);
+  }, [isOpen, data, loading, handleRunSimulation]);
 
   if (!isOpen) return null;
 
