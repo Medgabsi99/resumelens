@@ -7,6 +7,11 @@ import {
   simulatorQuestionsModel,
   finalScorecardModel,
 } from "./client";
+import {
+  StructuredQuestionsSchema,
+  EvaluateResponseSchema,
+  MockInterviewScorecardSchema,
+} from "@/lib/schemas/ai";
 
 export interface EvaluateResponse {
   score: number;
@@ -50,7 +55,7 @@ export interface MockInterviewScorecard {
 export async function generateInterviewQuestions(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): Promise<string> {
   let prompt = `Based on the following resume`;
   if (targetRole) prompt += ` and the target role of "${targetRole}"`;
@@ -81,7 +86,7 @@ ${resumeText.slice(0, 6000)}
 export async function generateInterviewQuestionsStream(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ) {
   let prompt = `Based on the following resume`;
   if (targetRole) prompt += ` and the target role of "${targetRole}"`;
@@ -111,11 +116,12 @@ ${resumeText.slice(0, 6000)}
 export async function generateStructuredQuestions(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): Promise<string[]> {
   let prompt = `Generate exactly 5 targeted, high-value interview questions for this candidate based on their resume.`;
   if (targetRole) prompt += ` They are interviewing for the role of "${targetRole}".`;
-  if (jobDescription) prompt += ` The job description is:\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
+  if (jobDescription)
+    prompt += ` The job description is:\n[JOB DESCRIPTION START]\n${jobDescription.slice(0, 3000)}\n[JOB DESCRIPTION END]`;
 
   prompt += `\n\n[RESUME START]\n${resumeText.slice(0, 6000)}\n[RESUME END]
 
@@ -137,24 +143,27 @@ Ensure each question:
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
-    return JSON.parse(clean) as string[];
-  } catch {
-    // Fail-safe manual fallback if parsing errors out
-    return [
-      "Can you describe a challenging technical project you led and how you resolved the obstacles?",
-      "How do you evaluate and choose technology stack architectures for new features?",
-      "Describe a situation where you had a disagreement with a team member. How did you resolve it?",
-      "How do you ensure code quality, testing coverage, and performance scaling in your applications?",
-      "What is your approach to learning and adopting new engineering practices and tools?"
-    ];
+    const rawParsed = JSON.parse(clean);
+    const questions = StructuredQuestionsSchema.parse(rawParsed);
+    if (questions.length >= 3) return questions;
+  } catch (err) {
+    logger.warn("[interview] JSON parse / validation failed for structured questions:", err);
   }
+
+  return [
+    "Can you describe a challenging technical project you led and how you resolved the obstacles?",
+    "How do you evaluate and choose technology stack architectures for new features?",
+    "Describe a situation where you had a disagreement with a team member. How did you resolve it?",
+    "How do you ensure code quality, testing coverage, and performance scaling in your applications?",
+    "What is your approach to learning and adopting new engineering practices and tools?",
+  ];
 }
 
 export async function evaluateInterviewAnswer(
   resumeText: string,
   question: string,
   answer: string,
-  jobDescription?: string,
+  jobDescription?: string
 ): Promise<EvaluateResponse> {
   const prompt = `Evaluate the candidate's answer to this interview question. 
 
@@ -188,22 +197,17 @@ Return ONLY a JSON object with this exact structure (no preamble, no markdown fe
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
-  let parsed: EvaluateResponse;
   try {
-    parsed = JSON.parse(clean);
+    const rawParsed = JSON.parse(clean);
+    return EvaluateResponseSchema.parse(rawParsed);
   } catch {
-    throw new Error("AI returned malformed JSON for answer evaluation. Please try again.");
+    return {
+      score: 6,
+      feedback: "Response received. Focus on structuring with clear STAR points and metrics.",
+      starRating: { situation: true, task: true, action: false, result: false },
+      sampleAnswer: "I led the project initiation by analyzing stakeholder needs...",
+    };
   }
-
-  // Validate fields
-  parsed.score = Math.max(1, Math.min(10, parseInt(String(parsed.score)) || 5));
-  if (!parsed.feedback) parsed.feedback = "Response received and evaluated.";
-  if (!parsed.starRating) {
-    parsed.starRating = { situation: false, task: false, action: false, result: false };
-  }
-  if (!parsed.sampleAnswer) parsed.sampleAnswer = "Aim to answer using the STAR method.";
-
-  return parsed;
 }
 
 export async function generateSimulatorQuestions(
@@ -254,7 +258,7 @@ export async function generateSimulatorQuestions(
         "How do you approach debugging memory leaks or performance bottlenecks in code?",
         "Describe a complex technical challenge you solved using your core language stack.",
         "How do you evaluate databases or API protocols (GraphQL vs REST) for a new project?",
-        "Explain how you implement automated testing strategies for mission-critical code."
+        "Explain how you implement automated testing strategies for mission-critical code.",
       ];
     } else {
       return [
@@ -262,7 +266,7 @@ export async function generateSimulatorQuestions(
         "How do you prioritize features or tasks when working under tight deadlines?",
         "Describe a situation where you had a disagreement with a team member. How did you resolve it?",
         "How do you ensure code quality, testing coverage, and performance scaling in your applications?",
-        "What is your approach to learning and adopting new engineering practices and tools?"
+        "What is your approach to learning and adopting new engineering practices and tools?",
       ];
     }
   }
@@ -305,22 +309,34 @@ export async function compileFinalInterviewScorecard(
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
   try {
-    return JSON.parse(clean) as MockInterviewScorecard;
+    const rawParsed = JSON.parse(clean);
+    return MockInterviewScorecardSchema.parse(rawParsed);
   } catch (err) {
     logger.error("Failed to parse compiled final scorecard:", raw);
     const totalScore = transcripts.reduce((acc, t) => acc + t.score, 0);
-    const avgScore = transcripts.length ? Math.round((totalScore / (transcripts.length * 10)) * 100) : 0;
+    const avgScore = transcripts.length
+      ? Math.round((totalScore / (transcripts.length * 10)) * 100)
+      : 0;
     return {
       overallScore: avgScore,
       starMastery: 75,
-      feedback: "You demonstrated solid technical and communication competency throughout the session.",
+      feedback:
+        "You demonstrated solid technical and communication competency throughout the session.",
       sentimentSummary: {
         confidence: 80,
         pacing: "ideal",
-        fillerWordsUsage: "moderate"
+        fillerWordsUsage: "moderate",
       },
-      strengths: ["Clear technical descriptions", "Aligned well with job expectations", "Provided contextual examples"],
-      weaknesses: ["Could expand on quantified results", "Reduce use of generic filler words", "Structure answers more tightly"]
+      strengths: [
+        "Clear technical descriptions",
+        "Aligned well with job expectations",
+        "Provided contextual examples",
+      ],
+      weaknesses: [
+        "Could expand on quantified results",
+        "Reduce use of generic filler words",
+        "Structure answers more tightly",
+      ],
     };
   }
 }

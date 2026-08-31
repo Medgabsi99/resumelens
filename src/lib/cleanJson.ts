@@ -35,7 +35,7 @@ export function extractCleanJson<T = unknown>(rawText: string, fallback?: T): T 
     }
   }
 
-  // 3. Remove trailing commas in arrays/objects (common LLM artifact)
+  // 3. Remove trailing commas in arrays/objects
   cleaned = cleaned.replace(/,\s*([}\]])/g, "$1");
 
   try {

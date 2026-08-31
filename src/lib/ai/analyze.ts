@@ -1,10 +1,11 @@
 import { AnalysisResult } from "@/types";
 import { withRetryAndTimeout, model } from "./client";
+import { AnalysisResultSchema, PreviewResultSchema } from "@/lib/schemas/ai";
 
 export function buildAnalysisPrompt(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): string {
   let prompt = `Analyze this resume`;
   if (targetRole) prompt += ` for a ${targetRole} position`;
@@ -60,39 +61,36 @@ ATS breakdown sub-scores:
 export async function analyzeResume(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): Promise<AnalysisResult> {
   const prompt = buildAnalysisPrompt(resumeText, jobDescription, targetRole);
 
-  const result = await withRetryAndTimeout(() => model.generateContent(prompt));
+  const result = await withRetryAndTimeout(() => model.generateContent(prompt), 50000, 3, 1000, {
+    route: "analyze",
+    model: "gemini-3.6-flash",
+  });
   const raw = result.response.text();
 
   // Strip any accidental markdown fences
   const clean = raw.replace(/```json|```/g, "").trim();
 
-  let parsed: AnalysisResult;
+  let rawParsed: unknown;
   try {
-    parsed = JSON.parse(clean);
+    rawParsed = JSON.parse(clean);
   } catch {
     throw new Error("AI returned malformed JSON. Please try again.");
   }
 
-  // Validate and clamp
-  parsed.score = Math.max(
-    1,
-    Math.min(100, parseInt(String(parsed.score)) || 50),
-  );
-  parsed.strengths = (parsed.strengths || []).slice(0, 5);
-  parsed.weaknesses = (parsed.weaknesses || []).slice(0, 5);
-  parsed.suggestions = (parsed.suggestions || []).slice(0, 5);
+  // Validate against schema — handles type coercion, clamping, and structural checks
+  const parsed = AnalysisResultSchema.parse(rawParsed);
 
-  return parsed;
+  return parsed as unknown as AnalysisResult;
 }
 
 export function buildPreviewPrompt(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): string {
   let prompt = `Provide a quick overall preview score and summary for this resume`;
   if (targetRole) prompt += ` for a ${targetRole} position`;
@@ -120,7 +118,7 @@ Scoring guide: 80-100 = exceptional, 65-79 = solid, 50-64 = average, below 50 = 
 export async function previewAnalyzeResume(
   resumeText: string,
   jobDescription?: string,
-  targetRole?: string,
+  targetRole?: string
 ): Promise<{ score: number; summary: string; strengths: string[] }> {
   const prompt = buildPreviewPrompt(resumeText, jobDescription, targetRole);
 
@@ -128,16 +126,13 @@ export async function previewAnalyzeResume(
   const raw = result.response.text();
   const clean = raw.replace(/```json|```/g, "").trim();
 
-  let parsed: { score: number; summary: string; strengths: string[] };
+  let rawParsed: unknown;
   try {
-    parsed = JSON.parse(clean);
+    rawParsed = JSON.parse(clean);
   } catch {
     throw new Error("AI returned malformed preview JSON. Please try again.");
   }
 
-  parsed.score = Math.max(1, Math.min(100, parseInt(String(parsed.score)) || 50));
-  parsed.strengths = (parsed.strengths || []).slice(0, 2);
-
-  return parsed;
+  // Validate against schema — handles score clamping and strengths slicing
+  return PreviewResultSchema.parse(rawParsed);
 }
-

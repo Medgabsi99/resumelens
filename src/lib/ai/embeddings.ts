@@ -28,10 +28,7 @@
 import { genAI } from "./client";
 import logger from "@/lib/logger";
 
-export type EmbeddingTaskType =
-  | "RETRIEVAL_DOCUMENT"
-  | "RETRIEVAL_QUERY"
-  | "SEMANTIC_SIMILARITY";
+export type EmbeddingTaskType = "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY" | "SEMANTIC_SIMILARITY";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -49,11 +46,11 @@ function l2Normalize(vec: number[]): number[] {
   if (norm === 0) return vec;
   return vec.map((v) => v / norm);
 }
-const MAX_BATCH_SIZE = 100; // gemini-2.5 API limit per batchEmbedContents call
+const MAX_BATCH_SIZE = 100; // gemini-3.6 API limit per batchEmbedContents call
 const MAX_RETRIES = 4;
 const BASE_DELAY_MS = 500;
 
-/** gemini-2.5 embedding model instance (singleton) */
+/** gemini-3.6 embedding model instance (singleton) */
 const embeddingModel = genAI.getGenerativeModel({ model: EMBEDDING_MODEL });
 
 // ─── Single embedding ─────────────────────────────────────────────────────────
@@ -76,7 +73,6 @@ export async function embedText(
   while (true) {
     attempt++;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- outputDimensionality not yet in SDK types
       const result = await embeddingModel.embedContent({
         content: { parts: [{ text: trimmed }], role: "user" },
         taskType: taskType as string,
@@ -135,10 +131,7 @@ export async function embedBatch(
   return results;
 }
 
-async function embedBatchChunk(
-  texts: string[],
-  taskType: EmbeddingTaskType
-): Promise<number[][]> {
+async function embedBatchChunk(texts: string[], taskType: EmbeddingTaskType): Promise<number[][]> {
   // Replace empty strings with a placeholder to avoid API errors
   const sanitized = texts.map((t) => t.trim() || " ");
 
@@ -146,7 +139,6 @@ async function embedBatchChunk(
   while (true) {
     attempt++;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- outputDimensionality not yet in SDK types
       const result = await embeddingModel.batchEmbedContents({
         requests: sanitized.map((text) => ({
           content: { parts: [{ text }], role: "user" },
@@ -165,9 +157,7 @@ async function embedBatchChunk(
       const errStatus = (err as { status?: number })?.status;
       const errMsg = (err as Error)?.message ?? String(err);
       const isRateLimit =
-        errStatus === 429 ||
-        errStatus === 503 ||
-        String(errMsg).includes("quota");
+        errStatus === 429 || errStatus === 503 || String(errMsg).includes("quota");
 
       if (isRateLimit && attempt < MAX_RETRIES) {
         const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
@@ -184,10 +174,7 @@ async function embedBatchChunk(
 }
 
 /** Sequential fallback — used when batch API fails */
-async function sequentialEmbed(
-  texts: string[],
-  taskType: EmbeddingTaskType
-): Promise<number[][]> {
+async function sequentialEmbed(texts: string[], taskType: EmbeddingTaskType): Promise<number[][]> {
   const results: number[][] = [];
   for (const text of texts) {
     results.push(await embedText(text, taskType));
@@ -204,7 +191,9 @@ async function sequentialEmbed(
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) throw new Error("Vector dimension mismatch");
-  let dot = 0, magA = 0, magB = 0;
+  let dot = 0,
+    magA = 0,
+    magB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
     magA += a[i] * a[i];

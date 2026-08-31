@@ -42,38 +42,58 @@ export interface RetrievedChunk {
  *   "Where did I study?" → "education"
  *   "How should I improve my resume?" → null (general)
  */
-export function routeQueryToChunkType(
-  query: string
-): string | null {
+export function routeQueryToChunkType(query: string): string | null {
   const q = query.toLowerCase();
 
   // Skills / tech
-  if (/\b(skill|technology|tech|stack|programm|language|framework|tool|library|software|proficien|expertise|know|certif|cloud|devops|database|api)\b/.test(q)) {
+  if (
+    /\b(skill|technology|tech|stack|programm|language|framework|tool|library|software|proficien|expertise|know|certif|cloud|devops|database|api)\b/.test(
+      q
+    )
+  ) {
     return "skills";
   }
 
   // Experience / work
-  if (/\b(experience|work(ed)?|job|career|employ|compan|role|position|manag|engineer|develop|senior|junior|intern|freelanc|achiev|accomplish|built|led|team|project at)\b/.test(q)) {
+  if (
+    /\b(experience|work(ed)?|job|career|employ|compan|role|position|manag|engineer|develop|senior|junior|intern|freelanc|achiev|accomplish|built|led|team|project at)\b/.test(
+      q
+    )
+  ) {
     return "experience";
   }
 
   // Education
-  if (/\b(educat|degree|university|college|school|gpa|academic|major|stud|graduate|bachelor|master|phd|diploma|coursework)\b/.test(q)) {
+  if (
+    /\b(educat|degree|university|college|school|gpa|academic|major|stud|graduate|bachelor|master|phd|diploma|coursework)\b/.test(
+      q
+    )
+  ) {
     return "education";
   }
 
   // Projects / portfolio
-  if (/\b(project|portfolio|github|open.?source|side.?project|personal.?project|built|created|developed|demo)\b/.test(q)) {
+  if (
+    /\b(project|portfolio|github|open.?source|side.?project|personal.?project|built|created|developed|demo)\b/.test(
+      q
+    )
+  ) {
     return "projects";
   }
 
   // Summary / overview
-  if (/\b(summary|overview|background|profile|about|introduc|describe yourself|who are you|tell me about yourself)\b/.test(q)) {
+  if (
+    /\b(summary|overview|background|profile|about|introduc|describe yourself|who are you|tell me about yourself)\b/.test(
+      q
+    )
+  ) {
     return "summary";
   }
 
   // Certifications
-  if (/\b(certif|credential|license|accreditat|aws certif|google certif|microsoft certif)\b/.test(q)) {
+  if (
+    /\b(certif|credential|license|accreditat|aws certif|google certif|microsoft certif)\b/.test(q)
+  ) {
     return "certifications";
   }
 
@@ -83,14 +103,14 @@ export function routeQueryToChunkType(
 // ─── RankGPT listwise reranking (2026 standard) ─────────────────────────────
 
 /**
- * Listwise Reranking (RankGPT-style): uses gemini-2.5 to precisely score and rank
+ * Listwise Reranking (RankGPT-style): uses gemini-3.6 to precisely score and rank
  * candidate chunks based on multi-dimensional relevance to the user's query.
  * Falls back to initial hybrid ranking if LLM call fails.
  */
 export async function rerankChunks(
   query: string,
   chunks: RetrievedChunk[],
-  topK: number = 5,
+  topK: number = 5
 ): Promise<RetrievedChunk[]> {
   if (chunks.length <= 1) return chunks.slice(0, topK);
 
@@ -111,9 +131,7 @@ Evaluate the relevance of each candidate chunk to the query. Sort them from most
   "rankedIds": ["id1", "id2", ...]
 }`;
 
-    const result = await withRetryAndTimeout(() =>
-      rerankModel.generateContent(prompt)
-    );
+    const result = await withRetryAndTimeout(() => rerankModel.generateContent(prompt));
 
     const raw = result.response.text();
     const clean = raw.replace(/```json|```/g, "").trim();
@@ -168,7 +186,7 @@ export async function retrieveHybrid(
   supabase: SupabaseClient,
   k: number = 5,
   analysisId?: string | null,
-  chunkType?: string | null,
+  chunkType?: string | null
 ): Promise<RetrievedChunk[]> {
   try {
     // Fetch a larger candidate pool (up to 12 chunks) for LLM reranking
@@ -186,7 +204,15 @@ export async function retrieveHybrid(
     if (error) {
       logger.warn("[retrieval] match_resume_chunks_hybrid RPC failed:", error.message);
       // Fall back to dense-only without reranking for speed in error paths
-      return retrieveRelevantChunks(queryEmbedding, userId, supabase, k, 0.2, analysisId, chunkType);
+      return retrieveRelevantChunks(
+        queryEmbedding,
+        userId,
+        supabase,
+        k,
+        0.2,
+        analysisId,
+        chunkType
+      );
     }
 
     if (!data || data.length === 0) return [];
@@ -216,7 +242,7 @@ export async function retrieveRelevantChunks(
   k: number = 5,
   threshold: number = 0.3,
   analysisId?: string | null,
-  chunkType?: string | null,
+  chunkType?: string | null
 ): Promise<RetrievedChunk[]> {
   try {
     const { data, error } = await supabase.rpc("match_resume_chunks", {
@@ -247,10 +273,7 @@ export async function retrieveRelevantChunks(
  * Returns true if the user has at least one stored embedding.
  * Used for graceful fallback in chat and job-match handlers.
  */
-export async function hasEmbeddings(
-  userId: string,
-  supabase: SupabaseClient
-): Promise<boolean> {
+export async function hasEmbeddings(userId: string, supabase: SupabaseClient): Promise<boolean> {
   try {
     const { count, error } = await supabase
       .from("resume_chunks")
@@ -291,9 +314,7 @@ export function formatChunksForPrompt(chunks: RetrievedChunk[]): string {
  * Group retrieved chunks by section type and compute per-type average similarity.
  * Used by job matching to produce structured embedding scores.
  */
-export function aggregateSectionScores(
-  chunks: RetrievedChunk[]
-): Record<string, number> {
+export function aggregateSectionScores(chunks: RetrievedChunk[]): Record<string, number> {
   const groups: Record<string, number[]> = {};
 
   for (const chunk of chunks) {
@@ -303,9 +324,7 @@ export function aggregateSectionScores(
 
   const scores: Record<string, number> = {};
   for (const [type, sims] of Object.entries(groups)) {
-    scores[type] = parseFloat(
-      (sims.reduce((a, b) => a + b, 0) / sims.length).toFixed(3)
-    );
+    scores[type] = parseFloat((sims.reduce((a, b) => a + b, 0) / sims.length).toFixed(3));
   }
 
   return scores;

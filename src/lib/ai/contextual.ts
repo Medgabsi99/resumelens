@@ -15,7 +15,7 @@
  * Reference: https://www.anthropic.com/news/contextual-retrieval
  *
  * Implementation details:
- *  - Single batched gemini-2.5 call for all chunks (efficient — not one call/chunk)
+ *  - Single batched gemini-3.6 call for all chunks (efficient — not one call/chunk)
  *  - Context generation uses the full resume text as reference
  *  - Original chunk content is preserved in the DB for display
  *  - Only the embedding uses the contextualized version
@@ -46,7 +46,7 @@ export interface ContextualizedChunk extends ResumeChunk {
 
 /**
  * Enrich resume chunks with LLM-generated context prefixes (Contextual Retrieval).
- * Uses a single batched gemini-2.5 call for all chunks.
+ * Uses a single batched gemini-3.6 call for all chunks.
  * Falls back to rule-based context if LLM fails.
  */
 export async function contextualizeChunks(
@@ -64,13 +64,8 @@ export async function contextualizeChunks(
       return buildContextualizedChunk(chunk, contextPrefix);
     });
   } catch (err) {
-    logger.warn(
-      "[contextual] Batch context generation failed, using rule-based fallback:",
-      err
-    );
-    return chunks.map((chunk) =>
-      buildContextualizedChunk(chunk, ruleBasedContext(chunk))
-    );
+    logger.warn("[contextual] Batch context generation failed, using rule-based fallback:", err);
+    return chunks.map((chunk) => buildContextualizedChunk(chunk, ruleBasedContext(chunk)));
   }
 }
 
@@ -116,13 +111,13 @@ ${chunksText}
   const parsed: unknown = JSON.parse(clean);
   if (!Array.isArray(parsed)) throw new Error("Expected JSON array");
   if (parsed.length !== chunks.length) {
-    throw new Error(
-      `Expected ${chunks.length} contexts, got ${parsed.length}`
-    );
+    throw new Error(`Expected ${chunks.length} contexts, got ${parsed.length}`);
   }
 
   return (parsed as unknown[]).map((c) =>
-    String(c ?? "").slice(0, 250).trim()
+    String(c ?? "")
+      .slice(0, 250)
+      .trim()
   );
 }
 
@@ -136,18 +131,12 @@ function ruleBasedContext(chunk: ResumeChunk): string {
   const labels: Record<string, string> = {
     contact: "From the Contact section: personal details and links.",
     summary: "From the Summary section: professional overview and career goals.",
-    experience:
-      "From the Experience section: employment history and work achievements.",
-    education:
-      "From the Education section: degrees, institutions, and academic history.",
-    skills:
-      "From the Skills section: technical skills, tools, and competencies.",
-    projects:
-      "From the Projects section: personal or professional portfolio work.",
-    certifications:
-      "From the Certifications section: credentials and professional training.",
-    awards:
-      "From the Awards/Achievements section: recognition and accomplishments.",
+    experience: "From the Experience section: employment history and work achievements.",
+    education: "From the Education section: degrees, institutions, and academic history.",
+    skills: "From the Skills section: technical skills, tools, and competencies.",
+    projects: "From the Projects section: personal or professional portfolio work.",
+    certifications: "From the Certifications section: credentials and professional training.",
+    awards: "From the Awards/Achievements section: recognition and accomplishments.",
     other: "From an additional section of the resume.",
   };
   return labels[chunk.type] ?? "From the candidate's resume.";
@@ -155,13 +144,8 @@ function ruleBasedContext(chunk: ResumeChunk): string {
 
 // ─── Builder ──────────────────────────────────────────────────────────────────
 
-function buildContextualizedChunk(
-  chunk: ResumeChunk,
-  contextPrefix: string
-): ContextualizedChunk {
-  const embeddingText = contextPrefix
-    ? `${contextPrefix}\n\n${chunk.content}`
-    : chunk.content;
+function buildContextualizedChunk(chunk: ResumeChunk, contextPrefix: string): ContextualizedChunk {
+  const embeddingText = contextPrefix ? `${contextPrefix}\n\n${chunk.content}` : chunk.content;
 
   return { ...chunk, contextPrefix, embeddingText };
 }
