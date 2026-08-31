@@ -1,3 +1,4 @@
+import React from "react";
 import { type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "@/components/ResumeEditor/types";
 
@@ -16,7 +17,7 @@ export async function downloadResumePdf(
   const { renderResumePdf } = await import("./generatePdf");
 
   const doc = renderResumePdf(templateId, data, targetRole, customStyle);
-   
+
   const blob = await pdf(doc as any).toBlob();
 
   const fileName = `${(data.contact.name || "Resume").replace(/\s+/g, "_")}-${templateId}.pdf`;
@@ -48,10 +49,53 @@ export async function downloadReviewPdf(
   const { renderReviewPdf } = await import("./generatePdf");
 
   const doc = renderReviewPdf(templateId, result, targetRole, jobDescription);
-   
+
   const blob = await pdf(doc as any).toBlob();
 
   const fileName = `Resume_Review_${(targetRole || "Analysis").replace(/\s+/g, "_")}-${templateId}.pdf`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Generates and downloads a PDF of the AI-fixed resume.
+ * - "same-format": renders the corrected text as a faithful plain-layout PDF
+ *   that preserves the original section structure without imposing visual styling.
+ * - Any other templateId: parses the corrected text into a ParsedResume and
+ *   renders it through the chosen styled PDF template.
+ */
+export async function downloadFixedResumePdf(
+  templateId: string,
+  correctedText: string,
+  targetRole?: string,
+  styleTokens?: import("@/types").ResumeStyleTokens,
+  structuredResume?: import("@/types/structuredResume").StructuredResume
+) {
+  const { pdf } = await import("@react-pdf/renderer");
+
+  let doc: React.ReactElement;
+
+  if (templateId === "same-format") {
+    const { renderPlainTextPdf } = await import("./generatePdf");
+    doc = renderPlainTextPdf(correctedText, targetRole, styleTokens, structuredResume);
+  } else {
+    const { parseResume } = await import("@/lib/parseResume");
+    const { renderResumePdf } = await import("./generatePdf");
+    const parsed = parseResume(correctedText);
+    doc = renderResumePdf(templateId, parsed, targetRole);
+  }
+
+  const blob = await pdf(doc as any).toBlob();
+  const safeRole = (targetRole || "Resume").replace(/\s+/g, "_");
+  const suffix = templateId === "same-format" ? "SameFormat" : templateId;
+  const fileName = `${safeRole}_Fixed_${suffix}.pdf`;
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

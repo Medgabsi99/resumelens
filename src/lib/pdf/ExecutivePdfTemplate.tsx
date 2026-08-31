@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#7a1c1c", // Oxblood accent
-    marginBottom: 4,
+    marginBottom: 6,
   },
   role: {
     fontSize: 10.5,
@@ -201,7 +201,7 @@ export default function ExecutivePdfTemplate({ data, targetRole }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>EDUCATION & ACADEMIC CREDENTIALS</Text>
           {data.education.map((edu, idx) => (
-            <View key={idx} style={styles.eduEntry} wrap={false}>
+            <View key={idx} style={styles.eduEntry}>
               <View style={styles.eduLeft}>
                 <Text style={styles.eduDegree}>{edu.degree}</Text>
                 <Text style={styles.eduSchool}>{edu.school}</Text>

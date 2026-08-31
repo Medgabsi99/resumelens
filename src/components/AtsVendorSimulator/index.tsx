@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   simulateAtsVendors,
+  simulateVendorXRay,
   type AtsVendor,
   type AtsVendorProfile,
   type AtsSimulatorResult,
+  type VendorXRayResult,
 } from "@/lib/atsSimulatorEngine";
+import { ATS_VENDOR_SPECS } from "@/lib/atsFingerprinter";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -17,7 +20,9 @@ import {
   ChevronRight,
   Sparkles,
   RefreshCw,
+  Terminal,
 } from "lucide-react";
+import SpotlightCard from "../SpotlightCard";
 
 interface Props {
   resumeText: string;
@@ -26,10 +31,19 @@ interface Props {
 }
 
 export default function AtsVendorSimulator({ resumeText, jobDescription, onApplyFixes }: Props) {
-  const result: AtsSimulatorResult = simulateAtsVendors(resumeText, jobDescription);
+  const result: AtsSimulatorResult = useMemo(() => {
+    return simulateAtsVendors(resumeText, jobDescription);
+  }, [resumeText, jobDescription]);
 
   const [activeVendor, setActiveVendor] = useState<AtsVendor>("workday");
+  const [viewMode, setViewMode] = useState<"audits" | "xray" | "specs">("audits");
+
   const activeProfile: AtsVendorProfile = result.profiles[activeVendor];
+  const activeSpec = ATS_VENDOR_SPECS[activeVendor];
+
+  const xrayResult: VendorXRayResult = useMemo(() => {
+    return simulateVendorXRay(resumeText, activeVendor);
+  }, [resumeText, activeVendor]);
 
   const handleApplyFixes = () => {
     if (onApplyFixes) {
@@ -77,11 +91,12 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
               <Building2 size={20} />
             </span>
             <h3 className="font-display text-xl font-bold text-ink">
-              Executive ATS Vendor Match Simulator
+              Executive ATS Vendor Match Simulator (8 Platforms)
             </h3>
           </div>
           <p className="text-xs text-ink-muted leading-relaxed">
-            Simulates parsing compatibility across top Fortune 500 Applicant Tracking Systems.
+            Simulates parsing compatibility and failure risks across Workday, Greenhouse, Lever,
+            Ashby, Taleo, and more.
           </p>
         </div>
 
@@ -105,10 +120,11 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
         </div>
       </div>
 
-      {/* ── Vendor Selector Tabs Grid ─────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+      {/* ── Vendor Selector Tabs Grid (8 Vendors) ──────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-6">
         {(Object.keys(result.profiles) as AtsVendor[]).map((vKey) => {
           const profile = result.profiles[vKey];
+          const spec = ATS_VENDOR_SPECS[vKey];
           const isSelected = activeVendor === vKey;
           return (
             <button
@@ -116,30 +132,30 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
               type="button"
               onClick={() => setActiveVendor(vKey)}
               style={{
-                borderColor: isSelected ? profile.accentColor : "var(--border)",
+                borderColor: isSelected ? spec.accentColor : "var(--border)",
                 background: isSelected ? "var(--paper)" : "transparent",
               }}
-              className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200 hover:border-accent ${
-                isSelected ? "shadow-md ring-1 ring-accent-border" : ""
+              className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all duration-200 hover:border-accent cursor-pointer ${
+                isSelected ? "shadow-md ring-1 ring-accent-border scale-[1.02]" : ""
               }`}
             >
-              <div className="flex items-center justify-between w-full mb-2">
+              <div className="flex items-center justify-between w-full mb-1.5">
                 <span
-                  style={{ background: profile.accentColor }}
-                  className="text-[10px] font-bold text-white px-2 py-0.5 rounded-md font-mono"
+                  style={{ background: spec.accentColor }}
+                  className="text-[9px] font-bold text-white px-1.5 py-0.5 rounded font-mono"
                 >
                   {profile.logoBadge}
                 </span>
                 <span
-                  className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded-md ${getScoreColor(
+                  className={`text-[11px] font-bold font-mono px-1 py-0.2 rounded ${getScoreColor(
                     profile.matchScore
                   )}`}
                 >
                   {profile.matchScore}%
                 </span>
               </div>
-              <div className="text-xs font-bold text-ink truncate w-full">{profile.name}</div>
-              <div className="text-[10px] text-ink-faint truncate w-full mt-0.5">
+              <div className="text-[11px] font-bold text-ink truncate w-full">{profile.name}</div>
+              <div className="text-[9px] text-ink-faint truncate w-full mt-0.5">
                 {profile.parsingRisk}
               </div>
             </button>
@@ -152,7 +168,7 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 mb-4 border-b border-border">
           <div className="flex items-center gap-3">
             <span
-              style={{ background: activeProfile.accentColor }}
+              style={{ background: activeSpec.accentColor }}
               className="text-sm font-extrabold text-white px-3 py-1 rounded-lg font-mono"
             >
               {activeProfile.logoBadge}
@@ -167,61 +183,159 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
             </div>
           </div>
 
+          {/* Sub-view Navigation Buttons */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-ink-muted">Parsing Security:</span>
-            <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full border ${getScoreColor(
-                activeProfile.matchScore
-              )}`}
+            <button
+              type="button"
+              onClick={() => setViewMode("audits")}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                viewMode === "audits"
+                  ? "bg-accent text-white border-accent"
+                  : "bg-paper-card text-ink-muted border-border"
+              }`}
             >
-              {activeProfile.parsingRisk}
-            </span>
+              Audits ({activeProfile.checks.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("xray")}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border flex items-center gap-1 ${
+                viewMode === "xray"
+                  ? "bg-accent text-white border-accent"
+                  : "bg-paper-card text-ink-muted border-border"
+              }`}
+            >
+              <Terminal size={12} />
+              <span>ATS X-Ray</span>
+              {xrayResult.detectedAnomalies.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("specs")}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                viewMode === "specs"
+                  ? "bg-accent text-white border-accent"
+                  : "bg-paper-card text-ink-muted border-border"
+              }`}
+            >
+              Insider Tips
+            </button>
           </div>
         </div>
 
         <p className="text-xs text-ink-muted leading-relaxed mb-5 italic bg-paper-card p-3 rounded-xl border border-border">
-          💡 <strong>Vendor Behavior:</strong> {activeProfile.summary}
+          💡 <strong>Engine Architecture:</strong> {activeProfile.summary}
         </p>
 
-        {/* ── Rules & Checks Breakdown ───────────────────────── */}
-        <div className="space-y-3">
-          <div className="text-xs font-mono uppercase tracking-wider text-ink-faint font-bold">
-            Platform Parsing Audits ({activeProfile.checks.length})
-          </div>
+        {/* ── View Mode 1: Audits ───────────────────────────── */}
+        {viewMode === "audits" && (
+          <div className="space-y-3">
+            <div className="text-xs font-mono uppercase tracking-wider text-ink-faint font-bold">
+              Platform Parsing Audits ({activeProfile.checks.length})
+            </div>
 
-          {activeProfile.checks.map((check) => (
-            <div
-              key={check.id}
-              className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-paper-card hover:bg-paper transition"
-            >
-              {getStatusIcon(check.status)}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-1">
-                  <div className="text-xs font-bold text-ink">{check.title}</div>
-                  <span className="text-[10px] font-mono text-ink-faint uppercase bg-paper px-2 py-0.5 rounded border border-border">
-                    {check.category}
-                  </span>
-                </div>
-                <div className="text-xs text-ink-muted leading-relaxed mb-2">
-                  {check.description}
-                </div>
-                {check.status !== "pass" && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                    <Sparkles size={13} className="shrink-0 text-amber-500" />
-                    <span>
-                      <strong>Recommended Fix:</strong> {check.recommendation}
+            {activeProfile.checks.map((check) => (
+              <div
+                key={check.id}
+                className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-paper-card hover:bg-paper transition"
+              >
+                {getStatusIcon(check.status)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-xs font-bold text-ink">{check.title}</div>
+                    <span className="text-[10px] font-mono text-ink-faint uppercase bg-paper px-2 py-0.5 rounded border border-border">
+                      {check.category}
                     </span>
                   </div>
-                )}
+                  <div className="text-xs text-ink-muted leading-relaxed mb-2">
+                    {check.description}
+                  </div>
+                  {check.status !== "pass" && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                      <Sparkles size={13} className="shrink-0 text-amber-500" />
+                      <span>
+                        <strong>Recommended Fix:</strong> {check.recommendation}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── View Mode 2: X-Ray Terminal ───────────────────── */}
+        {viewMode === "xray" && (
+          <div className="space-y-3">
+            <div className="rounded-xl overflow-hidden border border-border bg-[#0d0d12] text-slate-200 font-mono text-xs shadow-inner">
+              <div className="px-3.5 py-2 bg-[#181822] border-b border-border/40 flex items-center justify-between text-[11px] text-slate-400">
+                <span>{activeVendor.toUpperCase()}_PARSER_INGEST.raw</span>
+                <span className="text-emerald-400 font-bold">● INGEST BUFFER</span>
+              </div>
+              <div className="p-4 max-h-72 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text">
+                {xrayResult.parsedStream}
               </div>
             </div>
-          ))}
-        </div>
+
+            {xrayResult.detectedAnomalies.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1.5">
+                <div className="font-mono font-bold text-amber-600 dark:text-amber-400 uppercase">
+                  ⚠️ Detected Ingest Flags ({xrayResult.detectedAnomalies.length})
+                </div>
+                {xrayResult.detectedAnomalies.map((a, i) => (
+                  <div key={i} className="text-ink-muted text-[11px]">
+                    • <strong className="text-ink">"{a.line}"</strong> — {a.warning}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── View Mode 3: Insider Specs ────────────────────── */}
+        {viewMode === "specs" && (
+          <div className="space-y-4 text-xs">
+            <div>
+              <div className="font-mono font-bold uppercase text-accent mb-2">
+                Reverse-Engineered Quirks:
+              </div>
+              <div className="space-y-1.5">
+                {activeSpec.parsingPeculiarities.map((p, i) => (
+                  <div
+                    key={i}
+                    className="p-2.5 rounded-lg bg-paper-card border border-border text-ink-muted leading-relaxed"
+                  >
+                    <strong>0{i + 1}.</strong> {p}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-2">
+                Optimal Passing Strategy:
+              </div>
+              <div className="space-y-1.5">
+                {activeSpec.recommendedStrategy.map((s, i) => (
+                  <div
+                    key={i}
+                    className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-ink leading-relaxed flex items-start gap-2"
+                  >
+                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Universal Optimization Summary ───────────────── */}
       {result.universalFixesCount > 0 && (
-        <div className="mt-5 p-4 rounded-2xl bg-gradient-to-r from-accent/10 via-purple-500/10 to-indigo-500/10 border border-accent/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="mt-5 p-4 rounded-2xl bg-gradient-to-r from-accent/10 via-blue-500/10 to-emerald-500/10 border border-accent/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-accent text-white shadow-md">
               <Zap size={18} />
@@ -231,8 +345,8 @@ export default function AtsVendorSimulator({ resumeText, jobDescription, onApply
                 {result.universalFixesCount} Quick Fixes Available
               </div>
               <div className="text-[11px] text-ink-muted">
-                Resolving these flags boosts your score across Workday, Greenhouse, Lever, Taleo,
-                and iCIMS simultaneously.
+                Resolving these flags boosts your score across Workday, Greenhouse, Lever, Ashby,
+                and Taleo simultaneously.
               </div>
             </div>
           </div>

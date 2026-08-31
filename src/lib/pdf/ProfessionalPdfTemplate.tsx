@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   role: {
     fontSize: 11,
@@ -229,7 +229,7 @@ export default function ProfessionalPdfTemplate({ data, targetRole, customStyle 
         <View style={styles.section}>
           <Text style={sectionTitleStyle}>EDUCATION</Text>
           {data.education.map((edu, idx) => (
-            <View key={idx} style={styles.eduEntry} wrap={false}>
+            <View key={idx} style={styles.eduEntry}>
               <View style={styles.eduLeft}>
                 <Text style={styles.eduDegree}>{edu.degree}</Text>
                 <Text style={styles.eduSchool}>{edu.school}</Text>

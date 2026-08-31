@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ffffff",
     letterSpacing: -0.5,
-    marginBottom: 3,
+    marginBottom: 6,
   },
   role: {
     fontSize: 11,

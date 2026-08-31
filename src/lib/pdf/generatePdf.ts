@@ -6,9 +6,27 @@ import ModernPdfTemplate from "./ModernPdfTemplate";
 import CreativePdfTemplate from "./CreativePdfTemplate";
 import MinimalPdfTemplate from "./MinimalPdfTemplate";
 import ExecutivePdfTemplate from "./ExecutivePdfTemplate";
+import ResumeReviewPdfTemplate from "./ResumeReviewPdfTemplate";
+import PlainTextPdfTemplate from "./PlainTextPdfTemplate";
+import AtsPdfATemplate from "./AtsPdfATemplate";
 import { type ParsedResume } from "@/lib/parseResume";
 import { type ResumeCustomStyle } from "@/components/ResumeEditor/types";
+import { type AnalysisResult } from "@/types";
 import type { DocumentProps } from "@react-pdf/renderer";
+import { sanitizeResumeData } from "./pdfSanitizer";
+
+// ─── Plain-text markdown stripper (for same-format path only) ──────────────────
+function stripMdPlainText(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/\*\*([\s\S]+?)\*\*/g, "$1")
+    .replace(/\*([\s\S]+?)\*/g, "$1")
+    .replace(/__([\s\S]+?)__/g, "$1")
+    .replace(/_([^_\n]+)_/g, "$1")
+    .replace(/`([^`\n]+)`/g, "$1")
+    .replace(/#{1,6}\s+/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+}
 
 export function getPdfTemplateComponent(
   templateId: string,
@@ -18,6 +36,9 @@ export function getPdfTemplateComponent(
 ) {
   const props = { data, targetRole, customStyle };
   switch (templateId) {
+    case "ats-certified":
+    case "ats-safe":
+      return React.createElement(AtsPdfATemplate, { data, targetRole });
     case "tech-pro":
       return React.createElement(TechProPdfTemplate, { data, targetRole });
     case "modern":
@@ -45,16 +66,35 @@ export function renderResumePdf(
   targetRole?: string,
   customStyle?: ResumeCustomStyle
 ): React.ReactElement<DocumentProps> {
-  const component = getPdfTemplateComponent(templateId, data, targetRole, customStyle);
+  // ⚡ Self-healing: detect and repair ALL known data issues automatically
+  const { data: clean } = sanitizeResumeData(data);
+  const component = getPdfTemplateComponent(templateId, clean, targetRole, customStyle);
   return React.createElement(
     DocumentWrapper,
-    { title: `Resume - ${data.contact.name || "CV"}` },
+    { title: `Resume - ${clean.contact.name || "CV"}` },
     component
   );
 }
 
-import ResumeReviewPdfTemplate from "./ResumeReviewPdfTemplate";
-import { type AnalysisResult } from "@/types";
+export function renderPlainTextPdf(
+  text: string,
+  targetRole?: string,
+  styleTokens?: import("@/types").ResumeStyleTokens,
+  structuredResume?: import("@/types/structuredResume").StructuredResume
+): React.ReactElement<DocumentProps> {
+  const cleanText = stripMdPlainText(text);
+  const component = React.createElement(PlainTextPdfTemplate, {
+    text: cleanText,
+    targetRole,
+    styleTokens,
+    structuredResume,
+  });
+  return React.createElement(
+    DocumentWrapper,
+    { title: `Resume${targetRole ? ` - ${targetRole}` : ""} (Fixed)` },
+    component
+  );
+}
 
 export function renderReviewPdf(
   templateId: string,

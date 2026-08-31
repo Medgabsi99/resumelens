@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#1e1b4b",
-    marginBottom: 3,
+    marginBottom: 6,
   },
   role: {
     fontSize: 11,
@@ -208,7 +208,7 @@ export default function CreativePdfTemplate({ data, targetRole }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>EDUCATION</Text>
           {data.education.map((edu, idx) => (
-            <View key={idx} style={styles.eduEntry} wrap={false}>
+            <View key={idx} style={styles.eduEntry}>
               <View style={styles.eduLeft}>
                 <Text style={styles.eduDegree}>{edu.degree}</Text>
                 <Text style={styles.eduSchool}>{edu.school}</Text>
