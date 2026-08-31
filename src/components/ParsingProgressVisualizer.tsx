@@ -12,11 +12,36 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { id: 0, label: "Analyzing Layout Structure", sublabel: "Reading document columns & alignment rules", Icon: FileSearch },
-  { id: 1, label: "Extracting Text Layer", sublabel: "Locating contact block, education, & experiences", Icon: ScanSearch },
-  { id: 2, label: "Reranking Keywords", sublabel: "Comparing experience descriptions with target JD", Icon: Brain },
-  { id: 3, label: "Calibrating ATS Score", sublabel: "Checking styling, fonts, & margin rules", Icon: BarChart2 },
-  { id: 4, label: "Structuring AI Suggestions", sublabel: "Finalizing custom rewrite actions", Icon: Sparkles },
+  {
+    id: 0,
+    label: "Analyzing Layout Structure",
+    sublabel: "Reading document columns & alignment rules",
+    Icon: FileSearch,
+  },
+  {
+    id: 1,
+    label: "Extracting Text Layer",
+    sublabel: "Locating contact block, education, & experiences",
+    Icon: ScanSearch,
+  },
+  {
+    id: 2,
+    label: "Reranking Keywords",
+    sublabel: "Comparing experience descriptions with target JD",
+    Icon: Brain,
+  },
+  {
+    id: 3,
+    label: "Calibrating ATS Score",
+    sublabel: "Checking styling, fonts, & margin rules",
+    Icon: BarChart2,
+  },
+  {
+    id: 4,
+    label: "Structuring AI Suggestions",
+    sublabel: "Finalizing custom rewrite actions",
+    Icon: Sparkles,
+  },
 ];
 
 interface Props {
@@ -35,12 +60,16 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-[#0d0d15]/60 backdrop-blur-xl border border-white/5 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-8 animate-fade-in text-slate-100 font-sans">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes scanLaser {
           0%, 100% { top: 0%; }
           50% { top: 96%; }
         }
-      `}} />
+      `,
+        }}
+      />
 
       <div className="text-center space-y-1">
         <h3 className="font-display text-xl font-bold tracking-tight text-white">
@@ -54,7 +83,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
       {/* Visual Scanning Animation Box */}
       <div className="relative w-44 h-56 border border-white/10 rounded-2xl bg-[#08080c]/80 p-4 flex flex-col gap-3.5 overflow-hidden shadow-inner">
         {/* Scanning laser line */}
-        <div className="absolute left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-violet-500 to-transparent shadow-[0_0_15px_#8b5cf6] animate-[scanLaser_2.2s_ease-in-out_infinite] z-20" />
+        <div className="absolute left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-[scanLaser_2.2s_ease-in-out_infinite] z-20" />
 
         {/* Mock content blocks with scanning highlight state */}
         <div className="space-y-2 relative z-10">
@@ -67,12 +96,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
 
         <div className="space-y-3 flex-1 relative z-10">
           {/* Bullet points */}
-          {[
-            { w: "w-5/6" },
-            { w: "w-full" },
-            { w: "w-4/5" },
-            { w: "w-11/12" },
-          ].map((bar, i) => (
+          {[{ w: "w-5/6" }, { w: "w-full" }, { w: "w-4/5" }, { w: "w-11/12" }].map((bar, i) => (
             <div key={i} className="space-y-1">
               <div className="h-2 w-12 bg-slate-800/80 rounded" />
               <div className={`h-1.5 ${bar.w} bg-slate-800/30 rounded`} />
@@ -97,8 +121,8 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
                 isDone
                   ? "bg-emerald-500/5 border-emerald-500/20 text-slate-100"
                   : isActive
-                  ? "bg-violet-500/10 border-violet-500/30 text-slate-100 shadow-[0_0_15px_rgba(139,92,246,0.05)]"
-                  : "bg-transparent border-white/5 text-slate-400 opacity-60"
+                    ? "bg-blue-500/10 border-blue-500/30 text-slate-100 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
+                    : "bg-transparent border-white/5 text-slate-400 opacity-60"
               }`}
             >
               {/* Step Status Indicator Icon */}
@@ -107,8 +131,8 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
                   isDone
                     ? "bg-emerald-500/20 border-emerald-500/35 text-emerald-400"
                     : isActive
-                    ? "bg-violet-500/20 border-violet-500/35 text-violet-400 animate-pulse"
-                    : "bg-[#0d0d15] border-white/5 text-slate-500"
+                      ? "bg-blue-500/20 border-blue-500/35 text-blue-400 animate-pulse"
+                      : "bg-[#0d0d15] border-white/5 text-slate-500"
                 }`}
               >
                 {isDone ? <Check size={18} /> : <step.Icon size={18} />}
@@ -118,7 +142,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
                 <h4 className="text-sm font-bold leading-none mb-1 flex items-center gap-2">
                   {step.label}
                   {isActive && (
-                    <span className="inline-block w-1.5 h-1.5 bg-violet-400 rounded-full animate-ping" />
+                    <span className="inline-block w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping" />
                   )}
                 </h4>
                 <p className="text-xs text-slate-400 truncate leading-none">
@@ -127,7 +151,7 @@ export default function ParsingProgressVisualizer({ currentStep }: Props) {
               </div>
 
               {isActive && (
-                <span className="text-xs text-violet-400 font-bold font-mono tracking-widest animate-pulse">
+                <span className="text-xs text-blue-400 font-bold font-mono tracking-widest animate-pulse">
                   ACTIVE
                 </span>
               )}

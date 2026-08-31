@@ -42,91 +42,216 @@ export interface ParsedResume {
   awards?: string[];
 }
 
-// ─── Helpers ────────────────────────────────────────────────
+// ─── Section Mapping (Bilingual: English & French) ───────────────────────────
 
-const SECTION_KEYWORDS = [
-  // Summary
-  "summary",
-  "objective",
-  "profile",
-  "about me",
-  "about",
-  "profil",
-  "sommaire",
-  "presentation",
-  "resume",
-  "professional summary",
-  // Experience
-  "experience",
-  "work history",
-  "employment",
-  "career history",
-  "parcours",
-  "experiences",
-  "professional experience",
-  "work experience",
-  // Education
-  "education",
-  "academic",
-  "formation",
-  "etudes",
-  "cursus",
-  "academic background",
-  "educational background",
-  // Skills
-  "skills",
-  "core competencies",
-  "technical skills",
-  "expertise",
-  "competences",
-  "aptitudes",
-  "savoir-faire",
-  "technologies",
-  "tools",
-  "tools & technologies",
-  // Projects
-  "projects",
-  "personal projects",
-  "projets",
-  "key projects",
-  // Certifications
-  "certifications",
-  "licenses",
-  "certification",
-  "professional certifications",
-  // Languages
-  "languages",
-  "langues",
-  // Awards
-  "awards",
-  "honors",
-  "distinctions",
-  "prix",
-  "achievements",
-  // Volunteering / Interests
-  "volunteer",
-  "volunteering",
-  "interests",
-  "hobbies",
-  // References
-  "references",
-];
+const NORMALIZED_SECTION_MAP: Record<
+  string,
+  | "summary"
+  | "experience"
+  | "education"
+  | "skills"
+  | "projects"
+  | "certifications"
+  | "languages"
+  | "awards"
+> = {
+  // Summary (English)
+  summary: "summary",
+  "professional summary": "summary",
+  "executive summary": "summary",
+  "career summary": "summary",
+  "summary of qualifications": "summary",
+  profile: "summary",
+  "professional profile": "summary",
+  "personal profile": "summary",
+  "career profile": "summary",
+  about: "summary",
+  "about me": "summary",
+  objective: "summary",
+  "career objective": "summary",
+  "professional objective": "summary",
+
+  // Summary (French)
+  sommaire: "summary",
+  "sommaire professionnel": "summary",
+  profil: "summary",
+  "profil professionnel": "summary",
+  "a propos": "summary",
+  "a propos de moi": "summary",
+  presentation: "summary",
+  "presentation generale": "summary",
+  resume: "summary",
+  "resume professionnel": "summary",
+  objectif: "summary",
+  "objectif professionnel": "summary",
+
+  // Experience (English)
+  experience: "experience",
+  experiences: "experience",
+  "professional experience": "experience",
+  "professional experiences": "experience",
+  "work experience": "experience",
+  "work experiences": "experience",
+  "work history": "experience",
+  "employment history": "experience",
+  employment: "experience",
+  "career history": "experience",
+  "relevant experience": "experience",
+
+  // Experience (French)
+  "experience professionnelle": "experience",
+  "experiences professionnelles": "experience",
+  parcours: "experience",
+  "parcours professionnel": "experience",
+  "historique professionnel": "experience",
+  "stages et experiences": "experience",
+  "experiences et stages": "experience",
+  stages: "experience",
+
+  // Education (English)
+  education: "education",
+  "educational background": "education",
+  "academic background": "education",
+  "academic history": "education",
+  academics: "education",
+
+  // Education (French)
+  formation: "education",
+  formations: "education",
+  etudes: "education",
+  cursus: "education",
+  "cursus universitaire": "education",
+  "cursus academique": "education",
+  "parcours academique": "education",
+  "formation academique": "education",
+  "diplomes et formations": "education",
+  "formations et diplomes": "education",
+  diplomes: "education",
+
+  // Skills (English)
+  skills: "skills",
+  "technical skills": "skills",
+  "core competencies": "skills",
+  "key skills": "skills",
+  expertise: "skills",
+  "areas of expertise": "skills",
+  "hard skills": "skills",
+  "soft skills": "skills",
+  technologies: "skills",
+  "technologies and tools": "skills",
+  "technologies & tools": "skills",
+  "tools and technologies": "skills",
+  "tools & technologies": "skills",
+  tools: "skills",
+
+  // Skills (French)
+  competences: "skills",
+  "competences techniques": "skills",
+  "competences cles": "skills",
+  "savoir faire": "skills",
+  "savoir-faire": "skills",
+  aptitudes: "skills",
+  "technologies et outils": "skills",
+  "outils et technologies": "skills",
+  "langages et outils": "skills",
+
+  // Projects (English & French)
+  projects: "projects",
+  "personal projects": "projects",
+  "key projects": "projects",
+  "selected projects": "projects",
+  "academic projects": "projects",
+  projets: "projects",
+  "projets personnels": "projects",
+  "projets realises": "projects",
+  "projets academiques": "projects",
+  "projets et realisations": "projects",
+  realisations: "projects",
+
+  // Certifications (English & French)
+  certifications: "certifications",
+  certification: "certifications",
+  certificates: "certifications",
+  licenses: "certifications",
+  "licenses & certifications": "certifications",
+  certificats: "certifications",
+  "licences et certifications": "certifications",
+
+  // Languages (English & French)
+  languages: "languages",
+  language: "languages",
+  "language skills": "languages",
+  "language proficiency": "languages",
+  langues: "languages",
+  "langues pratiquees": "languages",
+  "competences linguistiques": "languages",
+
+  // Awards (English & French)
+  awards: "awards",
+  honors: "awards",
+  "honors & awards": "awards",
+  distinctions: "awards",
+  achievements: "awards",
+  prix: "awards",
+  recompenses: "awards",
+  "prix et distinctions": "awards",
+};
 
 /** Regex that matches common bullet-point prefixes. */
 const BULLET_PREFIX = /^[•\-◦✦▸►‣‐–*]\s*/;
 
-/** Does this line look like a section header? */
-export function isHeaderLine(line: string): boolean {
-  const clean = line
-    .trim()
+/** Determine section category from a candidate header line (Bilingual). */
+export function getSectionType(
+  line: string
+):
+  | "summary"
+  | "experience"
+  | "education"
+  | "skills"
+  | "projects"
+  | "certifications"
+  | "languages"
+  | "awards"
+  | null {
+  if (!line) return null;
+  const trimmed = line.trim();
+  if (isBulletLine(trimmed)) return null;
+  if (/[.!;]$/.test(trimmed)) return null;
+
+  const clean = trimmed
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[:\s]+$/, "");
+    .replace(/^[\s#*=_:–—\-#|]+|[\s#*=_:–—\-#|]+$/g, "")
+    .trim();
 
-  if (clean.length > 50 || clean.length === 0) return false;
+  if (!clean || clean.length > 50 || clean.length < 3) return null;
 
-  return SECTION_KEYWORDS.some((k) => clean === k || clean.includes(k));
+  // Direct exact match
+  if (NORMALIZED_SECTION_MAP[clean]) {
+    return NORMALIZED_SECTION_MAP[clean];
+  }
+
+  // Prefix / suffix match (e.g. "Mes Formations", "Key Skills", "Mon Parcours")
+  for (const [key, sec] of Object.entries(NORMALIZED_SECTION_MAP)) {
+    if (
+      clean === key ||
+      clean === `mes ${key}` ||
+      clean === `mon ${key}` ||
+      clean === `my ${key}` ||
+      clean === `key ${key}` ||
+      clean === `core ${key}`
+    ) {
+      return sec;
+    }
+  }
+
+  return null;
+}
+
+/** Does this line look like a section header? */
+export function isHeaderLine(line: string): boolean {
+  return getSectionType(line) !== null;
 }
 
 function cleanSectionName(sec: string): string {
@@ -145,11 +270,20 @@ function isBulletLine(line: string): boolean {
 /** Is this line purely a date / date-range? */
 function isDateLine(line: string): boolean {
   const clean = line.trim();
-  // e.g. "Jan 2020 - Present", "2018 – 2020", "06/2019 – 12/2021"
   return (
-    /^\w{0,12}\s*\d{4}\s*[-–—to]+\s*(\w{0,12}\s*\d{4}|present|current|now)/i.test(clean) ||
+    // e.g. "Jan 2020 - Present", "2018 – 2020", "Fév 2025 – Présent", "02/2025 - 07/2025"
+    /^\w{0,12}\s*\d{4}\s*[-–—to]+\s*(\w{0,12}\s*\d{4}|present|current|now|présent|actuel)/i.test(
+      clean
+    ) ||
+    /^\d{1,2}\/\d{4}\s*[-–—to]+\s*(\d{1,2}\/\d{4}|present|current|now|présent|actuel)/i.test(
+      clean
+    ) ||
+    /^\d{4}\s*[-–—]\s*\d{4}$/.test(clean) ||
     /^\d{4}\s*$/.test(clean) ||
-    (/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(clean) && /\d{4}/.test(clean))
+    (/^(?:jan|feb|fév|mar|avr|apr|mai|may|jun|jul|juil|aug|août|sep|oct|nov|déc|dec)/i.test(
+      clean
+    ) &&
+      /\d{4}/.test(clean))
   );
 }
 
@@ -237,10 +371,10 @@ function parseExperienceEntry(entryLines: string[]): ParsedResume["experience"][
   if (dateLineIdx > -1) {
     dates = entryLines[dateLineIdx];
   } else {
-    // Look for a date range anywhere
+    // Look for a date range anywhere in the lines (supports French months)
     for (const l of entryLines) {
       const dateMatch = l.match(
-        /(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\.?\s+)?\d{4}\s*[-–—to]+\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\.?\s+)?\d{4}|(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\.?\s+)?\d{4}\s*[-–—to]+\s*(?:present|current|now)/i
+        /(?:(?:jan|feb|fév|mar|avr|apr|mai|may|jun|jul|juil|aug|août|sep|oct|nov|déc|dec)\w*\.?\s+)?\d{4}\s*[-–—to]+\s*(?:(?:jan|feb|fév|mar|avr|apr|mai|may|jun|jul|juil|aug|août|sep|oct|nov|déc|dec)\w*\.?\s+)?\d{4}|(?:(?:jan|feb|fév|mar|avr|apr|mai|may|jun|jul|juil|aug|août|sep|oct|nov|déc|dec)\w*\.?\s+)?\d{4}\s*[-–—to]+\s*(?:present|current|now|présent|actuel)/i
       );
       if (dateMatch) {
         dates = dateMatch[0].trim();
@@ -295,6 +429,27 @@ function parseExperienceEntry(entryLines: string[]): ParsedResume["experience"][
 
 // ─── Main Parser ────────────────────────────────────────────
 
+function isLikelyContactLine(line: string, indexInContact: number): boolean {
+  const t = line.trim();
+  if (!t) return false;
+  if (isBulletLine(t)) return false;
+  if (isHeaderLine(t)) return false;
+  // First 1-2 lines can be name / title (short)
+  if (indexInContact <= 1 && t.length < 70 && !t.includes(". ")) return true;
+  // Contains email
+  if (/[\w.+-]+@[\w.-]+\.\w+/.test(t)) return true;
+  // Contains phone
+  if (/[+]?[\d\s\-()]{7,}/.test(t) && t.length < 50) return true;
+  // Contains URL / link / domain
+  if (/(?:https?:\/\/|www\.|\.com|\.io|\.me|\.app|\.net|\.org|\.fr|\.tn|linkedin|github)/i.test(t))
+    return true;
+  // Short line with pipes e.g. "Hammamet, Tunisia | Developer"
+  if (t.includes("|") && t.length < 100) return true;
+  // Short city/country location or subtitle
+  if (t.length < 50 && !t.includes(". ") && !t.endsWith(".")) return true;
+  return false;
+}
+
 export function parseResume(text: string): ParsedResume {
   // Keep blank lines for entry boundary detection
   const rawLines = text.split("\n");
@@ -306,22 +461,23 @@ export function parseResume(text: string): ParsedResume {
   };
 
   // ── Contact block: first few lines before any section header ──
-  // Scan up to 14 lines — contact sections often have a line each for
-  // name, title, email, phone, location, LinkedIn, GitHub, portfolio
   const contactLines: string[] = [];
-  let blankCount = 0;
   let i = 0;
-  for (; i < Math.min(14, rawLines.length); i++) {
+  for (; i < Math.min(10, rawLines.length); i++) {
     const trimmed = rawLines[i].trim();
     if (trimmed === "") {
-      blankCount++;
-      // Allow one blank line inside the contact block (separates name from details)
-      // but stop after two consecutive blanks
-      if (blankCount >= 2 && contactLines.length > 0) break;
+      if (contactLines.length > 0) {
+        const nextNonEmpty = rawLines.slice(i + 1).find((l) => l.trim() !== "");
+        if (nextNonEmpty && !isLikelyContactLine(nextNonEmpty, contactLines.length)) {
+          i++;
+          break;
+        }
+      }
       continue;
     }
-    blankCount = 0;
-    if (isHeaderLine(trimmed)) break;
+    if (!isLikelyContactLine(trimmed, contactLines.length)) {
+      break;
+    }
     contactLines.push(trimmed);
   }
 
@@ -444,30 +600,108 @@ export function parseResume(text: string): ParsedResume {
     }
     if (!buffer.length) return;
 
+    const sectionType = getSectionType(currentSection);
     const sec = cleanSectionName(currentSection);
     const textContent = buffer
       .map((l) => l.trim())
       .filter(Boolean)
       .join("\n");
 
-    // ── Summary / Profile ──
+    // ── 1. Summary / Profile ──
     if (
+      sectionType === "summary" ||
       sec.includes("summary") ||
       sec.includes("objective") ||
       sec.includes("profile") ||
-      sec.includes("about") ||
       sec.includes("sommaire") ||
-      sec.includes("presentation")
+      sec.includes("presentation") ||
+      sec.includes("profil")
     ) {
-      result.summary = textContent;
+      // Safety: the summary section sometimes has experience entries
+      // accidentally merged into it (AI or raw text may not emit an explicit header).
+      // Split the buffer at the first sign of an experience entry or bullet point:
+      const summaryLines: string[] = [];
+      const experienceOverflow: string[] = [];
+      let inExperience = false;
 
-      // ── Experience ──
+      for (let li = 0; li < buffer.length; li++) {
+        const l = buffer[li];
+        const t = l.trim();
+
+        if (inExperience) {
+          experienceOverflow.push(l);
+          continue;
+        }
+
+        if (t === "") {
+          if (summaryLines.length > 0) summaryLines.push("");
+          continue;
+        }
+
+        // Check if this line is the START of experience:
+        const isBullet = isBulletLine(t);
+        const hasInlineBullet = /[•✦▸►‣]\s+[A-ZÀ-Ü]/.test(t);
+        const isRoleHeader =
+          /[\w\u00C0-\u024F]{3,}\s+[—–-]\s+[\w\u00C0-\u024F]{2,}/.test(t) &&
+          !isBullet &&
+          t.length < 120;
+        const isDate =
+          isDateLine(t) ||
+          /\b(?:19|20)\d{2}\s*[-–—]\s*(?:(?:19|20)\d{2}|present|current|now|présent|actuel)\b/i.test(
+            t
+          );
+        const isExpHeader = getSectionType(t) === "experience";
+
+        if (
+          isBullet ||
+          hasInlineBullet ||
+          (summaryLines.some((s) => s.trim() !== "") && (isRoleHeader || isDate || isExpHeader))
+        ) {
+          inExperience = true;
+          if (hasInlineBullet && !isBullet) {
+            const bulletIdx = t.search(/[•✦▸►‣]/);
+            if (bulletIdx > 0) {
+              const narrative = t.slice(0, bulletIdx).trim();
+              const bulletPart = t.slice(bulletIdx).trim();
+              if (narrative) summaryLines.push(narrative);
+              if (bulletPart) experienceOverflow.push(bulletPart);
+              continue;
+            }
+          }
+          if (!isExpHeader) {
+            experienceOverflow.push(l);
+          }
+          continue;
+        }
+
+        summaryLines.push(l);
+      }
+
+      result.summary =
+        summaryLines
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .join("\n") || undefined;
+
+      // Re-parse overflowed experience lines as experience entries
+      if (experienceOverflow.length > 0) {
+        const overflowEntries = splitIntoEntries(experienceOverflow);
+        for (const entryLines of overflowEntries) {
+          const filtered = entryLines.filter(Boolean);
+          if (filtered.length === 0) continue;
+          result.experience.push(parseExperienceEntry(filtered));
+        }
+      }
+
+      // ── 2. Experience ──
     } else if (
+      sectionType === "experience" ||
       sec.includes("experience") ||
       sec.includes("work") ||
       sec.includes("employment") ||
       sec.includes("history") ||
-      sec.includes("parcours")
+      sec.includes("parcours") ||
+      sec.includes("stage")
     ) {
       const entries = splitIntoEntries(buffer);
       for (const entryLines of entries) {
@@ -476,31 +710,57 @@ export function parseResume(text: string): ParsedResume {
         result.experience.push(parseExperienceEntry(filtered));
       }
 
-      // ── Education ──
+      // ── 3. Education ──
     } else if (
+      sectionType === "education" ||
       sec.includes("education") ||
       sec.includes("academic") ||
       sec.includes("formation") ||
-      sec.includes("etudes")
+      sec.includes("etudes") ||
+      sec.includes("diplome") ||
+      sec.includes("cursus")
     ) {
       const entries = splitIntoEntries(buffer);
       for (const entryLines of entries) {
         const filtered = entryLines.filter((l) => l.trim() !== "");
         if (filtered.length === 0) continue;
-        const degree = filtered[0] || "";
-        const school = filtered.length > 1 ? filtered[1] : "";
-        const dates =
-          filtered.find((l) => isDateLine(l)) ||
-          (() => {
-            for (const l of filtered) {
-              const m = l.match(/\d{4}/);
-              if (m) return l;
+
+        const rawFirst = filtered[0] || "";
+
+        // If the first line has an embedded year-range (e.g. "ESPRIT, Tunis — Diplôme 2021 – 2025"),
+        // split it so the date doesn't appear in both degree AND dates columns.
+        const embeddedDateRe =
+          /\s+(\d{4}\s*[-–—]\s*(?:\d{4}|present|current|now|présent|actuel))\s*$/i;
+        const embeddedMatch = rawFirst.match(embeddedDateRe);
+        const degree = embeddedMatch
+          ? rawFirst.slice(0, embeddedMatch.index).trim()
+          : rawFirst.trim();
+        const embeddedDate = embeddedMatch ? embeddedMatch[1].trim() : "";
+
+        // School is the next non-date non-degree line
+        const school = filtered.length > 1 && !isDateLine(filtered[1]) ? filtered[1] : "";
+
+        // Dates: prefer explicit standalone date line, then embedded, then year search
+        const explicitDateLine = filtered.find((l, idx) => idx > 0 && isDateLine(l));
+        let dates = explicitDateLine || embeddedDate;
+        if (!dates) {
+          for (const l of filtered) {
+            const m = l.match(/\b\d{4}\b/);
+            if (m) {
+              dates = l;
+              break;
             }
-            return "";
-          })();
+          }
+        }
+
+        const headerSet = new Set<string>([rawFirst]);
+        if (school) headerSet.add(school);
+        if (explicitDateLine) headerSet.add(explicitDateLine);
+
         const detailLines = filtered.filter(
-          (l) => l !== degree && l !== school && l !== dates && !isDateLine(l)
+          (l) => !headerSet.has(l) && !isDateLine(l) && l.trim() !== degree
         );
+
         result.education.push({
           degree,
           school,
@@ -509,14 +769,16 @@ export function parseResume(text: string): ParsedResume {
         });
       }
 
-      // ── Skills ──
+      // ── 4. Skills ──
     } else if (
+      sectionType === "skills" ||
       sec.includes("skill") ||
       sec.includes("competenc") ||
       sec.includes("expertise") ||
       sec.includes("aptitude") ||
       sec.includes("technolog") ||
-      sec.includes("tools")
+      sec.includes("tool") ||
+      sec.includes("savoir")
     ) {
       const skills = textContent
         .split(/[,\n•|✦▸►]/)
@@ -524,8 +786,13 @@ export function parseResume(text: string): ParsedResume {
         .filter(Boolean);
       result.skills = [...result.skills, ...skills];
 
-      // ── Projects ──
-    } else if (sec.includes("project") || sec.includes("projet")) {
+      // ── 5. Projects ──
+    } else if (
+      sectionType === "projects" ||
+      sec.includes("project") ||
+      sec.includes("projet") ||
+      sec.includes("realisation")
+    ) {
       if (!result.projects) result.projects = [];
       const entries = splitIntoEntries(buffer);
       for (const entryLines of entries) {
@@ -539,15 +806,20 @@ export function parseResume(text: string): ParsedResume {
         });
       }
 
-      // ── Certifications ──
-    } else if (sec.includes("certif") || sec.includes("license")) {
+      // ── 6. Certifications ──
+    } else if (
+      sectionType === "certifications" ||
+      sec.includes("certif") ||
+      sec.includes("license") ||
+      sec.includes("licence")
+    ) {
       result.certifications = [
         ...(result.certifications || []),
         ...textContent.split("\n").map(stripBullet).filter(Boolean),
       ];
 
-      // ── Languages ──
-    } else if (sec.includes("language") || sec.includes("langue")) {
+      // ── 7. Languages ──
+    } else if (sectionType === "languages" || sec.includes("language") || sec.includes("langue")) {
       result.languages = [
         ...(result.languages || []),
         ...textContent
@@ -556,25 +828,39 @@ export function parseResume(text: string): ParsedResume {
           .filter(Boolean),
       ];
 
-      // ── Awards ──
+      // ── 8. Awards ──
     } else if (
+      sectionType === "awards" ||
       sec.includes("award") ||
       sec.includes("distinction") ||
       sec.includes("prix") ||
       sec.includes("achievement") ||
-      sec.includes("honor")
+      sec.includes("honor") ||
+      sec.includes("recompense")
     ) {
       result.awards = [
         ...(result.awards || []),
         ...textContent.split("\n").map(stripBullet).filter(Boolean),
       ];
 
-      // ── Fallback → summary ──
+      // ── 9. Fallback — unrecognized section header ──
     } else {
-      if (!result.summary) {
+      const hasRoleLines = buffer.some((l) => {
+        const t = l.trim();
+        return /[\w\u00C0-\u024F]{3,}\s+[—–-]\s+[\w\u00C0-\u024F]{2,}/.test(t) && t.length < 120;
+      });
+      const hasBullets = buffer.some((l) => isBulletLine(l));
+      const hasDateLines = buffer.some((l) => isDateLine(l.trim()));
+
+      if (hasRoleLines || (hasBullets && hasDateLines)) {
+        const entries = splitIntoEntries(buffer);
+        for (const entryLines of entries) {
+          const filtered = entryLines.filter(Boolean);
+          if (filtered.length === 0) continue;
+          result.experience.push(parseExperienceEntry(filtered));
+        }
+      } else if (!result.summary) {
         result.summary = textContent;
-      } else {
-        result.summary += "\n" + textContent;
       }
     }
 

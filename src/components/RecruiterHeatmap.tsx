@@ -305,7 +305,7 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
                 style={{
                   height: "100%",
                   width: `${heatmapData.fPatternScore}%`,
-                  background: "linear-gradient(90deg, #8b5cf6, #10b981)",
+                  background: "linear-gradient(90deg, #3b82f6, #10b981)",
                   borderRadius: "99px",
                 }}
               />
@@ -700,6 +700,29 @@ export default function RecruiterHeatmap({ resumeText }: Props) {
           </div>
         </div>
       )}
+
+      {/* Screen Reader Accessible Summary */}
+      <table className="sr-only">
+        <caption>Recruiter 6-Second Eye Tracking Scan Fixations</caption>
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Target Zone</th>
+            <th scope="col">Dwell Time (ms)</th>
+            <th scope="col">Attention Intensity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {heatmapData.fixations.map((f, idx) => (
+            <tr key={idx}>
+              <td>Step {f.sequenceOrder}</td>
+              <td>{f.label}</td>
+              <td>{f.durationMs}ms</td>
+              <td>{Math.round(f.intensity * 100)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
