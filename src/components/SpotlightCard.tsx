@@ -1,49 +1,74 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  glowColor?: string; // e.g. "rgba(139, 92, 246, 0.15)"
+  glowColor?: string;
   enableTilt?: boolean;
   borderBeam?: boolean;
   beamColor?: string;
+  specularBorder?: boolean;
 }
 
 export default function SpotlightCard({
   children,
-  glowColor = "rgba(139, 92, 246, 0.15)",
+  glowColor = "rgba(255, 255, 255, 0.06)",
   enableTilt = true,
   borderBeam = false,
-  beamColor = "linear-gradient(90deg, #8b5cf6, #10b981, #6366f1)",
+  beamColor = "linear-gradient(90deg, #6366f1, #10b981, #3b82f6)",
+  specularBorder = true,
   className = "",
   style = {},
   ...props
 }: Props) {
   const divRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [isFocused, setIsFocused] = useState(false);
-  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const rafId = useRef<number | null>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!divRef.current) return;
-    const rect = divRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setCoords({ x, y });
+    const el = divRef.current;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
 
-    if (enableTilt) {
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = Math.min(5, Math.max(-5, ((y - centerY) / centerY) * -5));
-      const rotateY = Math.min(5, Math.max(-5, ((x - centerX) / centerX) * 5));
-      setTilt({ rotateX, rotateY });
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+    }
+
+    rafId.current = requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      el.style.setProperty("--spotlight-x", `${x}px`);
+      el.style.setProperty("--spotlight-y", `${y}px`);
+
+      if (enableTilt) {
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = Math.min(3, Math.max(-3, ((y - centerY) / centerY) * -3));
+        const rotateY = Math.min(3, Math.max(-3, ((x - centerX) / centerX) * 3));
+        el.style.setProperty("--tilt-x", `${rotateX}deg`);
+        el.style.setProperty("--tilt-y", `${rotateY}deg`);
+      }
+    });
+  };
+
+  const handleMouseEnter = () => {
+    if (divRef.current) {
+      divRef.current.setAttribute("data-hovered", "true");
     }
   };
 
   const handleMouseLeave = () => {
-    setIsFocused(false);
-    setTilt({ rotateX: 0, rotateY: 0 });
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+    }
+    if (divRef.current) {
+      divRef.current.removeAttribute("data-hovered");
+      divRef.current.style.setProperty("--tilt-x", "0deg");
+      divRef.current.style.setProperty("--tilt-y", "0deg");
+    }
   };
 
   const hasBg = className.includes("bg-");
@@ -54,17 +79,13 @@ export default function SpotlightCard({
     <div
       ref={divRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsFocused(true)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden transition-transform duration-200 cubic-bezier(0.16, 1, 0.3, 1) ${
-        hasRounded ? "" : "rounded-xl"
-      } ${hasBorder ? "" : "border border-white/5"} ${
-        hasBg ? "" : "bg-[#0d0d15]/80 backdrop-blur-md"
-      } ${className}`}
+      className={`group relative overflow-hidden transition-[box-shadow,border-color,transform] duration-200 ease-out ${
+        hasRounded ? "" : "rounded-2xl"
+      } ${hasBorder ? "" : "border border-border"} ${hasBg ? "" : "bg-paper-card"} ${className}`}
       style={{
-        transform: enableTilt && isFocused
-          ? `perspective(1000px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale3d(1.01, 1.01, 1.01)`
-          : "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
+        transform: "perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))",
         transformStyle: "preserve-3d",
         ...style,
       }}
@@ -73,27 +94,36 @@ export default function SpotlightCard({
       {/* Animated Conic Border Beam */}
       {borderBeam && (
         <div
-          className="pointer-events-none absolute -inset-[1.5px] rounded-xl z-0 overflow-hidden"
+          className="pointer-events-none absolute -inset-[1.5px] rounded-2xl z-0 overflow-hidden opacity-40 group-hover:opacity-90 transition-opacity duration-300"
           style={{
             background: beamColor,
-            opacity: isFocused ? 0.9 : 0.4,
-            transition: "opacity 0.3s ease",
-            filter: "blur(0.5px)",
           }}
         />
       )}
 
-      {/* Radial Cursor Spotlight Glow */}
+      {/* Neutral Specular Edge Highlight on Hover */}
+      {specularBorder && (
+        <div
+          className="pointer-events-none absolute -inset-px rounded-2xl z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          style={{
+            background:
+              "radial-gradient(350px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(255, 255, 255, 0.12), transparent 70%)",
+          }}
+        />
+      )}
+
+      {/* Neutral Radial Cursor Spotlight */}
       <div
-        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition-opacity duration-300 z-10"
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
         style={{
-          opacity: isFocused ? 1 : 0,
-          background: `radial-gradient(400px circle at ${coords.x}px ${coords.y}px, ${glowColor}, transparent 80%)`,
+          background: `radial-gradient(420px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), ${glowColor}, transparent 80%)`,
         }}
       />
 
       {/* Card Content Container */}
-      <div className={`relative z-20 ${className.includes("flex") ? "flex flex-col h-full w-full" : ""}`}>
+      <div
+        className={`relative z-20 ${className.includes("flex") ? "flex flex-col h-full w-full" : ""}`}
+      >
         {children}
       </div>
     </div>

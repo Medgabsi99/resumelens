@@ -62,9 +62,9 @@ function CopyButton({ text }: { text: string }) {
 
 function XyzPill({ letter, label, value }: { letter: string; label: string; value: string }) {
   const colors: Record<string, { bg: string; text: string; border: string }> = {
-    X: { bg: "rgba(99,102,241,0.1)", text: "#818cf8", border: "rgba(99,102,241,0.25)" },
+    X: { bg: "rgba(59,130,246,0.1)", text: "#3b82f6", border: "rgba(59,130,246,0.25)" },
     Y: { bg: "rgba(16,185,129,0.1)", text: "#10b981", border: "rgba(16,185,129,0.25)" },
-    Z: { bg: "rgba(168,85,247,0.1)", text: "#a78bfa", border: "rgba(168,85,247,0.25)" },
+    Z: { bg: "rgba(245,158,11,0.1)", text: "#f59e0b", border: "rgba(245,158,11,0.25)" },
   };
   const c = colors[letter] || colors.X;
   return (

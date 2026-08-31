@@ -33,21 +33,21 @@ const THEMES: Record<string, ThemeConfig> = {
     surface: "rgba(30,35,55,0.6)",
     surfaceHover: "rgba(40,45,70,0.8)",
     border: "rgba(255,255,255,0.07)",
-    borderHover: "rgba(139,92,246,0.35)",
+    borderHover: "rgba(37,99,235,0.35)",
     text: "#e2e8f0",
     textMuted: "rgba(226,232,240,0.65)",
     textFaint: "rgba(226,232,240,0.40)",
-    accent: "#8b5cf6",
-    accentGlow: "rgba(139,92,246,0.14)",
-    accentText: "#a78bfa",
-    gradientA: "#8b5cf6",
-    gradientB: "#6366f1",
+    accent: "#2563eb",
+    accentGlow: "rgba(37,99,235,0.18)",
+    accentText: "#60a5fa",
+    gradientA: "#2563eb",
+    gradientB: "#0284c7",
     navBg: "rgba(9,13,22,0.88)",
     footerBg: "#090d16",
-    timelineDot: "#8b5cf6",
-    tagBg: "rgba(139,92,246,0.12)",
-    tagText: "#a78bfa",
-    tagBorder: "rgba(139,92,246,0.25)",
+    timelineDot: "#2563eb",
+    tagBg: "rgba(37,99,235,0.12)",
+    tagText: "#93c5fd",
+    tagBorder: "rgba(37,99,235,0.25)",
     headingFont: "'Outfit', sans-serif",
     bodyFont: "'Outfit', sans-serif",
     googleFontUrl:
@@ -132,10 +132,7 @@ const THEMES: Record<string, ThemeConfig> = {
 
 // ─── HTML Generator ─────────────────────────────────────────
 
-export function generatePortfolioHtml(
-  content: PortfolioData,
-  theme: string
-): string {
+export function generatePortfolioHtml(content: PortfolioData, theme: string): string {
   const t: ThemeConfig = THEMES[theme] ?? THEMES["modern-dark"];
 
   const escapeHtml = (text: string) => {
@@ -154,12 +151,7 @@ export function generatePortfolioHtml(
       <div class="skill-card">
         <h3 class="skill-category">${escapeHtml(cat.category)}</h3>
         <div class="skill-tags">
-          ${cat.items
-            .map(
-              (item) =>
-                `<span class="skill-tag">${escapeHtml(item)}</span>`
-            )
-            .join("")}
+          ${cat.items.map((item) => `<span class="skill-tag">${escapeHtml(item)}</span>`).join("")}
         </div>
       </div>`
     )
@@ -209,9 +201,7 @@ export function generatePortfolioHtml(
           <p class="project-desc">${escapeHtml(proj.description)}</p>
         </div>
         <div class="project-tags">
-          ${proj.tags
-            .map((tag) => `<span class="project-tag">${escapeHtml(tag)}</span>`)
-            .join("")}
+          ${proj.tags.map((tag) => `<span class="project-tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
       </div>`
     )

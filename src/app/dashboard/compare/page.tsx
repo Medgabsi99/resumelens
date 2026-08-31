@@ -134,7 +134,7 @@ function ResumeInput({
     maxFiles: 1,
   });
 
-  const colors = ["var(--accent)", "#8b5cf6"];
+  const colors = ["var(--accent)", "#2563eb"];
 
   return (
     <div
@@ -422,7 +422,7 @@ export default function ResumeComparePage() {
                             padding: "10px 20px",
                             textAlign: "center",
                             fontWeight: 700,
-                            color: "#8b5cf6",
+                            color: "#2563eb",
                             fontSize: 11,
                           }}
                         >
@@ -557,7 +557,7 @@ export default function ResumeComparePage() {
                               </span>
                             )}
                             {winner === "B" && (
-                              <span style={{ color: "#8b5cf6", fontWeight: 700 }}>B wins</span>
+                              <span style={{ color: "#2563eb", fontWeight: 700 }}>B wins</span>
                             )}
                             {winner === "tie" && <span style={{ color: "#6b7280" }}>Tied</span>}
                           </span>
@@ -604,14 +604,14 @@ export default function ResumeComparePage() {
                                 marginBottom: 3,
                               }}
                             >
-                              <span style={{ fontSize: 10, color: "#8b5cf6", fontWeight: 700 }}>
+                              <span style={{ fontSize: 10, color: "#2563eb", fontWeight: 700 }}>
                                 B
                               </span>
-                              <span style={{ fontSize: 10, color: "#8b5cf6", fontWeight: 800 }}>
+                              <span style={{ fontSize: 10, color: "#2563eb", fontWeight: 800 }}>
                                 {sB}
                               </span>
                             </div>
-                            <MiniBar value={sB} color="#8b5cf6" />
+                            <MiniBar value={sB} color="#2563eb" />
                           </div>
                         </div>
                       </div>
@@ -634,7 +634,7 @@ export default function ResumeComparePage() {
                 const totalB = Math.round((scoreB + quantB) / 2);
                 const winner = totalB > totalA + 2 ? "B" : totalA > totalB + 2 ? "A" : "tie";
                 const winColor =
-                  winner === "A" ? "var(--accent)" : winner === "B" ? "#8b5cf6" : "#f59e0b";
+                  winner === "A" ? "var(--accent)" : winner === "B" ? "#2563eb" : "#f59e0b";
                 return (
                   <div
                     style={{

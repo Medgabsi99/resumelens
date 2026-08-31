@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeftRight, X, Loader2, ArrowRight } from "lucide-react";
+import { computeDiffAsync } from "@/hooks/useWorkerParser";
 
 // ─── Types ────────────────────────────────────────────────────
 interface AnalysisSnapshot {
@@ -18,9 +20,9 @@ interface AnalysisDetail {
 }
 
 type DiffToken =
-  | { type: "equal";   text: string }
-  | { type: "insert";  text: string }
-  | { type: "delete";  text: string };
+  | { type: "equal"; text: string }
+  | { type: "insert"; text: string }
+  | { type: "delete"; text: string };
 
 // ─── Word-level diff (Myers LCS, simplified) ─────────────────
 function wordDiff(a: string, b: string): DiffToken[] {
@@ -44,11 +46,13 @@ function wordDiff(a: string, b: string): DiffToken[] {
 
   // Trace back
   const tokens: DiffToken[] = [];
-  let i = 0, j = 0;
+  let i = 0,
+    j = 0;
   while (i < m || j < n) {
     if (i < m && j < n && wordsA[i] === wordsB[j]) {
       tokens.push({ type: "equal", text: wordsA[i] });
-      i++; j++;
+      i++;
+      j++;
     } else if (j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j])) {
       tokens.push({ type: "insert", text: wordsB[j] });
       j++;
@@ -149,29 +153,54 @@ function ScoreDelta({ from, to }: { from: number | null; to: number | null }) {
         flexDirection: "column",
         alignItems: "center",
         gap: 4,
-        padding: "0 16px",
+        padding: "0 14px",
         flexShrink: 0,
       }}
     >
       <div
         style={{
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: 800,
           color,
           fontFamily: "DM Mono, monospace",
           lineHeight: 1,
         }}
       >
-        {sign}{delta}
+        {sign}
+        {delta}
       </div>
-      <div style={{ fontSize: 9, color: "var(--ink-faint)", fontFamily: "DM Mono, monospace", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+      <div
+        style={{
+          fontSize: 9,
+          color: "var(--ink-faint)",
+          fontFamily: "DM Mono, monospace",
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+        }}
+      >
         pts
       </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        {delta >= 0
-          ? <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 5 5 12"/></>
-          : <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></>
-        }
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {delta >= 0 ? (
+          <>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="19 12 12 5 5 12" />
+          </>
+        ) : (
+          <>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="5 12 12 19 19 12" />
+          </>
+        )}
       </svg>
     </div>
   );
@@ -192,10 +221,13 @@ function PanelHeader({
   side: "left" | "right";
 }) {
   const scoreColor =
-    score === null ? "var(--ink-faint)"
-    : score >= 80 ? "#10b981"
-    : score >= 60 ? "#f59e0b"
-    : "#ef4444";
+    score === null
+      ? "var(--ink-faint)"
+      : score >= 80
+        ? "#10b981"
+        : score >= 60
+          ? "#f59e0b"
+          : "#ef4444";
 
   return (
     <div
@@ -211,7 +243,7 @@ function PanelHeader({
         flexShrink: 0,
       }}
     >
-      <div>
+      <div className="min-w-0">
         <div
           style={{
             fontSize: 10,
@@ -224,27 +256,41 @@ function PanelHeader({
         >
           {label}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>
+        <div
+          style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+          className="truncate"
+        >
           {role || "Resume Analysis"}
         </div>
         <div style={{ fontSize: 10, color: "var(--ink-faint)", marginTop: 1 }}>
-          {new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          {new Date(date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
         </div>
       </div>
       {score !== null && (
         <div
           style={{
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             borderRadius: "50%",
-            border: `2.5px solid ${scoreColor}`,
+            border: `2px solid ${scoreColor}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 800, color: scoreColor, fontFamily: "DM Mono, monospace" }}>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: scoreColor,
+              fontFamily: "DM Mono, monospace",
+            }}
+          >
             {score}
           </span>
         </div>
@@ -259,11 +305,30 @@ function DiffLegend() {
     <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
       <span style={{ fontSize: 11, color: "var(--ink-faint)" }}>Legend:</span>
       <span style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}>
-        <mark style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", borderRadius: 3, padding: "0 5px", textDecoration: "line-through" }}>removed</mark>
+        <mark
+          style={{
+            background: "rgba(239,68,68,0.15)",
+            color: "#ef4444",
+            borderRadius: 3,
+            padding: "0 5px",
+            textDecoration: "line-through",
+          }}
+        >
+          removed
+        </mark>
         <span style={{ color: "var(--ink-muted)" }}>Deleted text</span>
       </span>
       <span style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}>
-        <mark style={{ background: "rgba(16,185,129,0.18)", color: "#10b981", borderRadius: 3, padding: "0 5px" }}>added</mark>
+        <mark
+          style={{
+            background: "rgba(16,185,129,0.18)",
+            color: "#10b981",
+            borderRadius: 3,
+            padding: "0 5px",
+          }}
+        >
+          added
+        </mark>
         <span style={{ color: "var(--ink-muted)" }}>New text</span>
       </span>
     </div>
@@ -280,7 +345,13 @@ interface Props {
   defaultRightId?: string;
 }
 
-export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defaultRightId }: Props) {
+export default function ResumeDiffViewer({
+  isOpen,
+  onClose,
+  defaultLeftId,
+  defaultRightId,
+}: Props) {
+  const [mounted, setMounted] = useState(false);
   const [analyses, setAnalyses] = useState<AnalysisSnapshot[]>([]);
   const [leftId, setLeftId] = useState(defaultLeftId ?? "");
   const [rightId, setRightId] = useState(defaultRightId ?? "");
@@ -292,20 +363,36 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
   const [rightError, setRightError] = useState<string | null>(null);
   const [tokens, setTokens] = useState<DiffToken[]>([]);
 
-  // Fetch analysis list
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Fetch analysis list, then auto-select the "after" side if a defaultLeftId was supplied
   useEffect(() => {
     if (!isOpen) return;
     fetch("/api/analyses")
       .then((r) => r.json())
       .then((j) => {
-        if (j.success) setAnalyses(j.data ?? []);
+        if (!j.success) return;
+        const list: AnalysisSnapshot[] = j.data ?? [];
+        setAnalyses(list);
+
+        // Auto-select AFTER when opened from a specific analysis page
+        if (defaultLeftId && !defaultRightId) {
+          const other = list.find((a) => a.id !== defaultLeftId);
+          if (other) setRightId(other.id);
+        }
       })
       .catch(() => {});
-  }, [isOpen]);
+  }, [isOpen, defaultLeftId, defaultRightId]);
 
   // Fetch left detail
   useEffect(() => {
-    if (!leftId) { setLeftDetail(null); setLeftError(null); return; }
+    if (!leftId) {
+      setLeftDetail(null);
+      setLeftError(null);
+      return;
+    }
     setLoadingLeft(true);
     setLeftError(null);
     fetch(`/api/analyses/${leftId}`)
@@ -327,7 +414,11 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
 
   // Fetch right detail
   useEffect(() => {
-    if (!rightId) { setRightDetail(null); setRightError(null); return; }
+    if (!rightId) {
+      setRightDetail(null);
+      setRightError(null);
+      return;
+    }
     setLoadingRight(true);
     setRightError(null);
     fetch(`/api/analyses/${rightId}`)
@@ -347,68 +438,48 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
       .finally(() => setLoadingRight(false));
   }, [rightId]);
 
-  // Recompute diff whenever both sides are loaded
+  // Recompute diff asynchronously on background Web Worker thread
   useEffect(() => {
     if (!leftDetail?.resumeText || !rightDetail?.resumeText) {
       setTokens([]);
       return;
     }
-    const raw = wordDiff(leftDetail.resumeText, rightDetail.resumeText);
-    setTokens(mergeTokens(raw));
+    let isMounted = true;
+    computeDiffAsync(leftDetail.resumeText, rightDetail.resumeText).then((raw) => {
+      if (isMounted) {
+        setTokens(raw);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [leftDetail, rightDetail]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const leftSnap = analyses.find((a) => a.id === leftId);
   const rightSnap = analyses.find((a) => a.id === rightId);
   const hasDiff = tokens.length > 0;
   const changeCount = tokens.filter((t) => t.type !== "equal").length;
 
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0,
-          background: "rgba(0,0,0,0.5)",
-          backdropFilter: "blur(6px)",
-          zIndex: 9000,
-          animation: "rdvFadeIn 0.15s ease",
-        }}
-      />
-
-      {/* Modal */}
+  const modalContent = (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 md:p-8 backdrop-blur-md overflow-hidden animate-fadeIn"
+      style={{
+        background: "rgba(0, 0, 0, 0.65)",
+      }}
+    >
       <div
         role="dialog"
         aria-label="Resume diff viewer"
         aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-6xl h-[88vh] max-h-[850px] bg-paper-card border border-border/80 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{
-          position: "fixed",
-          top: "50%", left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "min(1100px, calc(100vw - 32px))",
-          height: "min(88vh, 820px)",
-          background: "var(--paper-card)",
-          border: "1px solid var(--accent-border)",
-          borderRadius: 20,
-          boxShadow: "0 40px 80px -20px rgba(0,0,0,0.5), 0 0 60px -20px var(--brand-glow)",
-          zIndex: 9001,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          animation: "rdvSlideUp 0.2s cubic-bezier(0.16,1,0.3,1)",
-          fontFamily: "Instrument Sans, system-ui, sans-serif",
+          boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 0 50px -10px var(--brand-glow)",
         }}
       >
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes rdvFadeIn  { from { opacity:0 } to { opacity:1 } }
-          @keyframes rdvSlideUp {
-            from { opacity:0; transform:translate(-50%,-46%) scale(0.95); }
-            to   { opacity:1; transform:translate(-50%,-50%) scale(1);    }
-          }
-        `}} />
-
         {/* ── Header ─────────────────────────────────────────── */}
         <div
           style={{
@@ -424,16 +495,23 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
-                width: 34, height: 34, borderRadius: 10,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
                 background: "var(--accent-bg)",
                 border: "1px solid var(--accent-border)",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent)",
               }}
             >
               <ArrowLeftRight size={16} />
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Resume Diff Viewer</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
+                Resume Diff Viewer
+              </div>
               <div style={{ fontSize: 11, color: "var(--ink-faint)" }}>
                 Compare two analyses word-by-word
               </div>
@@ -443,9 +521,13 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
           {hasDiff && (
             <div
               style={{
-                fontSize: 11, fontFamily: "DM Mono, monospace",
-                background: "var(--accent-bg)", border: "1px solid var(--accent-border)",
-                borderRadius: 8, padding: "4px 10px", color: "var(--accent)",
+                fontSize: 11,
+                fontFamily: "DM Mono, monospace",
+                background: "var(--accent-bg)",
+                border: "1px solid var(--accent-border)",
+                borderRadius: 8,
+                padding: "4px 10px",
+                color: "var(--accent)",
               }}
             >
               {changeCount} changed token{changeCount !== 1 ? "s" : ""}
@@ -456,16 +538,29 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             onClick={onClose}
             aria-label="Close"
             style={{
-              background: "transparent", border: "none", cursor: "pointer",
-              lineHeight: 1, padding: "4px 6px", borderRadius: 6,
-              color: "var(--ink-faint)", transition: "color 0.15s",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              lineHeight: 1,
+              padding: "6px",
+              borderRadius: 8,
+              color: "var(--ink-faint)",
+              transition: "color 0.15s, background 0.15s",
               marginLeft: "auto",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-faint)")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--ink)";
+              e.currentTarget.style.background = "var(--paper-warm)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--ink-faint)";
+              e.currentTarget.style.background = "transparent";
+            }}
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
@@ -482,12 +577,16 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             flexWrap: "wrap",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 220 }}>
             <span
               style={{
-                fontSize: 10, fontFamily: "DM Mono, monospace", fontWeight: 700,
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                color: "#ef4444", flexShrink: 0,
+                fontSize: 10,
+                fontFamily: "DM Mono, monospace",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#ef4444",
+                flexShrink: 0,
               }}
             >
               Before
@@ -496,16 +595,25 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
               value={leftId}
               onChange={(e) => setLeftId(e.target.value)}
               style={{
-                flex: 1, padding: "7px 10px", borderRadius: 9,
-                border: "1px solid var(--border)", background: "var(--paper-card)",
-                color: "var(--ink)", fontSize: 12, cursor: "pointer",
+                flex: 1,
+                padding: "7px 10px",
+                borderRadius: 9,
+                border: "1px solid var(--border)",
+                background: "var(--paper-card)",
+                color: "var(--ink)",
+                fontSize: 12,
+                cursor: "pointer",
                 outline: "none",
               }}
             >
               <option value="">— Choose analysis —</option>
               {analyses.map((a) => (
                 <option key={a.id} value={a.id} disabled={a.id === rightId}>
-                  {new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(a.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                   {a.target_role ? ` · ${a.target_role}` : ""}
                   {a.score !== null ? ` · ${a.score}pts` : ""}
                 </option>
@@ -513,14 +621,18 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             </select>
           </div>
 
-          <ArrowRight size={18} color="var(--ink-faint)" />
+          <ArrowRight size={16} color="var(--ink-faint)" className="shrink-0 hidden sm:block" />
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 220 }}>
             <span
               style={{
-                fontSize: 10, fontFamily: "DM Mono, monospace", fontWeight: 700,
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                color: "#10b981", flexShrink: 0,
+                fontSize: 10,
+                fontFamily: "DM Mono, monospace",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#10b981",
+                flexShrink: 0,
               }}
             >
               After
@@ -529,16 +641,25 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
               value={rightId}
               onChange={(e) => setRightId(e.target.value)}
               style={{
-                flex: 1, padding: "7px 10px", borderRadius: 9,
-                border: "1px solid var(--border)", background: "var(--paper-card)",
-                color: "var(--ink)", fontSize: 12, cursor: "pointer",
+                flex: 1,
+                padding: "7px 10px",
+                borderRadius: 9,
+                border: "1px solid var(--border)",
+                background: "var(--paper-card)",
+                color: "var(--ink)",
+                fontSize: 12,
+                cursor: "pointer",
                 outline: "none",
               }}
             >
               <option value="">— Choose analysis —</option>
               {analyses.map((a) => (
                 <option key={a.id} value={a.id} disabled={a.id === leftId}>
-                  {new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(a.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                   {a.target_role ? ` · ${a.target_role}` : ""}
                   {a.score !== null ? ` · ${a.score}pts` : ""}
                 </option>
@@ -551,12 +672,24 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
         {!leftId || !rightId ? (
           <div
             style={{
-              flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", gap: 12,
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
               color: "var(--ink-faint)",
             }}
           >
-            <div style={{ fontSize: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)" }}>
+            <div
+              style={{
+                fontSize: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--ink-faint)",
+              }}
+            >
               <ArrowLeftRight size={36} />
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-muted)" }}>
@@ -569,19 +702,33 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
         ) : loadingLeft || loadingRight ? (
           <div
             style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--ink-faint)", gap: 10, fontSize: 13,
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--ink-faint)",
+              gap: 10,
+              fontSize: 13,
             }}
           >
             <span style={{ animation: "spin 1s linear infinite", display: "inline-flex" }}>
-              <Loader2 size={15} />
+              <Loader2 size={16} />
             </span>
             Computing diff…
           </div>
         ) : (
           <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
             {/* LEFT pane */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: "1px solid var(--border)", overflow: "hidden" }}>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+                borderRight: "1px solid var(--border)",
+                overflow: "hidden",
+              }}
+            >
               {leftSnap && (
                 <PanelHeader
                   label="Before"
@@ -591,19 +738,47 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
                   side="left"
                 />
               )}
-              <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
+              <div
+                style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "16px 18px" }}
+              >
                 {leftError ? (
-                  <div style={{ color: "#ef4444", fontSize: 12, padding: "12px", background: "rgba(239,68,68,0.08)", borderRadius: 8 }}>
+                  <div
+                    style={{
+                      color: "#ef4444",
+                      fontSize: 12,
+                      padding: "12px",
+                      background: "rgba(239,68,68,0.08)",
+                      borderRadius: 8,
+                    }}
+                  >
                     {leftError}
                   </div>
                 ) : hasDiff ? (
                   <DiffContent tokens={tokens} side="left" />
                 ) : leftDetail?.resumeText ? (
-                  <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)", margin: 0 }}>
+                  <pre
+                    style={{
+                      fontFamily: "DM Mono, monospace",
+                      fontSize: 12.5,
+                      lineHeight: 1.9,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      color: "var(--ink)",
+                      margin: 0,
+                    }}
+                  >
                     {leftDetail.resumeText}
                   </pre>
                 ) : (
-                  <div style={{ color: "var(--ink-faint)", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "32px 0" }}>
+                  <div
+                    style={{
+                      color: "var(--ink-faint)",
+                      fontSize: 12,
+                      fontStyle: "italic",
+                      textAlign: "center",
+                      padding: "32px 0",
+                    }}
+                  >
                     No resume text recorded for this analysis.
                   </div>
                 )}
@@ -614,9 +789,13 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             {(hasDiff || (leftSnap && rightSnap)) && (
               <div
                 style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  justifyContent: "center", padding: "0 4px",
-                  background: "var(--paper-warm)", borderRight: "1px solid var(--border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                  background: "var(--paper-warm)",
+                  borderRight: "1px solid var(--border)",
                   flexShrink: 0,
                 }}
               >
@@ -628,7 +807,15 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
             )}
 
             {/* RIGHT pane */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
               {rightSnap && (
                 <PanelHeader
                   label="After"
@@ -638,19 +825,47 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
                   side="right"
                 />
               )}
-              <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
+              <div
+                style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "16px 18px" }}
+              >
                 {rightError ? (
-                  <div style={{ color: "#ef4444", fontSize: 12, padding: "12px", background: "rgba(239,68,68,0.08)", borderRadius: 8 }}>
+                  <div
+                    style={{
+                      color: "#ef4444",
+                      fontSize: 12,
+                      padding: "12px",
+                      background: "rgba(239,68,68,0.08)",
+                      borderRadius: 8,
+                    }}
+                  >
                     {rightError}
                   </div>
                 ) : hasDiff ? (
                   <DiffContent tokens={tokens} side="right" />
                 ) : rightDetail?.resumeText ? (
-                  <pre style={{ fontFamily: "DM Mono, monospace", fontSize: 12.5, lineHeight: 1.9, whiteSpace: "pre-wrap", color: "var(--ink)", margin: 0 }}>
+                  <pre
+                    style={{
+                      fontFamily: "DM Mono, monospace",
+                      fontSize: 12.5,
+                      lineHeight: 1.9,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      color: "var(--ink)",
+                      margin: 0,
+                    }}
+                  >
                     {rightDetail.resumeText}
                   </pre>
                 ) : (
-                  <div style={{ color: "var(--ink-faint)", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "32px 0" }}>
+                  <div
+                    style={{
+                      color: "var(--ink-faint)",
+                      fontSize: 12,
+                      fontStyle: "italic",
+                      textAlign: "center",
+                      padding: "32px 0",
+                    }}
+                  >
                     No resume text recorded for this analysis.
                   </div>
                 )}
@@ -675,18 +890,31 @@ export default function ResumeDiffViewer({ isOpen, onClose, defaultLeftId, defau
           <button
             onClick={onClose}
             style={{
-              padding: "6px 16px", borderRadius: 9,
-              border: "1px solid var(--border)", background: "var(--paper-card)",
-              color: "var(--ink-muted)", fontSize: 12, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.15s",
+              padding: "6px 16px",
+              borderRadius: 9,
+              border: "1px solid var(--border)",
+              background: "var(--paper-card)",
+              color: "var(--ink-muted)",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--ink-muted)"; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--accent)";
+              e.currentTarget.style.color = "var(--accent)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.color = "var(--ink-muted)";
+            }}
           >
             Close
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

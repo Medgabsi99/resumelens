@@ -146,7 +146,7 @@ export default function ApplicationTracker() {
             }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition cursor-pointer"
             style={{
-              background: "linear-gradient(135deg, #06b6d4, #8b5cf6)",
+              background: "linear-gradient(135deg, #0284c7, #2563eb)",
               border: "none",
             }}
           >

@@ -20,7 +20,7 @@ export default function ExtensionInstallationPage() {
   const [copiedPath, setCopiedPath] = useState(false);
 
   const handleCopyPath = () => {
-    navigator.clipboard.writeText("c:\\Users\\LENOVO\\Documents\\resumelens\\extension");
+    navigator.clipboard.writeText("c:\\Users\\LENOVO\\Documents\\resumelens\\chrome-extension");
     setCopiedPath(true);
     setTimeout(() => setCopiedPath(false), 2000);
   };
@@ -34,9 +34,9 @@ export default function ExtensionInstallationPage() {
             style={{
               borderRadius: 20,
               padding: "32px 36px",
-              background: "linear-gradient(135deg, #8b5cf6 0%, #4f46e5 100%)",
+              background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
               color: "white",
-              boxShadow: "0 12px 36px rgba(139, 92, 246, 0.3)",
+              boxShadow: "0 12px 36px rgba(37, 99, 235, 0.25)",
               marginBottom: 32,
             }}
           >

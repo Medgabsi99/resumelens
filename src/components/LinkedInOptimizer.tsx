@@ -23,18 +23,26 @@ function Linkedin({ size = 20, style }: { size?: number; style?: React.CSSProper
   );
 }
 import { auditLinkedInProfile, type LinkedInAuditResult } from "@/lib/linkedinOptimizer";
+import LinkedInSyncBridgeModal from "@/components/LinkedInSyncBridgeModal";
+import { playSound } from "@/lib/soundFx";
 
 interface Props {
   defaultRole?: string;
   defaultJobDescription?: string;
+  resumeText?: string;
 }
 
-export default function LinkedInOptimizer({ defaultRole, defaultJobDescription }: Props) {
+export default function LinkedInOptimizer({
+  defaultRole,
+  defaultJobDescription,
+  resumeText = "",
+}: Props) {
   const [headline, setHeadline] = useState("");
   const [about, setAbout] = useState("");
   const [targetRole, setTargetRole] = useState(defaultRole || "");
   const [copiedHeadline, setCopiedHeadline] = useState<number | null>(null);
   const [copiedAbout, setCopiedAbout] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   const audit: LinkedInAuditResult = auditLinkedInProfile(
     headline,
@@ -47,12 +55,14 @@ export default function LinkedInOptimizer({ defaultRole, defaultJobDescription }
     audit.seoScore >= 80 ? "#16a34a" : audit.seoScore >= 60 ? "#d97706" : "#dc2626";
 
   const handleCopyHeadline = (text: string, index: number) => {
+    playSound("apply");
     navigator.clipboard.writeText(text);
     setCopiedHeadline(index);
     setTimeout(() => setCopiedHeadline(null), 2000);
   };
 
   const handleCopyAbout = (text: string) => {
+    playSound("apply");
     navigator.clipboard.writeText(text);
     setCopiedAbout(true);
     setTimeout(() => setCopiedAbout(false), 2000);
@@ -88,31 +98,64 @@ export default function LinkedInOptimizer({ defaultRole, defaultJobDescription }
           </p>
         </div>
 
-        {/* Score Pill */}
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.15)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            borderRadius: 16,
-            padding: "14px 24px",
-            textAlign: "center",
-            minWidth: 140,
-          }}
-        >
-          <div
+        {/* Sync Bridge & Score Pill */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button
+            onClick={() => {
+              playSound("click");
+              setIsSyncModalOpen(true);
+            }}
             style={{
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              opacity: 0.8,
+              background: "white",
+              color: "#0a66c2",
+              border: "none",
+              borderRadius: 12,
+              padding: "12px 18px",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
           >
-            LinkedIn SEO Score
+            <Sparkles size={16} /> 1-Click Sync Bridge
+          </button>
+
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              borderRadius: 16,
+              padding: "14px 24px",
+              textAlign: "center",
+              minWidth: 120,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                opacity: 0.8,
+              }}
+            >
+              SEO Score
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, marginTop: 2 }}>{audit.seoScore}/100</div>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 900, marginTop: 2 }}>{audit.seoScore}/100</div>
         </div>
       </div>
+
+      {/* Sync Bridge Modal */}
+      <LinkedInSyncBridgeModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        resumeText={resumeText || about || headline}
+        targetRole={targetRole}
+      />
 
       {/* Inputs Section */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>

@@ -16,7 +16,11 @@ interface Props {
   scenario: string;
   initialOffer: NegotiationOffer;
   onClose: () => void;
-  onSaveScorecard?: (scorecard: NegotiationScorecard, finalOffer: NegotiationOffer, verdict: string) => Promise<{ savedInDb: boolean; dbError: string | null }>;
+  onSaveScorecard?: (
+    scorecard: NegotiationScorecard,
+    finalOffer: NegotiationOffer,
+    verdict: string
+  ) => Promise<{ savedInDb: boolean; dbError: string | null }>;
 }
 
 export default function SalaryNegotiatorBoard({
@@ -27,14 +31,40 @@ export default function SalaryNegotiatorBoard({
   initialOffer,
   onClose,
 }: Props) {
-  const session = useNegotiationSession({ resumeText, roleTitle, companyName, scenario, initialOffer });
+  const session = useNegotiationSession({
+    resumeText,
+    roleTitle,
+    companyName,
+    scenario,
+    initialOffer,
+  });
   const {
-    recruiter, messageHistory, currentOffer, sentiment, leverage,
-    coachFeedback, inputText, setInputText, isSubmitting, errorMsg,
-    isConcluded, verdict, scorecard, savingStatus, savingError, savedMethod,
-    isInitializing, initializingStep, INITIALIZING_STEPS, chatEndRef,
-    initialTotal, currentTotal, netGain, proximityPct,
-    handleSubmitMessage, handleConcludeNegotiation,
+    recruiter,
+    messageHistory,
+    currentOffer,
+    sentiment,
+    leverage,
+    coachFeedback,
+    inputText,
+    setInputText,
+    isSubmitting,
+    errorMsg,
+    isConcluded,
+    verdict,
+    scorecard,
+    savingStatus,
+    savingError,
+    savedMethod,
+    isInitializing,
+    initializingStep,
+    INITIALIZING_STEPS,
+    chatEndRef,
+    initialTotal,
+    currentTotal,
+    netGain,
+    proximityPct,
+    handleSubmitMessage,
+    handleConcludeNegotiation,
   } = session;
 
   const { isListening, useVoiceFeedback, setUseVoiceFeedback, handleToggleListening, speakText } =
@@ -48,13 +78,15 @@ export default function SalaryNegotiatorBoard({
   const prevConcludedRef = useRef(isConcluded);
 
   useEffect(() => {
-    if (currentTotal > prevTotalRef.current && prevTotalRef.current > 0) playSynthSound("concession");
+    if (currentTotal > prevTotalRef.current && prevTotalRef.current > 0)
+      playSynthSound("concession");
     prevTotalRef.current = currentTotal;
   }, [currentTotal]);
 
   useEffect(() => {
     const isCriticalNow = proximityPct >= 80 || sentiment === "offended";
-    const wasCriticalBefore = prevProximityRef.current >= 80 || prevSentimentRef.current === "offended";
+    const wasCriticalBefore =
+      prevProximityRef.current >= 80 || prevSentimentRef.current === "offended";
     if (isCriticalNow && !wasCriticalBefore) playSynthSound("warning");
     prevSentimentRef.current = sentiment;
     prevProximityRef.current = proximityPct;
@@ -68,13 +100,29 @@ export default function SalaryNegotiatorBoard({
   const getSentimentBadge = (sent: string) => {
     switch (sent) {
       case "impressed":
-        return <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🌟 Impressed</span>;
+        return (
+          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">
+            🌟 Impressed
+          </span>
+        );
       case "resistant":
-        return <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">🤨 Resistant</span>;
+        return (
+          <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">
+            🤨 Resistant
+          </span>
+        );
       case "offended":
-        return <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😡 Offended</span>;
+        return (
+          <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">
+            😡 Offended
+          </span>
+        );
       default:
-        return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">😊 Open</span>;
+        return (
+          <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider">
+            😊 Open
+          </span>
+        );
     }
   };
 
@@ -145,7 +193,6 @@ export default function SalaryNegotiatorBoard({
   return (
     <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 md:p-6 backdrop-blur-md overflow-hidden animate-fade-in text-slate-100">
       <div className="w-full max-w-6xl h-[92vh] bg-paper border border-border rounded-2xl flex flex-col shadow-2xl overflow-hidden font-sans">
-        
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-paper-card">
           <div className="flex items-center gap-3">
@@ -197,10 +244,8 @@ export default function SalaryNegotiatorBoard({
           </div>
         ) : (
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-            
             {/* Main Chat Panel */}
             <div className="flex-1 flex flex-col bg-paper relative overflow-hidden h-full">
-              
               {/* Scrollable feed */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {messageHistory.map((msg, idx) => (
@@ -234,31 +279,40 @@ export default function SalaryNegotiatorBoard({
                     </div>
                   </div>
                 ))}
-                
+
                 {isSubmitting && !isConcluded && (
                   <div className="flex justify-start">
                     <div className="bg-paper-card border border-border text-ink-muted rounded-2xl rounded-bl-none px-4 py-3 text-sm shadow-sm flex items-center gap-2">
                       <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" />
                       <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:0.2s]" />
                       <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:0.4s]" />
-                      <span className="text-xs italic ml-1">Recruiter is typing counter-proposal...</span>
+                      <span className="text-xs italic ml-1">
+                        Recruiter is typing counter-proposal...
+                      </span>
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={chatEndRef} />
               </div>
 
               {/* Input Bar */}
               <div className="px-6 py-4 border-t border-border bg-paper-card">
                 {!isConcluded ? (
-                  <form onSubmit={(e) => handleSubmitMessage(e, speakText)} className="flex flex-col gap-3">
-                    <style dangerouslySetInnerHTML={{ __html: `
+                  <form
+                    onSubmit={(e) => handleSubmitMessage(e, speakText)}
+                    className="flex flex-col gap-3"
+                  >
+                    <style
+                      dangerouslySetInnerHTML={{
+                        __html: `
                       @keyframes eqPulse {
                         0% { transform: scaleY(0.3); }
                         100% { transform: scaleY(2.5); }
                       }
-                    `}} />
+                    `,
+                      }}
+                    />
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -276,12 +330,66 @@ export default function SalaryNegotiatorBoard({
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                             </span>
-                            <svg className="w-8 h-4 flex items-center" viewBox="0 0 24 12" fill="none">
-                              <line className="animate-[eqPulse_0.5s_infinite_alternate]" x1="2" y1="6" x2="2" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transformOrigin: 'center' }} />
-                              <line className="animate-[eqPulse_0.6s_infinite_alternate_0.15s]" x1="7" y1="6" x2="7" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transformOrigin: 'center' }} />
-                              <line className="animate-[eqPulse_0.4s_infinite_alternate_0.3s]" x1="12" y1="6" x2="12" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transformOrigin: 'center' }} />
-                              <line className="animate-[eqPulse_0.7s_infinite_alternate_0.1s]" x1="17" y1="6" x2="17" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transformOrigin: 'center' }} />
-                              <line className="animate-[eqPulse_0.5s_infinite_alternate_0.2s]" x1="22" y1="6" x2="22" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transformOrigin: 'center' }} />
+                            <svg
+                              className="w-8 h-4 flex items-center"
+                              viewBox="0 0 24 12"
+                              fill="none"
+                            >
+                              <line
+                                className="animate-[eqPulse_0.5s_infinite_alternate]"
+                                x1="2"
+                                y1="6"
+                                x2="2"
+                                y2="6"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                style={{ transformOrigin: "center" }}
+                              />
+                              <line
+                                className="animate-[eqPulse_0.6s_infinite_alternate_0.15s]"
+                                x1="7"
+                                y1="6"
+                                x2="7"
+                                y2="6"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                style={{ transformOrigin: "center" }}
+                              />
+                              <line
+                                className="animate-[eqPulse_0.4s_infinite_alternate_0.3s]"
+                                x1="12"
+                                y1="6"
+                                x2="12"
+                                y2="6"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                style={{ transformOrigin: "center" }}
+                              />
+                              <line
+                                className="animate-[eqPulse_0.7s_infinite_alternate_0.1s]"
+                                x1="17"
+                                y1="6"
+                                x2="17"
+                                y2="6"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                style={{ transformOrigin: "center" }}
+                              />
+                              <line
+                                className="animate-[eqPulse_0.5s_infinite_alternate_0.2s]"
+                                x1="22"
+                                y1="6"
+                                x2="22"
+                                y2="6"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                style={{ transformOrigin: "center" }}
+                              />
                             </svg>
                           </>
                         ) : (
@@ -294,7 +402,11 @@ export default function SalaryNegotiatorBoard({
                         type="text"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
-                        placeholder={isListening ? "Listening..." : "Type your counter-offer response... Highlight achievements, value metrics, and stack affinity."}
+                        placeholder={
+                          isListening
+                            ? "Listening..."
+                            : "Type your counter-offer response... Highlight achievements, value metrics, and stack affinity."
+                        }
                         disabled={isSubmitting}
                         className="flex-1 px-4 py-3 bg-paper border border-border rounded-xl text-sm outline-none focus:border-accent text-ink transition"
                       />
@@ -310,10 +422,8 @@ export default function SalaryNegotiatorBoard({
                         )}
                       </button>
                     </div>
-                    
-                    {errorMsg && (
-                      <div className="text-rose-400 text-xs mt-1">⚠️ {errorMsg}</div>
-                    )}
+
+                    {errorMsg && <div className="text-rose-400 text-xs mt-1">⚠️ {errorMsg}</div>}
 
                     {/* Immediate Action Buttons */}
                     <div className="flex flex-wrap gap-2 justify-end mt-1">
@@ -338,7 +448,9 @@ export default function SalaryNegotiatorBoard({
                 ) : (
                   <div className="text-center py-2 text-sm text-ink-muted flex items-center justify-center gap-2">
                     <span>🏁 Simulator finished:</span>
-                    <span className="font-bold capitalize text-ink">{verdict.replace("_", " ")}</span>
+                    <span className="font-bold capitalize text-ink">
+                      {verdict.replace("_", " ")}
+                    </span>
                   </div>
                 )}
               </div>
@@ -346,12 +458,16 @@ export default function SalaryNegotiatorBoard({
 
             {/* Sidebar Panel */}
             <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-border bg-paper-card flex flex-col gap-4 p-4 overflow-y-auto">
-              
               {/* Recruiter Profile Card */}
               {recruiter && (
-                <SpotlightCard className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
+                <SpotlightCard
+                  className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0"
+                  glowColor="rgba(99, 102, 241, 0.12)"
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`text-3xl p-2 bg-paper border border-border rounded-xl shadow-inner select-none transition-all duration-500 ${getSentimentRing(sentiment)}`}>
+                    <div
+                      className={`text-3xl p-2 bg-paper border border-border rounded-xl shadow-inner select-none transition-all duration-500 ${getSentimentRing(sentiment)}`}
+                    >
                       {recruiter.avatar}
                     </div>
                     <div>
@@ -361,16 +477,20 @@ export default function SalaryNegotiatorBoard({
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1.5 border-t border-border/50 pt-2.5">
-                    <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">Profile Description</div>
+                    <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">
+                      Profile Description
+                    </div>
                     <p className="text-xs text-ink-muted leading-relaxed italic">
                       &quot;{recruiter.description}&quot;
                     </p>
                   </div>
 
                   <div className="space-y-1.5 border-t border-border/50 pt-2.5">
-                    <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">Current Mood</div>
+                    <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">
+                      Current Mood
+                    </div>
                     <p className="text-xs text-ink font-medium leading-relaxed transition-all duration-300">
                       {getRecruiterMoodText(sentiment, recruiter.name)}
                     </p>
@@ -379,11 +499,14 @@ export default function SalaryNegotiatorBoard({
               )}
 
               {/* Live Recruiter Status */}
-              <SpotlightCard className="p-5 border border-border/60 space-y-4 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
+              <SpotlightCard
+                className="p-5 border border-border/60 space-y-4 bg-paper/50 shrink-0"
+                glowColor="rgba(99, 102, 241, 0.12)"
+              >
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider">
                   Recruiter Evaluation
                 </h3>
-                
+
                 {/* Sentiment */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-ink-muted">Recruiter Sentiment</span>
@@ -398,7 +521,7 @@ export default function SalaryNegotiatorBoard({
                   </div>
                   <div className="w-full bg-paper h-2 rounded-full overflow-hidden">
                     <div
-                       className={`h-full transition-all duration-500 ${getLeverageColor(leverage)}`}
+                      className={`h-full transition-all duration-500 ${getLeverageColor(leverage)}`}
                       style={{ width: `${leverage}%` }}
                     />
                   </div>
@@ -410,7 +533,13 @@ export default function SalaryNegotiatorBoard({
                     <div className="flex justify-between text-xs">
                       <span className="text-ink-muted">Corporate Budget Cap Proximity</span>
                       <span className="font-bold text-ink text-[10px] uppercase tracking-wider">
-                        {proximityPct >= 100 ? "âš ï¸ Cap Reached" : proximityPct >= 80 ? "Critical" : proximityPct >= 50 ? "Moderate" : "Safe Range"}
+                        {proximityPct >= 100
+                          ? "âš ï¸ Cap Reached"
+                          : proximityPct >= 80
+                            ? "Critical"
+                            : proximityPct >= 50
+                              ? "Moderate"
+                              : "Safe Range"}
                       </span>
                     </div>
                     <div className="w-full bg-paper h-2 rounded-full overflow-hidden relative">
@@ -419,17 +548,18 @@ export default function SalaryNegotiatorBoard({
                           proximityPct >= 100
                             ? "bg-rose-600 animate-pulse"
                             : proximityPct >= 80
-                            ? "bg-rose-500"
-                            : proximityPct >= 50
-                            ? "bg-amber-500"
-                            : "bg-emerald-500"
+                              ? "bg-rose-500"
+                              : proximityPct >= 50
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
                         }`}
                         style={{ width: `${proximityPct}%` }}
                       />
                     </div>
                     {proximityPct >= 80 && (
                       <div className="text-[10px] text-rose-400 font-medium leading-normal animate-pulse">
-                        ⚠️ Recruiter is resisting further base salary increases. Pushing harder risks losing the offer!
+                        ⚠️ Recruiter is resisting further base salary increases. Pushing harder
+                        risks losing the offer!
                       </div>
                     )}
                   </div>
@@ -437,28 +567,55 @@ export default function SalaryNegotiatorBoard({
               </SpotlightCard>
 
               {/* Tactics Checklist */}
-              <SpotlightCard className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
+              <SpotlightCard
+                className="p-5 border border-border/60 space-y-3.5 bg-paper/50 shrink-0"
+                glowColor="rgba(99, 102, 241, 0.12)"
+              >
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center justify-between">
                   <span>🎯 Tactic Checklist</span>
-                  <span className="text-[10px] text-accent font-semibold">{completedTactics.length}/5 Used</span>
+                  <span className="text-[10px] text-accent font-semibold">
+                    {completedTactics.length}/5 Used
+                  </span>
                 </h3>
                 <div className="space-y-2 text-xs">
                   {[
-                    { name: "Resume Anchoring", desc: "Reference quantitative metrics or achievements." },
-                    { name: "Alternative Offer", desc: "Leverage competing timelines or other options." },
-                    { name: "Total Comp Focus", desc: "Discuss equity, bonuses, or sign-on terms." },
-                    { name: "Collaborative Tone", desc: "Keep phrasings polite, professional, and positive." },
-                    { name: "Market Research", desc: "Mention industry standards or data benchmarks." },
+                    {
+                      name: "Resume Anchoring",
+                      desc: "Reference quantitative metrics or achievements.",
+                    },
+                    {
+                      name: "Alternative Offer",
+                      desc: "Leverage competing timelines or other options.",
+                    },
+                    {
+                      name: "Total Comp Focus",
+                      desc: "Discuss equity, bonuses, or sign-on terms.",
+                    },
+                    {
+                      name: "Collaborative Tone",
+                      desc: "Keep phrasings polite, professional, and positive.",
+                    },
+                    {
+                      name: "Market Research",
+                      desc: "Mention industry standards or data benchmarks.",
+                    },
                   ].map((t) => {
                     const isDone = completedTactics.includes(t.name);
                     return (
-                      <div key={t.name} className={`flex items-start gap-2.5 p-2 rounded-xl border transition ${isDone ? 'bg-emerald-500/5 border-emerald-500/20 text-ink' : 'bg-paper/30 border-border/40 text-ink-muted'}`}>
+                      <div
+                        key={t.name}
+                        className={`flex items-start gap-2.5 p-2 rounded-xl border transition ${isDone ? "bg-emerald-500/5 border-emerald-500/20 text-ink" : "bg-paper/30 border-border/40 text-ink-muted"}`}
+                      >
                         <span className="text-sm select-none">{isDone ? "✅" : "⭕"}</span>
                         <div>
-                          <div className={`font-bold text-[11px] ${isDone ? 'text-emerald-500/80 line-through opacity-85' : 'text-ink'}`}>
+                          <div
+                            className={`font-bold text-[11px] ${isDone ? "text-emerald-500/80 line-through opacity-85" : "text-ink"}`}
+                          >
                             {t.name}
                           </div>
-                          <div className="text-[10px] opacity-75 leading-normal mt-0.5">{t.desc}</div>
+                          <div className="text-[10px] opacity-75 leading-normal mt-0.5">
+                            {t.desc}
+                          </div>
                         </div>
                       </div>
                     );
@@ -467,7 +624,10 @@ export default function SalaryNegotiatorBoard({
               </SpotlightCard>
 
               {/* Compensation Tracker */}
-              <SpotlightCard className="p-5 border border-border/60 space-y-4 bg-paper/50 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
+              <SpotlightCard
+                className="p-5 border border-border/60 space-y-4 bg-paper/50 shrink-0"
+                glowColor="rgba(99, 102, 241, 0.12)"
+              >
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex justify-between">
                   <span>Offer Package</span>
                   {netGain > 0 && (
@@ -476,7 +636,7 @@ export default function SalaryNegotiatorBoard({
                     </span>
                   )}
                 </h3>
-                
+
                 {/* Dynamic Stacked Bar Comparison Chart */}
                 <div className="space-y-3 border-b border-border/50 pb-3">
                   <div className="space-y-2">
@@ -490,21 +650,27 @@ export default function SalaryNegotiatorBoard({
                         {currentOffer.base > 0 && (
                           <div
                             className="h-full bg-indigo-500 transition-all duration-500"
-                            style={{ width: `${(currentOffer.base / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            style={{
+                              width: `${(currentOffer.base / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                             title={`Base Salary: $${currentOffer.base.toLocaleString()}`}
                           />
                         )}
                         {currentOffer.equity > 0 && (
                           <div
-                            className="h-full bg-purple-500 transition-all duration-500 border-l border-white/10"
-                            style={{ width: `${(currentOffer.equity / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            className="h-full bg-sky-500 transition-all duration-500 border-l border-white/10"
+                            style={{
+                              width: `${(currentOffer.equity / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                             title={`Equity Value: $${currentOffer.equity.toLocaleString()}`}
                           />
                         )}
                         {currentOffer.signOn > 0 && (
                           <div
                             className="h-full bg-emerald-500 transition-all duration-500 border-l border-white/10"
-                            style={{ width: `${(currentOffer.signOn / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            style={{
+                              width: `${(currentOffer.signOn / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                             title={`Sign-on Bonus: $${currentOffer.signOn.toLocaleString()}`}
                           />
                         )}
@@ -515,25 +681,33 @@ export default function SalaryNegotiatorBoard({
                     <div className="space-y-1 opacity-70 hover:opacity-100 transition-opacity">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-ink-muted">Initial Offer</span>
-                        <span className="font-semibold text-ink-muted">${initialTotal.toLocaleString()}</span>
+                        <span className="font-semibold text-ink-muted">
+                          ${initialTotal.toLocaleString()}
+                        </span>
                       </div>
                       <div className="w-full bg-paper h-2.5 rounded-md overflow-hidden flex shadow-inner border border-border/30">
                         {initialOffer.base > 0 && (
                           <div
                             className="h-full bg-indigo-500/60"
-                            style={{ width: `${(initialOffer.base / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            style={{
+                              width: `${(initialOffer.base / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                           />
                         )}
                         {initialOffer.equity > 0 && (
                           <div
-                            className="h-full bg-purple-500/60 border-l border-white/10"
-                            style={{ width: `${(initialOffer.equity / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            className="h-full bg-sky-500/60 border-l border-white/10"
+                            style={{
+                              width: `${(initialOffer.equity / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                           />
                         )}
                         {initialOffer.signOn > 0 && (
                           <div
                             className="h-full bg-emerald-500/60 border-l border-white/10"
-                            style={{ width: `${(initialOffer.signOn / Math.max(initialTotal, currentTotal, 1)) * 100}%` }}
+                            style={{
+                              width: `${(initialOffer.signOn / Math.max(initialTotal, currentTotal, 1)) * 100}%`,
+                            }}
                           />
                         )}
                       </div>
@@ -547,7 +721,7 @@ export default function SalaryNegotiatorBoard({
                       <span>Base</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-purple-500 rounded-sm" />
+                      <span className="w-2 h-2 bg-sky-500 rounded-sm" />
                       <span>Equity</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -559,9 +733,24 @@ export default function SalaryNegotiatorBoard({
 
                 <div className="space-y-2">
                   {[
-                    { label: "Base Salary", val: currentOffer.base, orig: initialOffer.base, color: "bg-indigo-500" },
-                    { label: "Equity Value", val: currentOffer.equity, orig: initialOffer.equity, color: "bg-purple-500" },
-                    { label: "Sign-on Bonus", val: currentOffer.signOn, orig: initialOffer.signOn, color: "bg-emerald-500" },
+                    {
+                      label: "Base Salary",
+                      val: currentOffer.base,
+                      orig: initialOffer.base,
+                      color: "bg-indigo-500",
+                    },
+                    {
+                      label: "Equity Value",
+                      val: currentOffer.equity,
+                      orig: initialOffer.equity,
+                      color: "bg-sky-500",
+                    },
+                    {
+                      label: "Sign-on Bonus",
+                      val: currentOffer.signOn,
+                      orig: initialOffer.signOn,
+                      color: "bg-emerald-500",
+                    },
                   ].map((item) => {
                     const gain = item.val - item.orig;
                     return (
@@ -598,7 +787,9 @@ export default function SalaryNegotiatorBoard({
                   {/* Other details */}
                   {currentOffer.other && (
                     <div className="text-xs text-ink-muted bg-paper border border-border p-2 rounded-lg mt-2">
-                      <span className="font-semibold text-[10px] text-ink block mb-0.5">Other Perks:</span>
+                      <span className="font-semibold text-[10px] text-ink block mb-0.5">
+                        Other Perks:
+                      </span>
                       {currentOffer.other}
                     </div>
                   )}
@@ -606,17 +797,22 @@ export default function SalaryNegotiatorBoard({
               </SpotlightCard>
 
               {/* Live AI Coach */}
-              <SpotlightCard className="p-5 mb-4 space-y-4 bg-paper/50 border border-border/60 shrink-0" glowColor="rgba(99, 102, 241, 0.12)">
+              <SpotlightCard
+                className="p-5 mb-4 space-y-4 bg-paper/50 border border-border/60 shrink-0"
+                glowColor="rgba(99, 102, 241, 0.12)"
+              >
                 <h3 className="font-display text-xs font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1.5">
                   <span>💡 Live AI Coach</span>
                 </h3>
                 <div className="bg-accent/5 border border-accent/10 p-3 rounded-xl text-xs leading-relaxed text-ink-muted italic">
                   &quot;{coachFeedback}&quot;
                 </div>
-                
+
                 {/* Suggestions List */}
                 <div className="space-y-2 border-t border-border/50 pt-3">
-                  <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">Suggested Phrasings (Click to inject)</div>
+                  <div className="text-[9px] uppercase tracking-wider font-semibold text-ink-muted">
+                    Suggested Phrasings (Click to inject)
+                  </div>
                   <div className="flex flex-col gap-2">
                     {getCoachSuggestions(sentiment, proximityPct).map((sug, i) => (
                       <button
@@ -632,9 +828,7 @@ export default function SalaryNegotiatorBoard({
                   </div>
                 </div>
               </SpotlightCard>
-
             </div>
-
           </div>
         )}
 
@@ -643,7 +837,10 @@ export default function SalaryNegotiatorBoard({
           <div className="absolute inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-6 backdrop-blur-sm text-center">
             <span className="w-10 h-10 border-4 border-accent/20 border-t-accent rounded-full animate-spin mb-4" />
             <h3 className="font-display text-lg font-bold text-ink mt-2">Compiling Scorecard...</h3>
-            <p className="text-xs text-ink-muted mt-2 max-w-sm">Analyzing negotiation strategies, sentiment transitions, achievements highlighted, and final package value gains.</p>
+            <p className="text-xs text-ink-muted mt-2 max-w-sm">
+              Analyzing negotiation strategies, sentiment transitions, achievements highlighted, and
+              final package value gains.
+            </p>
           </div>
         )}
 
@@ -660,9 +857,7 @@ export default function SalaryNegotiatorBoard({
             onClose={onClose}
           />
         )}
-
       </div>
     </div>
   );
 }
-

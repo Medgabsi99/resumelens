@@ -268,7 +268,7 @@ export default function InterviewsPage() {
                 {GENERATING_STEPS[genStep]}
               </h3>
               <p className="text-xs text-ink-muted">
-                Leveraging gemini-2.5 models to customize specialized questions for your target
+                Leveraging gemini-3.6 models to customize specialized questions for your target
                 profile
               </p>
             </div>

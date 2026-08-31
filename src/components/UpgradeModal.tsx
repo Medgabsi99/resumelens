@@ -51,9 +51,11 @@ export default function UpgradeModal({ preview, onClose }: Props) {
         </button>
 
         <div className="text-center mb-8">
-          <div className="font-display text-2xl font-bold mb-2">
-            You&apos;ve used your free analyses
-          </div>
+          <div className="font-display text-2xl font-bold mb-2">Full Access Unlocked</div>
+          <p className="text-sm text-ink-muted leading-relaxed max-w-sm mx-auto mb-4">
+            All AI resume analysis, tailoring, and career optimization tools are 100% free and
+            unlimited.
+          </p>
           {preview && (
             <div className="mt-4">
               <div className="font-display text-5xl text-accent font-bold mb-2">
@@ -77,38 +79,17 @@ export default function UpgradeModal({ preview, onClose }: Props) {
                     {s}
                   </span>
                 ))}
-                <span className="text-xs px-2.5 py-1 rounded-lg font-medium border border-border text-ink-muted bg-paper">
-                  + full report locked
-                </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Plans */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PlanCard
-            title="One-time"
-            price="$9"
-            desc="Unlimited reviews, forever"
-            cta="Buy Access"
-            loading={loading === "one_time"}
-            onClick={() => checkout("one_time")}
-          />
-          <PlanCard
-            title="Pro Monthly"
-            price="$19/mo"
-            desc="Unlimited reviews + priority support"
-            cta="Subscribe"
-            featured
-            loading={loading === "monthly"}
-            onClick={() => checkout("monthly")}
-          />
-        </div>
-
-        <p className="text-center text-[10px] text-ink-faint mt-6 uppercase tracking-wider font-mono">
-          Powered by Stripe. Cancel subscriptions anytime.
-        </p>
+        <button
+          onClick={onClose}
+          className="w-full btn-gradient py-3 rounded-xl text-sm font-bold cursor-pointer"
+        >
+          Continue with Full Report
+        </button>
       </div>
     </div>
   );
@@ -153,21 +134,23 @@ function PlanCard({
       )}
       <div>
         <div className="font-semibold text-sm mb-1">{title}</div>
-        <div className="font-display text-2xl font-bold text-ink mb-2">
-          {price}
-        </div>
+        <div className="font-display text-2xl font-bold text-ink mb-2">{price}</div>
         <div className="text-xs text-ink-muted leading-relaxed mb-4">{desc}</div>
       </div>
       <button
         onClick={onClick}
         disabled={loading}
         className="w-full btn-gradient py-2 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
-        style={!featured ? {
-          background: "transparent",
-          border: "2px solid var(--accent)",
-          color: "var(--accent)",
-          boxShadow: "none",
-        } : undefined}
+        style={
+          !featured
+            ? {
+                background: "transparent",
+                border: "2px solid var(--accent)",
+                color: "var(--accent)",
+                boxShadow: "none",
+              }
+            : undefined
+        }
       >
         {loading ? "..." : cta}
       </button>

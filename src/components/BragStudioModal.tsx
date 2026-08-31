@@ -42,14 +42,14 @@ interface ThemePreset {
 const THEMES: Record<BragTheme, ThemePreset> = {
   cyberpunk: {
     id: "cyberpunk",
-    label: "Cyberpunk Obsidian",
-    bgGrad: ["#090d16", "#1e1b4b"],
-    accentColor: "#8b5cf6",
-    cardBg: "rgba(30, 27, 75, 0.45)",
-    border: "rgba(139, 92, 246, 0.35)",
+    label: "Obsidian Sapphire",
+    bgGrad: ["#090d16", "#0f172a"],
+    accentColor: "#2563eb",
+    cardBg: "rgba(15, 23, 42, 0.5)",
+    border: "rgba(37, 99, 235, 0.35)",
     textColor: "#ffffff",
-    subColor: "#a78bfa",
-    badgeBg: "rgba(139, 92, 246, 0.2)",
+    subColor: "#93c5fd",
+    badgeBg: "rgba(37, 99, 235, 0.2)",
   },
   gold: {
     id: "gold",
@@ -318,12 +318,12 @@ function BragStudioContent({
                 width: "36px",
                 height: "36px",
                 borderRadius: "10px",
-                background: "rgba(139, 92, 246, 0.15)",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
+                background: "var(--accent-bg)",
+                border: "1px solid var(--accent-border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#8b5cf6",
+                color: "var(--accent)",
               }}
             >
               <Award size={20} />

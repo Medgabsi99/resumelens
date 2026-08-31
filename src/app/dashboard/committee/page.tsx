@@ -962,7 +962,7 @@ export default function RecruiterSandboxPage() {
                   border: "none",
                   background:
                     canRun && !loading
-                      ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #7c3aed 100%)"
+                      ? "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)"
                       : "var(--border)",
                   color: canRun && !loading ? "white" : "var(--ink-faint)",
                   fontSize: 13.5,
@@ -1049,8 +1049,8 @@ export default function RecruiterSandboxPage() {
                         inset: 0,
                         borderRadius: "50%",
                         border: "2px solid transparent",
-                        borderTopColor: "#6366f1",
-                        borderRightColor: "#a855f7",
+                        borderTopColor: "var(--accent)",
+                        borderRightColor: "#2563eb",
                       }}
                     />
                     <div
@@ -1058,9 +1058,8 @@ export default function RecruiterSandboxPage() {
                         position: "absolute",
                         inset: 8,
                         borderRadius: "50%",
-                        background:
-                          "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15))",
-                        border: "1px solid rgba(99,102,241,0.2)",
+                        background: "var(--accent-bg)",
+                        border: "1px solid var(--accent-border)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -2209,7 +2208,7 @@ export default function RecruiterSandboxPage() {
                       desc="The 5 exact questions a recruiter would ask based on your resume"
                     />
                     <FeatureCard
-                      icon={<Trophy size={14} color="#a78bfa" />}
+                      icon={<Trophy size={14} color="#f59e0b" />}
                       title="Hiring Decision"
                       desc="The gut-feel verdict: Strong hire, pass, maybe, or not qualified"
                     />

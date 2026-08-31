@@ -16,7 +16,7 @@ import {
   Mail,
   Locate,
   GraduationCap,
-  Compass
+  Compass,
 } from "lucide-react";
 
 interface UserProfile {
@@ -60,7 +60,10 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadSettingsData() {
       try {
-        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authErr,
+        } = await supabase.auth.getUser();
         if (authErr || !user) {
           router.push("/login");
           return;
@@ -155,7 +158,10 @@ export default function SettingsPage() {
         window.location.href = data.url;
       }
     } catch (err: unknown) {
-      toastError((err as Error).message || "Failed to open billing portal.", "Billing Portal Error");
+      toastError(
+        (err as Error).message || "Failed to open billing portal.",
+        "Billing Portal Error"
+      );
     } finally {
       setLoadingPortal(false);
     }
@@ -203,12 +209,24 @@ export default function SettingsPage() {
   const getPlanBadgeStyles = (plan: string) => {
     switch (plan) {
       case "monthly":
-        return { background: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.2)" };
+        return {
+          background: "var(--accent-bg)",
+          color: "var(--accent)",
+          border: "1px solid var(--accent-border)",
+        };
       case "one_time":
-        return { background: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.2)" };
+        return {
+          background: "rgba(16, 185, 129, 0.1)",
+          color: "#10b981",
+          border: "1px solid rgba(16, 185, 129, 0.2)",
+        };
       case "free":
       default:
-        return { background: "rgba(107, 114, 128, 0.1)", color: "#6b7280", border: "1px solid rgba(107, 114, 128, 0.2)" };
+        return {
+          background: "rgba(107, 114, 128, 0.1)",
+          color: "#6b7280",
+          border: "1px solid rgba(107, 114, 128, 0.2)",
+        };
     }
   };
 
@@ -241,44 +259,100 @@ export default function SettingsPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight"
-            style={{ color: "var(--ink)", fontFamily: "Instrument Sans, sans-serif", margin: "0 0 6px 0" }}>
+          <h1
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight"
+            style={{
+              color: "var(--ink)",
+              fontFamily: "Instrument Sans, sans-serif",
+              margin: "0 0 6px 0",
+            }}
+          >
             Account Settings
           </h1>
           <p className="text-sm" style={{ margin: 0, color: "var(--ink-muted)" }}>
-            Update your account details, manage your billing plan, and update your security settings.
+            Update your account details, manage your billing plan, and update your security
+            settings.
           </p>
         </div>
 
         {loading ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            <div style={{ height: 180, background: "var(--paper-card)", borderRadius: 16, border: "1px solid var(--border)", animation: "pulse 1.5s infinite" }} />
-            <div style={{ height: 180, background: "var(--paper-card)", borderRadius: 16, border: "1px solid var(--border)", animation: "pulse 1.5s infinite" }} />
+            <div
+              style={{
+                height: 180,
+                background: "var(--paper-card)",
+                borderRadius: 16,
+                border: "1px solid var(--border)",
+                animation: "pulse 1.5s infinite",
+              }}
+            />
+            <div
+              style={{
+                height: 180,
+                background: "var(--paper-card)",
+                borderRadius: 16,
+                border: "1px solid var(--border)",
+                animation: "pulse 1.5s infinite",
+              }}
+            />
           </div>
         ) : (
           <div className="flex flex-col gap-7">
-
             {/* PROFILE & SECURITY */}
             <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Profile Credentials</h2>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Update your sign-in email address or change password.</p>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "var(--ink)",
+                  }}
+                >
+                  Profile Credentials
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
+                  Update your sign-in email address or change password.
+                </p>
               </div>
 
               {/* Update Email Form */}
-              <form onSubmit={handleUpdateEmail} style={{ display: "flex", flexDirection: "column", gap: 12, borderBottom: "1px solid var(--border)", paddingBottom: 24 }}>
+              <form
+                onSubmit={handleUpdateEmail}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  borderBottom: "1px solid var(--border)",
+                  paddingBottom: 24,
+                }}
+              >
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label htmlFor="current-email" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>Current Email</label>
+                  <label
+                    htmlFor="current-email"
+                    style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+                  >
+                    Current Email
+                  </label>
                   <input
                     id="current-email"
                     type="text"
                     disabled
                     value={userEmail || ""}
-                    style={{ ...inputStyle, background: "var(--paper-warm)", color: "var(--ink-faint)" }}
+                    style={{
+                      ...inputStyle,
+                      background: "var(--paper-warm)",
+                      color: "var(--ink-faint)",
+                    }}
                   />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label htmlFor="new-email" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>New Email</label>
+                  <label
+                    htmlFor="new-email"
+                    style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+                  >
+                    New Email
+                  </label>
                   <input
                     id="new-email"
                     type="email"
@@ -287,8 +361,8 @@ export default function SettingsPage() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                    onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+                    onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
                   />
                 </div>
                 <div className="flex justify-end mt-1">
@@ -298,7 +372,8 @@ export default function SettingsPage() {
                     style={{
                       padding: "10px 20px",
                       borderRadius: 10,
-                      background: updatingEmail || !newEmail.trim() ? "var(--border)" : "var(--accent)",
+                      background:
+                        updatingEmail || !newEmail.trim() ? "var(--border)" : "var(--accent)",
                       color: "white",
                       border: "none",
                       fontSize: 13,
@@ -310,17 +385,38 @@ export default function SettingsPage() {
                     {updatingEmail ? "Sending Links..." : "Update Email"}
                   </button>
                 </div>
-                <p style={{ margin: 0, fontSize: 11, color: "var(--ink-faint)", lineHeight: 1.4, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 11,
+                    color: "var(--ink-faint)",
+                    lineHeight: 1.4,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 6,
+                  }}
+                >
                   <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                  <span><em>Note:</em> Supabase sends verification links to both the old and new email addresses. The email will not change until both links are clicked.</span>
+                  <span>
+                    <em>Note:</em> Supabase sends verification links to both the old and new email
+                    addresses. The email will not change until both links are clicked.
+                  </span>
                 </p>
               </form>
 
               {/* Change Password Form */}
-              <form onSubmit={handleUpdatePassword} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <form
+                onSubmit={handleUpdatePassword}
+                style={{ display: "flex", flexDirection: "column", gap: 14 }}
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <label htmlFor="new-password" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>New Password</label>
+                    <label
+                      htmlFor="new-password"
+                      style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+                    >
+                      New Password
+                    </label>
                     <input
                       id="new-password"
                       type="password"
@@ -329,12 +425,17 @@ export default function SettingsPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       style={inputStyle}
-                      onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                      onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                      onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
                     />
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <label htmlFor="confirm-password" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>Confirm Password</label>
+                    <label
+                      htmlFor="confirm-password"
+                      style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+                    >
+                      Confirm Password
+                    </label>
                     <input
                       id="confirm-password"
                       type="password"
@@ -343,8 +444,8 @@ export default function SettingsPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       style={inputStyle}
-                      onFocus={(e) => e.target.style.borderColor = "var(--accent)"}
-                      onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                      onFocus={(e) => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
                     />
                   </div>
                 </div>
@@ -355,7 +456,8 @@ export default function SettingsPage() {
                     style={{
                       padding: "10px 20px",
                       borderRadius: 10,
-                      background: updatingPassword || !newPassword.trim() ? "var(--border)" : "var(--accent)",
+                      background:
+                        updatingPassword || !newPassword.trim() ? "var(--border)" : "var(--accent)",
                       color: "white",
                       border: "none",
                       fontSize: 13,
@@ -373,83 +475,52 @@ export default function SettingsPage() {
             {/* BILLING & PLANS */}
             <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Billing &amp; Subscription</h2>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>View your plan details, download invoices, or cancel a subscription.</p>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "var(--ink)",
+                  }}
+                >
+                  Billing &amp; Subscription
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
+                  View your plan details, download invoices, or cancel a subscription.
+                </p>
               </div>
 
               {profile && (
-                <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
-                  style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}>
+                <div
+                  className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                  style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}
+                >
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>Current Plan</span>
-                      <span style={{
-                        padding: "3px 8px",
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        ...getPlanBadgeStyles(profile.plan)
-                      }}>
-                        {getPlanLabel(profile.plan)}
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
+                    >
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+                        Access Level
+                      </span>
+                      <span
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          background: "rgba(16, 185, 129, 0.1)",
+                          color: "#10b981",
+                          border: "1px solid rgba(16, 185, 129, 0.2)",
+                        }}
+                      >
+                        Unlimited Pro
                       </span>
                     </div>
-                    {profile.plan === "free" ? (
-                      <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-                        Includes 2 free resume reviews and ATS analysis scans.
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>
-                        You have unlocked full access to all resume rewriter and template tools!
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ flexShrink: 0 }}>
-                    {profile.plan === "monthly" || profile.stripe_customer_id ? (
-                      <button
-                        onClick={handleManageBilling}
-                        disabled={loadingPortal}
-                        style={{
-                          padding: "9px 16px",
-                          borderRadius: 10,
-                          background: "transparent",
-                          color: "var(--accent)",
-                          border: "1.5px solid var(--accent-border)",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          cursor: loadingPortal ? "not-allowed" : "pointer",
-                          transition: "all 0.15s",
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-bg)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        {loadingPortal ? "Launching Portal..." : "Manage Billing & Cancel"}
-                      </button>
-                    ) : profile.plan === "free" ? (
-                      <Link
-                        href="/pricing"
-                        style={{
-                          padding: "9px 16px",
-                          borderRadius: 10,
-                          background: "var(--accent)",
-                          color: "white",
-                          border: "none",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
-                          textAlign: "center",
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        <span>Upgrade to Pro</span>
-                        <ArrowRight size={14} />
-                      </Link>
-                    ) : null}
+                    <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>
+                      Full, unlimited access to all AI resume rewriting, ATS scoring, and interview
+                      prep tools.
+                    </span>
                   </div>
                 </div>
               )}
@@ -459,25 +530,38 @@ export default function SettingsPage() {
             <div className="p-5 sm:p-7" style={cardStyle}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <h2
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      margin: "0 0 4px 0",
+                      color: "var(--ink)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <Cpu size={18} className="text-accent" />
                     <span>Chrome Extension Integration</span>
                   </h2>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
-                    Analyze compatibility and track applications directly from LinkedIn, Indeed, Greenhouse, and Lever.
+                    Analyze compatibility and track applications directly from LinkedIn, Indeed,
+                    Greenhouse, and Lever.
                   </p>
                 </div>
-                <span style={{
-                  background: "rgba(139, 92, 246, 0.1)",
-                  color: "#a78bfa",
-                  border: "1px solid rgba(139, 92, 246, 0.2)",
-                  padding: "3px 8px",
-                  borderRadius: 6,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  flexShrink: 0,
-                }}>
+                <span
+                  style={{
+                    background: "var(--accent-bg)",
+                    color: "var(--accent)",
+                    border: "1px solid var(--accent-border)",
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    flexShrink: 0,
+                  }}
+                >
                   Developer Tool
                 </span>
               </div>
@@ -486,44 +570,101 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 {/* Left col: value props */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>Key Capabilities:</h3>
-                  <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8, color: "var(--ink-muted)" }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
+                    Key Capabilities:
+                  </h3>
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingLeft: 0,
+                      listStyle: "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      color: "var(--ink-muted)",
+                    }}
+                  >
                     <li className="flex items-start gap-2">
                       <Zap size={13} className="text-amber-500 shrink-0 mt-1" />
-                      <span><strong>Live Scraping</strong>: Instantly captures job roles, companies, and requirements from active tabs.</span>
+                      <span>
+                        <strong>Live Scraping</strong>: Instantly captures job roles, companies, and
+                        requirements from active tabs.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <Compass size={13} className="text-purple-500 shrink-0 mt-1" />
-                      <span><strong>Direct Match Scoring</strong>: Compares candidate resume with listings using gemini-2.5 algorithms.</span>
+                      <Compass size={13} className="text-accent shrink-0 mt-1" />
+                      <span>
+                        <strong>Direct Match Scoring</strong>: Compares candidate resume with
+                        listings using gemini-3.6 algorithms.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Mail size={13} className="text-indigo-500 shrink-0 mt-1" />
-                      <span><strong>Outreach Pitcher</strong>: Drafts customized recruiter cold-outreach templates on the fly.</span>
+                      <span>
+                        <strong>Outreach Pitcher</strong>: Drafts customized recruiter cold-outreach
+                        templates on the fly.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Locate size={13} className="text-emerald-500 shrink-0 mt-1" />
-                      <span><strong>Board sync</strong>: Creates application tracker cards automatically.</span>
+                      <span>
+                        <strong>Board sync</strong>: Creates application tracker cards
+                        automatically.
+                      </span>
                     </li>
                   </ul>
                 </div>
 
                 {/* Right col: Installation steps */}
-                <div style={{
-                  padding: 16,
-                  background: "var(--paper-warm)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>How to Install &amp; Load:</h3>
-                  <ol style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 6, color: "var(--ink-muted)", fontSize: 12, lineHeight: 1.4 }}>
-                    <li>Open Chrome and navigate to <strong style={{ color: "var(--ink)", fontFamily: "monospace" }}>chrome://extensions/</strong></li>
-                    <li>Toggle <strong>Developer mode</strong> in the top-right corner.</li>
-                    <li>Click <strong>Load unpacked</strong> in the top-left menu.</li>
-                    <li>Select the <code style={{ color: "var(--accent)", fontStyle: "italic" }}>chrome-extension</code> folder inside your local codebase directory.</li>
-                    <li>Pin the extension, sign in to this web dashboard, and click the icon on any job posting page!</li>
+                <div
+                  style={{
+                    padding: 16,
+                    background: "var(--paper-warm)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
+                >
+                  <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
+                    How to Install &amp; Load:
+                  </h3>
+                  <ol
+                    style={{
+                      margin: 0,
+                      paddingLeft: 16,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                      color: "var(--ink-muted)",
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <li>
+                      Open Chrome and navigate to{" "}
+                      <strong style={{ color: "var(--ink)", fontFamily: "monospace" }}>
+                        chrome://extensions/
+                      </strong>
+                    </li>
+                    <li>
+                      Toggle <strong>Developer mode</strong> in the top-right corner.
+                    </li>
+                    <li>
+                      Click <strong>Load unpacked</strong> in the top-left menu.
+                    </li>
+                    <li>
+                      Select the{" "}
+                      <code style={{ color: "var(--accent)", fontStyle: "italic" }}>
+                        chrome-extension
+                      </code>{" "}
+                      folder inside your local codebase directory.
+                    </li>
+                    <li>
+                      Pin the extension, sign in to this web dashboard, and click the icon on any
+                      job posting page!
+                    </li>
                   </ol>
                 </div>
               </div>
@@ -532,18 +673,43 @@ export default function SettingsPage() {
             {/* PREFERENCES */}
             <div className="p-5 sm:p-7" style={cardStyle}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "var(--ink)" }}>Preferences</h2>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Personalization and onboarding options.</p>
+                <h2
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: "0 0 4px 0",
+                    color: "var(--ink)",
+                  }}
+                >
+                  Preferences
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
+                  Personalization and onboarding options.
+                </p>
               </div>
 
-              <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
-                style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}>
+              <div
+                className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                style={{ background: "var(--paper-warm)", border: "1px solid var(--border)" }}
+              >
                 <div>
-                  <p style={{ margin: "0 0 3px 0", fontSize: 14, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <p
+                    style={{
+                      margin: "0 0 3px 0",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "var(--ink)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <GraduationCap size={16} className="text-accent" />
                     <span>Onboarding Tour</span>
                   </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}>
+                  <p
+                    style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}
+                  >
                     Replay the 4-step feature walkthrough shown on first login.
                   </p>
                 </div>
@@ -564,8 +730,12 @@ export default function SettingsPage() {
                     transition: "all 0.15s",
                     flexShrink: 0,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-bg)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--accent-bg)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   Replay Tour →
                 </button>
@@ -575,18 +745,40 @@ export default function SettingsPage() {
             {/* DANGER ZONE */}
             <div className="p-5 sm:p-7" style={{ ...cardStyle, border: "1px dashed #ef4444" }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "#ef4444" }}>Danger Zone</h2>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>Permanently delete your account. This is irreversible.</p>
+                <h2
+                  style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0", color: "#ef4444" }}
+                >
+                  Danger Zone
+                </h2>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--ink-muted)" }}>
+                  Permanently delete your account. This is irreversible.
+                </p>
               </div>
 
-              <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
-                style={{ background: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.1)" }}>
+              <div
+                className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5 rounded-xl"
+                style={{
+                  background: "rgba(239, 68, 68, 0.04)",
+                  border: "1px solid rgba(239, 68, 68, 0.1)",
+                }}
+              >
                 <div className="flex-1 min-w-0 pr-0 sm:pr-5">
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", fontWeight: 500, marginBottom: 4 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 13,
+                      color: "var(--ink)",
+                      fontWeight: 500,
+                      marginBottom: 4,
+                    }}
+                  >
                     Delete Account &amp; Data
                   </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}>
-                    Your subscription will be canceled and all saved resumes, job tracker logs, analysis results, and portfolio pages will be deleted forever.
+                  <p
+                    style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)", lineHeight: 1.4 }}
+                  >
+                    Your subscription will be canceled and all saved resumes, job tracker logs,
+                    analysis results, and portfolio pages will be deleted forever.
                   </p>
                 </div>
                 <button
@@ -603,14 +795,13 @@ export default function SettingsPage() {
                     flexShrink: 0,
                     transition: "background 0.15s",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#dc2626"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "#ef4444"}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#dc2626")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#ef4444")}
                 >
                   Delete Account
                 </button>
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -628,32 +819,46 @@ export default function SettingsPage() {
               zIndex: 9998,
             }}
           />
-          <div style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "min(460px, calc(100vw - 32px))",
-            background: "var(--paper-card)",
-            border: "1px solid rgba(239, 68, 68, 0.2)",
-            borderRadius: 18,
-            boxShadow: "0 32px 64px -16px rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            fontFamily: "Instrument Sans, system-ui, sans-serif",
-            padding: 24,
-          }}>
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "min(460px, calc(100vw - 32px))",
+              background: "var(--paper-card)",
+              border: "1px solid rgba(239, 68, 68, 0.2)",
+              borderRadius: 18,
+              boxShadow: "0 32px 64px -16px rgba(0,0,0,0.45)",
+              zIndex: 9999,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              fontFamily: "Instrument Sans, system-ui, sans-serif",
+              padding: 24,
+            }}
+          >
             <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 10px 0", color: "#ef4444" }}>
               Are you absolutely sure?
             </h3>
-            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "var(--ink-muted)", lineHeight: 1.5 }}>
-              This action cannot be undone. All saved data will be deleted immediately, and your subscription in Stripe will be canceled.
+            <p
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: 13,
+                color: "var(--ink-muted)",
+                lineHeight: 1.5,
+              }}
+            >
+              This action cannot be undone. All your saved resumes, applications, and analysis
+              history will be permanently deleted.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-              <label htmlFor="confirm-delete-text" style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}>
-                Please type <strong style={{ color: "var(--ink)" }}>delete my account</strong> to confirm:
+              <label
+                htmlFor="confirm-delete-text"
+                style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)" }}
+              >
+                Please type <strong style={{ color: "var(--ink)" }}>delete my account</strong> to
+                confirm:
               </label>
               <input
                 id="confirm-delete-text"
@@ -691,12 +896,14 @@ export default function SettingsPage() {
                 style={{
                   padding: "9px 16px",
                   borderRadius: 10,
-                  background: deleting || deleteText !== "delete my account" ? "var(--border)" : "#ef4444",
+                  background:
+                    deleting || deleteText !== "delete my account" ? "var(--border)" : "#ef4444",
                   color: "white",
                   border: "none",
                   fontSize: 13,
                   fontWeight: 600,
-                  cursor: deleting || deleteText !== "delete my account" ? "not-allowed" : "pointer",
+                  cursor:
+                    deleting || deleteText !== "delete my account" ? "not-allowed" : "pointer",
                 }}
               >
                 {deleting ? "Deleting..." : "Permanently Delete"}
@@ -707,10 +914,7 @@ export default function SettingsPage() {
       )}
       {/* Tour Replay Overlay */}
       {tourReplayOpen && (
-        <OnboardingTour
-          forceOpen={tourReplayOpen}
-          onClose={() => setTourReplayOpen(false)}
-        />
+        <OnboardingTour forceOpen={tourReplayOpen} onClose={() => setTourReplayOpen(false)} />
       )}
     </DashboardLayout>
   );

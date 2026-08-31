@@ -25,6 +25,7 @@ interface Props {
   defaultJobTitle?: string;
   defaultCompanyName?: string;
   onGoToEditor?: () => void;
+  onOpenAutoFix?: () => void;
 }
 
 const VERDICT_COLORS: Record<string, { bg: string; text: string; label: string }> = {
@@ -109,6 +110,7 @@ export default function JobMatchPanel({
   defaultJobTitle = "",
   defaultCompanyName = "",
   onGoToEditor,
+  onOpenAutoFix,
 }: Props) {
   const {
     jobDescription,
@@ -628,11 +630,15 @@ export default function JobMatchPanel({
             </div>
             <button
               onClick={() => {
+                if (onOpenAutoFix) {
+                  onOpenAutoFix();
+                }
                 if (onGoToEditor) {
                   onGoToEditor();
                 }
                 setTimeout(() => {
                   const el =
+                    document.getElementById("editor-section") ||
                     document.getElementById("resume-editor-section") ||
                     document.getElementById("areas-to-improve-section") ||
                     document.querySelector(".sbs-editor-grid");
@@ -696,7 +702,7 @@ export default function JobMatchPanel({
               <span
                 style={{
                   display: "inline-block",
-                  background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                  background: "var(--accent)",
                   color: "white",
                   fontSize: 10,
                   fontWeight: 800,
@@ -707,7 +713,7 @@ export default function JobMatchPanel({
                   marginBottom: 10,
                 }}
               >
-                AI Auto-Tailor
+                Auto-Tailor
               </span>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                 Tailor your resume for this role in seconds
@@ -729,7 +735,7 @@ export default function JobMatchPanel({
               onClick={handleAutoTailor}
               disabled={isTailoring}
               style={{
-                background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                 color: "white",
                 border: "none",
                 borderRadius: 9,

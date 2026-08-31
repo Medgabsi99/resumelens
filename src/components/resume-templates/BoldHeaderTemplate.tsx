@@ -24,7 +24,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
       {/* Bold Color-Block Header */}
       <div
         style={{
-          background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2563eb 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #2563eb 100%)",
           padding: "40px 48px 32px",
           color: "#ffffff",
         }}
@@ -90,7 +90,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                 style={{
                   width: 4,
                   height: 18,
-                  background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                  background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                   borderRadius: 2,
                 }}
               />
@@ -123,7 +123,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                     style={{
                       width: 4,
                       height: 18,
-                      background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                      background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                       borderRadius: 2,
                     }}
                   />
@@ -157,7 +157,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                         width: 8,
                         height: 8,
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+                        background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
                       }}
                     />
                     <div
@@ -175,9 +175,9 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                       <div
                         style={{
                           fontSize: "10pt",
-                          color: "#7c3aed",
+                          color: "#2563eb",
                           fontWeight: 600,
-                          background: "#f3f0ff",
+                          background: "#e0f2fe",
                           padding: "2px 10px",
                           borderRadius: 4,
                         }}
@@ -225,7 +225,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                     style={{
                       width: 4,
                       height: 18,
-                      background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                      background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                       borderRadius: 2,
                     }}
                   />
@@ -273,7 +273,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                     style={{
                       width: 4,
                       height: 18,
-                      background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                      background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                       borderRadius: 2,
                     }}
                   />
@@ -317,7 +317,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                     style={{
                       width: 4,
                       height: 18,
-                      background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                      background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                       borderRadius: 2,
                     }}
                   />
@@ -348,7 +348,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                       {edu.degree}
                     </div>
                     <div
-                      style={{ fontSize: "10pt", color: "#7c3aed", fontWeight: 600, marginTop: 2 }}
+                      style={{ fontSize: "10pt", color: "#2563eb", fontWeight: 600, marginTop: 2 }}
                     >
                       {edu.school}
                     </div>
@@ -367,7 +367,7 @@ export default function BoldHeaderTemplate({ resumeText, targetRole, parsedData 
                     style={{
                       width: 4,
                       height: 18,
-                      background: "linear-gradient(180deg, #7c3aed, #2563eb)",
+                      background: "linear-gradient(180deg, #1e3a8a, #2563eb)",
                       borderRadius: 2,
                     }}
                   />

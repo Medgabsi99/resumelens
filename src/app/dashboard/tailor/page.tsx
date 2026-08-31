@@ -315,7 +315,7 @@ export default function TailorSandboxPage() {
                 }}
                 className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white shadow-md transition cursor-pointer"
                 style={{
-                  background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
+                  background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                   border: "none",
                 }}
               >

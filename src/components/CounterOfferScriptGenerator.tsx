@@ -91,7 +91,8 @@ Best regards,
       },
       perks_flexible: {
         title: "The Flexible Perks & 6-Month Review Counter",
-        subtitle: "Best for requesting early performance reviews, learning stipends, or remote perks.",
+        subtitle:
+          "Best for requesting early performance reviews, learning stipends, or remote perks.",
         subject: `Discussion Regarding Offer Details — ${roleTitle} — [Your Name]`,
         body: `Dear [Hiring Manager / Recruiter Name],
 
@@ -132,7 +133,16 @@ Sincerely,
       className={className}
     >
       {/* Top Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+          flexWrap: "wrap",
+          gap: "10px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div
             style={{
@@ -162,13 +172,13 @@ Sincerely,
         {/* Market Benchmark Badge */}
         <div
           style={{
-            background: "rgba(139, 92, 246, 0.1)",
-            border: "1px solid rgba(139, 92, 246, 0.25)",
+            background: "var(--accent-bg)",
+            border: "1px solid var(--accent-border)",
             borderRadius: "99px",
             padding: "4px 12px",
             fontSize: "11px",
             fontWeight: 700,
-            color: "#8b5cf6",
+            color: "var(--accent)",
             fontFamily: "DM Mono, monospace",
             display: "flex",
             alignItems: "center",
@@ -194,7 +204,15 @@ Sincerely,
         }}
       >
         <div>
-          <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-muted)", display: "block", marginBottom: "4px" }}>
+          <label
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--ink-muted)",
+              display: "block",
+              marginBottom: "4px",
+            }}
+          >
             Offered Base Salary ($)
           </label>
           <input
@@ -215,7 +233,15 @@ Sincerely,
         </div>
 
         <div>
-          <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent)", display: "block", marginBottom: "4px" }}>
+          <label
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--accent)",
+              display: "block",
+              marginBottom: "4px",
+            }}
+          >
             Target Counter Base ($)
           </label>
           <input
@@ -238,7 +264,15 @@ Sincerely,
         </div>
 
         <div>
-          <label style={{ fontSize: "11px", fontWeight: 700, color: "#10b981", display: "block", marginBottom: "4px" }}>
+          <label
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#10b981",
+              display: "block",
+              marginBottom: "4px",
+            }}
+          >
             Target Sign-On Bonus ($)
           </label>
           <input
@@ -303,8 +337,18 @@ Sincerely,
           marginBottom: "14px",
         }}
       >
-        <div style={{ marginBottom: "12px", paddingBottom: "8px", borderBottom: "1px solid #21262d" }}>
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "#8b949e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <div
+          style={{ marginBottom: "12px", paddingBottom: "8px", borderBottom: "1px solid #21262d" }}
+        >
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#8b949e",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
             Subject Line:
           </span>
           <div style={{ fontWeight: 700, color: "#58a6ff", fontSize: "13.5px", marginTop: "2px" }}>

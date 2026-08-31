@@ -416,9 +416,9 @@ export default function MockInterviewBoard({
                   <button
                     onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)}
                     style={{
-                      background: isFlashcardFlipped ? "rgba(139,92,246,0.25)" : "#282836",
-                      color: isFlashcardFlipped ? "#c084fc" : "#a5b4fc",
-                      border: "1px solid rgba(165,180,252,0.3)",
+                      background: isFlashcardFlipped ? "rgba(37,99,235,0.25)" : "#282836",
+                      color: isFlashcardFlipped ? "#60a5fa" : "#93c5fd",
+                      border: "1px solid rgba(59,130,246,0.3)",
                       borderRadius: 8,
                       padding: "6px 10px",
                       fontSize: 11,
@@ -456,16 +456,16 @@ export default function MockInterviewBoard({
               {isFlashcardFlipped && (
                 <div
                   style={{
-                    background: "rgba(139,92,246,0.1)",
-                    borderLeft: "3px solid #8b5cf6",
+                    background: "rgba(37,99,235,0.1)",
+                    borderLeft: "3px solid #2563eb",
                     padding: "12px 14px",
                     borderRadius: 8,
                     fontSize: 12,
-                    color: "#d8b4fe",
+                    color: "#93c5fd",
                     lineHeight: 1.6,
                   }}
                 >
-                  <div style={{ fontWeight: 700, marginBottom: 4, color: "#e9d5ff" }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, color: "#bfdbfe" }}>
                     💡 STAR Technique Study Flashcard:
                   </div>
                   <ul
@@ -617,7 +617,7 @@ export default function MockInterviewBoard({
                       background:
                         isEvaluating || !answerText.trim()
                           ? "#2d2d38"
-                          : "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                          : "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                       color: isEvaluating || !answerText.trim() ? "#6b7280" : "#ffffff",
                       border: "none",
                       borderRadius: 8,

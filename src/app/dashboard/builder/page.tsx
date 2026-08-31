@@ -37,7 +37,7 @@ const TEMPLATES = [
   { id: "professional", name: "Classic", color: "#1e40af", emoji: "🏛️", ats: true },
   { id: "modern", name: "Modern", color: "#0f2044", emoji: "⚡", ats: true },
   { id: "sidebar", name: "Sidebar", color: "#0f4c75", emoji: "📐", ats: false },
-  { id: "bold-header", name: "Bold", color: "#7c3aed", emoji: "🎨", ats: false },
+  { id: "bold-header", name: "Bold", color: "#1e3a8a", emoji: "🎨", ats: false },
   { id: "elegant", name: "Elegant", color: "#92400e", emoji: "✨", ats: false },
 ] as const;
 type TemplateId = (typeof TEMPLATES)[number]["id"];
@@ -56,8 +56,8 @@ const TMPL_COMPS: Record<
 
 // ─── Section definitions ──────────────────────────────────────────────────────
 const SECTIONS = [
-  { id: "contact", label: "Contact", icon: <User size={15} />, color: "#6366f1" },
-  { id: "summary", label: "Summary", icon: <Sparkles size={15} />, color: "#8b5cf6" },
+  { id: "contact", label: "Contact", icon: <User size={15} />, color: "#2563eb" },
+  { id: "summary", label: "Summary", icon: <Sparkles size={15} />, color: "#e05d2e" },
   { id: "experience", label: "Experience", icon: <Briefcase size={15} />, color: "#0ea5e9" },
   { id: "education", label: "Education", icon: <GraduationCap size={15} />, color: "#10b981" },
   { id: "skills", label: "Skills", icon: <Wrench size={15} />, color: "#f59e0b" },
@@ -579,7 +579,7 @@ export default function BuilderPage() {
           value={data.summary}
           onChange={(v) => set("summary", v)}
           rows={6}
-          accent="#8b5cf6"
+          accent="var(--accent)"
           placeholder="Results-driven Software Engineer with 5+ years of experience building scalable web applications at Google. Expert in React and Node.js. Led teams of 8+ engineers, shipped 3 products with $2M+ combined ARR."
         />
       </F>

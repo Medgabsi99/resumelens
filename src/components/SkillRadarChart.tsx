@@ -22,6 +22,22 @@ interface Props {
   resumeText: string;
 }
 
+// SVG Geometry Settings
+const size = 420;
+const center = size / 2;
+const radius = 140;
+const numAxes = 6;
+const angleStep = (2 * Math.PI) / numAxes;
+
+// Convert (axisIndex, scorePercent) to SVG (x, y) coordinates
+function getCoordinates(index: number, score: number) {
+  const angle = index * angleStep - Math.PI / 2; // Start from top 12 o'clock
+  const r = (score / 100) * radius;
+  const x = center + r * Math.cos(angle);
+  const y = center + r * Math.sin(angle);
+  return { x, y };
+}
+
 export default function SkillRadarChart({ resumeText }: Props) {
   const [selectedLevel, setSelectedLevel] = useState<SeniorityLevel>("senior");
   const [hoveredAxis, setHoveredAxis] = useState<RadarAxis | null>(null);
@@ -29,22 +45,6 @@ export default function SkillRadarChart({ resumeText }: Props) {
   const radarData = useMemo(() => {
     return calculateSkillRadarData(resumeText, selectedLevel);
   }, [resumeText, selectedLevel]);
-
-  // SVG Geometry Settings
-  const size = 420;
-  const center = size / 2;
-  const radius = 140;
-  const numAxes = 6;
-  const angleStep = (2 * Math.PI) / numAxes;
-
-  // Convert (axisIndex, scorePercent) to SVG (x, y) coordinates
-  const getCoordinates = (index: number, score: number) => {
-    const angle = index * angleStep - Math.PI / 2; // Start from top 12 o'clock
-    const r = (score / 100) * radius;
-    const x = center + r * Math.cos(angle);
-    const y = center + r * Math.sin(angle);
-    return { x, y };
-  };
 
   // Build SVG polygon points strings
   const candidatePoints = useMemo(() => {
@@ -95,12 +95,12 @@ export default function SkillRadarChart({ resumeText }: Props) {
               width: "36px",
               height: "36px",
               borderRadius: "10px",
-              background: "rgba(139, 92, 246, 0.12)",
-              border: "1px solid rgba(139, 92, 246, 0.25)",
+              background: "var(--accent-bg)",
+              border: "1px solid var(--accent-border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#8b5cf6",
+              color: "var(--accent)",
             }}
           >
             <Compass size={18} />
@@ -123,12 +123,13 @@ export default function SkillRadarChart({ resumeText }: Props) {
                 style={{
                   fontSize: "10px",
                   fontFamily: "DM Mono, monospace",
-                  background: "rgba(139, 92, 246, 0.15)",
-                  color: "#8b5cf6",
+                  background: "var(--accent-bg)",
+                  color: "var(--accent)",
                   padding: "2px 8px",
                   borderRadius: "99px",
                   fontWeight: 700,
                   textTransform: "uppercase",
+                  border: "1px solid var(--accent-border)",
                 }}
               >
                 360° View
@@ -142,20 +143,30 @@ export default function SkillRadarChart({ resumeText }: Props) {
 
         {/* Seniority Fit Badge */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "11px", color: "var(--ink-muted)", fontWeight: 600 }}>Seniority Fit:</span>
+          <span style={{ fontSize: "11px", color: "var(--ink-muted)", fontWeight: 600 }}>
+            Seniority Fit:
+          </span>
           <div
             style={{
               background:
                 radarData.overallFitScore >= 80
                   ? "rgba(16, 185, 129, 0.15)"
                   : radarData.overallFitScore >= 60
-                  ? "rgba(245, 158, 11, 0.15)"
-                  : "rgba(239, 68, 68, 0.15)",
+                    ? "rgba(245, 158, 11, 0.15)"
+                    : "rgba(239, 68, 68, 0.15)",
               border: `1px solid ${
-                radarData.overallFitScore >= 80 ? "#10b981" : radarData.overallFitScore >= 60 ? "#f59e0b" : "#ef4444"
+                radarData.overallFitScore >= 80
+                  ? "#10b981"
+                  : radarData.overallFitScore >= 60
+                    ? "#f59e0b"
+                    : "#ef4444"
               }`,
               color:
-                radarData.overallFitScore >= 80 ? "#10b981" : radarData.overallFitScore >= 60 ? "#f59e0b" : "#ef4444",
+                radarData.overallFitScore >= 80
+                  ? "#10b981"
+                  : radarData.overallFitScore >= 60
+                    ? "#f59e0b"
+                    : "#ef4444",
               borderRadius: "99px",
               padding: "4px 12px",
               fontSize: "12.5px",
@@ -181,7 +192,14 @@ export default function SkillRadarChart({ resumeText }: Props) {
           gap: "10px",
         }}
       >
-        <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--ink)", fontFamily: "DM Mono, monospace" }}>
+        <span
+          style={{
+            fontSize: "11.5px",
+            fontWeight: 700,
+            color: "var(--ink)",
+            fontFamily: "DM Mono, monospace",
+          }}
+        >
           Target Seniority Target:
         </span>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -233,7 +251,12 @@ export default function SkillRadarChart({ resumeText }: Props) {
             minWidth: "300px",
           }}
         >
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: "100%", height: "auto" }}>
+          <svg
+            width={size}
+            height={size}
+            viewBox={`0 0 ${size} ${size}`}
+            style={{ maxWidth: "100%", height: "auto" }}
+          >
             {/* Concentric Grid Rings (20%, 40%, 60%, 80%, 100%) */}
             {[0.2, 0.4, 0.6, 0.8, 1.0].map((level, ringIdx) => {
               const ringPoints = radarData.axes
@@ -281,11 +304,11 @@ export default function SkillRadarChart({ resumeText }: Props) {
               style={{ transition: "all 0.4s ease" }}
             />
 
-            {/* Candidate Score Polygon (Solid Neon Purple/Emerald) */}
+            {/* Candidate Score Polygon (Solid Sapphire / Brand Accent) */}
             <polygon
               points={candidatePoints}
-              fill="rgba(139, 92, 246, 0.22)"
-              stroke="#8b5cf6"
+              fill="rgba(37, 99, 235, 0.18)"
+              stroke="#2563eb"
               strokeWidth="2.5"
               style={{ transition: "all 0.4s ease" }}
             />
@@ -304,7 +327,7 @@ export default function SkillRadarChart({ resumeText }: Props) {
                     cx={candCoord.x}
                     cy={candCoord.y}
                     r={isHovered ? "7" : "5"}
-                    fill="#8b5cf6"
+                    fill="#2563eb"
                     stroke="#ffffff"
                     strokeWidth="2"
                     style={{ cursor: "pointer", transition: "all 0.2s ease" }}
@@ -313,12 +336,7 @@ export default function SkillRadarChart({ resumeText }: Props) {
                   />
 
                   {/* Target Benchmark Vertex Dot */}
-                  <circle
-                    cx={targetCoord.x}
-                    cy={targetCoord.y}
-                    r="3.5"
-                    fill="#f59e0b"
-                  />
+                  <circle cx={targetCoord.x} cy={targetCoord.y} r="3.5" fill="#f59e0b" />
 
                   {/* Outer Axis Labels */}
                   <text
@@ -355,7 +373,15 @@ export default function SkillRadarChart({ resumeText }: Props) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "12px", height: "12px", borderRadius: "3px", background: "rgba(139, 92, 246, 0.5)", border: "1px solid #8b5cf6" }} />
+              <span
+                style={{
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "3px",
+                  background: "rgba(37, 99, 235, 0.4)",
+                  border: "1px solid #2563eb",
+                }}
+              />
               Candidate Profile
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -391,14 +417,36 @@ export default function SkillRadarChart({ resumeText }: Props) {
                 boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
               }}
             >
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", marginBottom: "6px" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "var(--ink)",
+                  marginBottom: "6px",
+                }}
+              >
                 {hoveredAxis.label}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", color: "var(--ink-muted)", marginBottom: "8px" }}>
-                <span>Score: <strong style={{ color: "#8b5cf6" }}>{hoveredAxis.score}/100</strong></span>
-                <span>Target: <strong style={{ color: "#f59e0b" }}>{hoveredAxis.targetScore}/100</strong></span>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "11.5px",
+                  color: "var(--ink-muted)",
+                  marginBottom: "8px",
+                }}
+              >
+                <span>
+                  Score: <strong style={{ color: "#2563eb" }}>{hoveredAxis.score}/100</strong>
+                </span>
+                <span>
+                  Target:{" "}
+                  <strong style={{ color: "#f59e0b" }}>{hoveredAxis.targetScore}/100</strong>
+                </span>
               </div>
-              <p style={{ fontSize: "11px", color: "var(--ink-muted)", margin: 0, lineHeight: 1.5 }}>
+              <p
+                style={{ fontSize: "11px", color: "var(--ink-muted)", margin: 0, lineHeight: 1.5 }}
+              >
                 {hoveredAxis.advice}
               </p>
             </div>
@@ -414,7 +462,8 @@ export default function SkillRadarChart({ resumeText }: Props) {
                 lineHeight: 1.5,
               }}
             >
-              💡 Hover over any dimension on the radar chart to view candidate score vs target benchmark details.
+              💡 Hover over any dimension on the radar chart to view candidate score vs target
+              benchmark details.
             </div>
           )}
 
@@ -503,6 +552,31 @@ export default function SkillRadarChart({ resumeText }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Screen Reader Accessible Table */}
+      <table className="sr-only">
+        <caption>
+          Skill Radar Competency Breakdown for {SENIORITY_LABELS[selectedLevel].name}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Competency Dimension</th>
+            <th scope="col">Your Score</th>
+            <th scope="col">Target Score</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {radarData.axes.map((axis) => (
+            <tr key={axis.key}>
+              <td>{axis.label}</td>
+              <td>{axis.score}%</td>
+              <td>{axis.targetScore}%</td>
+              <td>{axis.score >= axis.targetScore ? "Exceeds Target" : "Improvement Area"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

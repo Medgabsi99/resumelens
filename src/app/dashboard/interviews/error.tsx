@@ -17,7 +17,7 @@ export default function InterviewErrorBoundary({ error, reset }: ErrorProps) {
 
   return (
     <div className="relative z-10 glass-card bg-paper-card border border-border rounded-2xl p-8 max-w-xl mx-auto my-12 text-center shadow-lg">
-      <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 mx-auto mb-6">
+      <div className="w-16 h-16 rounded-2xl bg-accent-bg border border-accent-border flex items-center justify-center text-accent mx-auto mb-6">
         <Mic size={28} />
       </div>
 
@@ -26,7 +26,8 @@ export default function InterviewErrorBoundary({ error, reset }: ErrorProps) {
       </h2>
 
       <p className="text-ink-muted text-sm mb-6 leading-relaxed max-w-md mx-auto">
-        The interactive interview workspace encountered an unexpected issue. This can happen due to speech recognition API timeouts, mic access constraints, or AI context exhaustion.
+        The interactive interview workspace encountered an unexpected issue. This can happen due to
+        speech recognition API timeouts, mic access constraints, or AI context exhaustion.
       </p>
 
       {error.message && (

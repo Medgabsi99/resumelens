@@ -515,7 +515,9 @@ export default function ResumeEditor({
       <button
         onClick={() => setEditorOpen(!editorOpen)}
         style={{
-          background: editorOpen ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
+          background: editorOpen
+            ? "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)"
+            : "transparent",
           color: editorOpen ? "white" : "var(--accent)",
           border: `1.5px solid ${editorOpen ? "transparent" : "var(--accent-border)"}`,
           borderRadius: 10,
@@ -528,7 +530,7 @@ export default function ResumeEditor({
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
-          boxShadow: editorOpen ? "0 4px 15px rgba(99,102,241,0.35)" : "none",
+          boxShadow: editorOpen ? "0 4px 15px var(--brand-glow)" : "none",
           letterSpacing: "-0.01em",
         }}
       >
@@ -648,14 +650,14 @@ export default function ResumeEditor({
                 {isEnhanced && (
                   <span
                     style={{
-                      background: "rgba(124,58,237,0.1)",
-                      color: "#7c3aed",
+                      background: "var(--accent-bg)",
+                      color: "var(--accent)",
                       padding: "2px 8px",
                       borderRadius: 10,
                       fontSize: 9.5,
                       fontWeight: 700,
                       letterSpacing: "0.03em",
-                      border: "1px solid rgba(124,58,237,0.2)",
+                      border: "1px solid var(--accent-border)",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
@@ -663,17 +665,18 @@ export default function ResumeEditor({
                     }}
                   >
                     <Sparkles size={9} />
-                    <span>AI Enhanced</span>
+                    <span>Restructured</span>
                   </span>
                 )}
               </div>
               {/* Template tabs strip */}
               <div
                 style={{
-                  padding: "0 12px 10px",
                   display: "flex",
-                  alignItems: "center",
                   gap: 3,
+                  padding: "4px 8px",
+                  borderBottom: "1px solid var(--border)",
+                  background: "var(--paper-warm)",
                   overflowX: "auto",
                   overflowY: "hidden",
                   flexWrap: "nowrap",
@@ -763,8 +766,8 @@ export default function ResumeEditor({
                 disabled={isDownloading}
                 style={{
                   background: isDownloading
-                    ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
-                    : "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                    ? "var(--accent-hover)"
+                    : "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                   color: "white",
                   border: "none",
                   borderRadius: 7,
@@ -775,7 +778,7 @@ export default function ResumeEditor({
                   cursor: isDownloading ? "wait" : "pointer",
                   fontFamily: "Instrument Sans, sans-serif",
                   transition: "all 0.2s",
-                  boxShadow: "0 2px 10px rgba(79,70,229,0.35)",
+                  boxShadow: "0 2px 10px var(--brand-glow)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 5,
@@ -1135,7 +1138,7 @@ export default function ResumeEditor({
                       { hex: "#4f46e5", label: "Indigo" },
                       { hex: "#10b981", label: "Emerald" },
                       { hex: "#374151", label: "Charcoal" },
-                      { hex: "#8b5cf6", label: "Purple" },
+                      { hex: "#e05d2e", label: "Terracotta" },
                     ].map((col) => (
                       <button
                         key={col.hex}
@@ -1408,8 +1411,8 @@ export default function ResumeEditor({
                   disabled={isGenerating || !text.trim()}
                   style={{
                     background: isGenerating
-                      ? "linear-gradient(135deg, #7c3aed, #6366f1)"
-                      : "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                      ? "var(--accent-hover)"
+                      : "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                     color: "white",
                     border: "none",
                     borderRadius: 7,
@@ -1419,7 +1422,7 @@ export default function ResumeEditor({
                     cursor: isGenerating ? "wait" : "pointer",
                     fontFamily: "Instrument Sans, sans-serif",
                     transition: "all 0.2s",
-                    boxShadow: "0 2px 10px rgba(99,102,241,0.35)",
+                    boxShadow: "0 2px 10px var(--brand-glow)",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 5,
@@ -1814,7 +1817,8 @@ export default function ResumeEditor({
                         onClick={handleOptimizeBullet}
                         style={{
                           width: "100%",
-                          background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                          background:
+                            "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                           color: "white",
                           border: "none",
                           borderRadius: 8,

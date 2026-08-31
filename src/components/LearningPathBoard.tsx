@@ -275,7 +275,7 @@ export default function LearningPathBoard({ data, pathId, onClose }: Props) {
                           href={`https://www.udemy.com/courses/search/?q=${encodeURIComponent(milestone.title)}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 flex items-center gap-1 font-medium text-[11px]"
+                          className="px-2.5 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 flex items-center gap-1 font-medium text-[11px]"
                         >
                           <ExternalLink size={10} /> Udemy
                         </a>

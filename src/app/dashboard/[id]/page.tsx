@@ -24,18 +24,12 @@ export async function generateMetadata({
     .eq("user_id", user.id)
     .single();
 
-  const title = analysis?.target_role 
-    ? `${analysis.target_role} Review` 
-    : "Review Analysis";
+  const title = analysis?.target_role ? `${analysis.target_role} Review` : "Review Analysis";
 
   return { title };
 }
 
-export default async function PastAnalysisPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function PastAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerComponentClient();
   const {
@@ -54,10 +48,21 @@ export default async function PastAnalysisPage({
 
   if (error || !analysis) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--paper)", display: "grid", placeItems: "center" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--paper)",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
-          <h1 style={{ fontFamily: "DM Serif Display", fontSize: 24, marginBottom: 12 }}>Analysis not found</h1>
-          <a href="/dashboard" style={{ color: "var(--accent)" }}>← Back to Dashboard</a>
+          <h1 style={{ fontFamily: "DM Serif Display", fontSize: 24, marginBottom: 12 }}>
+            Analysis not found
+          </h1>
+          <a href="/dashboard" style={{ color: "var(--accent)" }}>
+            ← Back to Dashboard
+          </a>
         </div>
       </div>
     );
@@ -72,7 +77,11 @@ export default async function PastAnalysisPage({
   // Ensure resultData has a valid score property, falling back to DB analysis.score
   if (resultData && typeof resultData === "object") {
     if (typeof resultData.score !== "number" || isNaN(resultData.score) || resultData.score === 0) {
-      resultData.score = analysis.score || (resultData as any).overallScore || (resultData as any).overall_score || 75;
+      resultData.score =
+        analysis.score ||
+        (resultData as any).overallScore ||
+        (resultData as any).overall_score ||
+        75;
     }
   }
 
@@ -83,7 +92,10 @@ export default async function PastAnalysisPage({
     <div className="min-h-screen relative overflow-hidden" style={{ background: "var(--paper)" }}>
       {/* Background glow blobs */}
       <div className="glow-blob animate-blob-1 top-[-100px] right-[-50px] md:w-[500px] md:h-[500px]" />
-      <div className="glow-blob animate-blob-2 bottom-[-100px] left-[-50px] md:w-[400px] md:h-[400px]" style={{ animationDelay: "-2s" }} />
+      <div
+        className="glow-blob animate-blob-2 bottom-[-100px] left-[-50px] md:w-[400px] md:h-[400px]"
+        style={{ animationDelay: "-2s" }}
+      />
 
       {/* Nav */}
       <nav
@@ -93,7 +105,10 @@ export default async function PastAnalysisPage({
           borderColor: "var(--border)",
         }}
       >
-        <a href="/" className="font-display text-2xl font-bold tracking-tight no-underline text-ink">
+        <a
+          href="/"
+          className="font-display text-2xl font-bold tracking-tight no-underline text-ink"
+        >
           Resume<span className="text-accent">Lens</span>
         </a>
         <div className="flex items-center gap-3">
@@ -110,12 +125,29 @@ export default async function PastAnalysisPage({
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-12 md:py-16">
         <div className="mb-8">
-          <div className="font-mono text-xs text-ink-faint uppercase tracking-wider mb-2">
-            {new Date(analysis.created_at).toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          <div className="font-mono text-xs text-ink-faint uppercase tracking-wider mb-3">
+            {new Date(analysis.created_at).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight">
-            {analysis.target_role ? `Target Role: ${analysis.target_role}` : "General Resume Review"}
-          </h1>
+          {analysis.target_role ? (
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-ink-faint">
+                Target Role
+              </span>
+              <span className="w-1 h-1 rounded-full bg-border" />
+              <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+                {analysis.target_role}
+              </h1>
+            </div>
+          ) : (
+            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+              General Resume Review
+            </h1>
+          )}
         </div>
 
         {/* Print-only branded header (hidden on screen) */}
@@ -124,11 +156,22 @@ export default async function PastAnalysisPage({
             <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px" }}>
               Resume<span style={{ color: "#6366f1" }}>Lens</span>
             </div>
-            <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>AI-Powered Resume Analysis</div>
+            <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>
+              AI-Powered Resume Analysis
+            </div>
           </div>
           <div style={{ textAlign: "right", fontSize: 10, color: "#64748b" }}>
-            <div>{new Date(analysis.created_at).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div>
-            {analysis.target_role && <div style={{ marginTop: 2 }}>Target Role: {analysis.target_role}</div>}
+            <div>
+              {new Date(analysis.created_at).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+            {analysis.target_role && (
+              <div style={{ marginTop: 2 }}>Target Role: {analysis.target_role}</div>
+            )}
           </div>
         </div>
 

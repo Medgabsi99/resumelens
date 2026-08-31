@@ -308,7 +308,7 @@ export default function LearningPathsPage() {
                 {GENERATING_STEPS[genStep]}
               </h3>
               <p className="text-xs text-ink-muted">
-                Leveraging gemini-2.5 models to customize architecture configurations and Weekly
+                Leveraging gemini-3.6 models to customize architecture configurations and Weekly
                 timelines
               </p>
             </div>
