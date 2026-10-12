@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase-server";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
